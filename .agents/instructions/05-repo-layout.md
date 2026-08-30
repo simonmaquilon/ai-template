@@ -10,4 +10,6 @@ Read when moving code or deciding where a new piece belongs.
 - Treat everything in `.scripts/` as optional: the application must build, run, and deploy without any of it.
 - Keep long-running processes, application or framework code, configuration, and automation (Nuxt, React, and equivalents) out of `.scripts/`, in the location their framework or owning domain defines.
 - Create a top-level file or directory only when required by the explicit request, the approved framework, or the fixed template structure; ask before introducing any other top-level boundary.
+- Create a directory only together with the first file it holds, except the fixed template directories that ship with a placeholder.
+- Remove a directory when its last file leaves it, unless the fixed template structure requires it.
 - If ownership is ambiguous, reuse the nearest established pattern and state the choice in the closing report.
