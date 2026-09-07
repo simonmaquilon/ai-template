@@ -1,9 +1,9 @@
 # Meta Guidelines
 
-Read before adding, renaming, removing, or editing any file under `.agents/instructions/`, the primary references or routing table in `AGENTS.md`, a primary-reference or root `README.md` skeleton, or `.agents/template-version`.
+Read before adding, renaming, removing, or editing any file under `.agents/instructions/`, the primary references or routing table in `AGENTS.md`, a primary-reference or root `README.md` skeleton, template-owned `.readme/` documentation, or `.agents/template-version`.
 
 - Persistent agent instructions live in `.agents/instructions/`.
-- In the maintained template, `.agents/template-version` identifies the baseline release; increment it exactly once per commit changing baseline instructions, the primary references or routing table in `AGENTS.md`, primary-reference skeletons, or the root `README.md` skeleton, relative to the previously committed template version.
+- In the maintained template, `.agents/template-version` identifies the baseline release; increment it exactly once per commit changing baseline instructions, the primary references or routing table in `AGENTS.md`, primary-reference skeletons, the root `README.md` skeleton, or template-owned `.readme/` documentation, relative to the previously committed template version.
 - All pending edits and conversation turns belonging to the same commit share that single version increment; do not increment again for revisions before committing.
 - Derived projects retain the adopted baseline version; completing or editing their product documents and local policies does not increment it. Update it when adopting a newer template release, and record deliberate baseline deviations in root `AGENTS.md` with links to routed project-specific policy.
 - Without a prior template commit, preserve a verifiable inherited baseline version; for a newly created template with no inherited version, initialize it to 1. Do not infer a release number when baseline provenance is ambiguous.

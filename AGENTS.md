@@ -9,9 +9,9 @@
 
 ## Instruction routing
 
-Instruction files live in `.agents/instructions/`. Load every file whose scope matches the request before acting, plus any file a loaded rule directs you to apply, and only those. Read `01-meta-guidelines.md` before adding, renaming, removing, or editing any file in this table, the primary references or this routing table itself, a primary-reference or root `README.md` skeleton, or `.agents/template-version`.
+Instruction files live in `.agents/instructions/`. Load every file whose scope matches the request before acting, plus any file a loaded rule directs you to apply, and only those. Read `01-meta-guidelines.md` before adding, renaming, removing, or editing any file in this table, the primary references or this routing table itself, a primary-reference or root `README.md` skeleton, template-owned `.readme/` documentation, or `.agents/template-version`.
 
-- `01-meta-guidelines.md`: authoring, naming, numbering, sizing, routing, and retirement of instruction files, plus the primary references and root `README.md`, their skeletons, the baseline template version, and derived-project deviations.
+- `01-meta-guidelines.md`: authoring, naming, numbering, sizing, routing, and retirement of instruction files, plus the primary references and root `README.md`, their skeletons, template-owned `.readme/` documentation, the baseline template version, and derived-project deviations.
 - `02-change-workflow.md`: every implementation or code change, ordered discovery, capability preflight, defect entry, unresolved decisions, and usage sweeps.
 - `03-approval-boundaries.md`: authorization for repository writes, version-control writes, dependencies, destructive actions, external changes, agent permissions and operating limits, open decisions, and confirmations.
 - `04-sources-and-skills.md`: selecting repository sources, skills, plugins, fallbacks, official documentation, searching outside the workspace, source-authority precedence, and conflicts between loaded instructions or between an explicit user instruction and a routed default.
