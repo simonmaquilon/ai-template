@@ -2,7 +2,7 @@
 
 Read when touching runtime configuration, environment bindings, migration deployment ordering, generated platform types, or deployment behavior.
 
-- Discover the runtime and deployment targets from repository manifests, infrastructure files, and project documentation before editing.
+- Discover the runtime, deployment targets, selected tools, and environments from `PLAN.md` first, then repository manifests, infrastructure files, and project documentation before editing.
 - Keep application, runtime, framework, platform, database, external-service, deployment-tool, and binary versions synchronized in `SECURITY.md` under `21-document-maintenance.md`, including their source of truth, support status, security state, and last verification.
 - Treat platform bindings and types as generated artifacts under `14-code-authoring.md`; discover their runtime or platform generation requirements before using the established project workflow.
 - Apply `23-data-integrity-and-migrations.md` to persistent schema changes, migrations, and backfills; keep deployment ordering and recovery compatible with every affected target environment.
