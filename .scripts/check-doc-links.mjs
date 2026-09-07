@@ -6,7 +6,6 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-const ROOTS = ['.', '.agents/instructions', '.readme'];
 const LINK = /\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+)/g;
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
