@@ -11,6 +11,10 @@
           {
             "type": "command",
             "command": "d=$(find . -type d -empty -not -path './.git/*' 2>/dev/null | git check-ignore -nv --stdin 2>/dev/null | grep '^::' | cut -f2); [ -n \"$d\" ] && echo \"Empty directories (05-repo-layout.md): $d\"; true"
+          },
+          {
+            "type": "command",
+            "command": "node .scripts/check-doc-links.mjs 2>/dev/null; true"
           }
         ]
       }
