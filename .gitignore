@@ -22,5 +22,8 @@ $RECYCLE.BIN/
 *.swo
 .idea/
 
+# Repository-owned temporary artifacts
+.temp/
+
 # Local agent overrides
 .claude/settings.local.json

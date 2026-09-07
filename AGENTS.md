@@ -14,7 +14,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 - `01-meta-guidelines.md`: authoring, naming, numbering, sizing, routing, and retirement of instruction files, plus the primary references and root `README.md`, their skeletons, template-owned `.readme/` documentation, the baseline template version, and derived-project deviations.
 - `02-change-workflow.md`: every implementation or code change, ordered discovery, capability preflight, defect entry, unresolved decisions, and usage sweeps.
 - `03-approval-boundaries.md`: authorization for repository writes, version-control writes, dependencies, destructive actions, external changes, agent permissions and operating limits, open decisions, and confirmations.
-- `04-sources-and-skills.md`: selecting repository sources, skills, plugins, fallbacks, official documentation, searching outside the workspace, source-authority precedence, and conflicts between loaded instructions or between an explicit user instruction and a routed default.
+- `04-sources-and-skills.md`: selecting repository sources and the locations excluded from them, skills, plugins, fallbacks, official documentation, searching outside the workspace, source-authority precedence, and conflicts between loaded instructions or between an explicit user instruction and a routed default.
 - `05-repo-layout.md`: discovering ownership boundaries, locating new work, `.scripts/` boundaries, and directory lifecycle.
 - `06-commands-and-local-runtime.md`: repository commands, scripts, URLs, lockfiles, local service recovery, and `.temp/` artifacts.
 - `07-dependencies-and-binaries.md`: evaluating, adding, updating, replacing, or removing dependencies, CLI tools, or binaries.
