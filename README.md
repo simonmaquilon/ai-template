@@ -66,15 +66,15 @@ No incluyas secretos ni valores reales de producción en este repositorio.
 
 ## Pruebas y calidad
 
-[Indica qué niveles de prueba existen, dónde viven según el framework elegido y cómo interpretar un resultado satisfactorio.]
+[Resume qué niveles de prueba existen y enlaza la estrategia de validación en `PLAN.md` y el detalle de ejecución en `.readme/`.]
 
 ## Despliegue y operación
 
-[Documenta los entornos, el procedimiento de despliegue, la observabilidad y la recuperación ante fallos.]
+[Resume los entornos y enlaza el enfoque de entrega, observabilidad y recuperación en `PLAN.md` y el procedimiento ejecutable en `.readme/`.]
 
 ## Contribución
 
-[Explica el flujo de ramas, revisión, convenciones y comprobaciones obligatorias antes de abrir un cambio.]
+[Resume el flujo de ramas, revisión y convenciones, y enlaza las comprobaciones obligatorias a la estrategia de validación en `PLAN.md`.]
 
 ## Licencia
 

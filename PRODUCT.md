@@ -30,9 +30,14 @@ Reemplaza cada `TODO` antes de considerar decidido ese elemento y elimina las se
 
 - TODO — Expresa cada regla en términos verificables, incluyendo propiedad y estados prohibidos.
 
+## Terminología del dominio
+
+- TODO — Define cada término del negocio con su significado único y los sinónimos que no deben usarse.
+
 ## Datos e integraciones
 
 - Fuentes de verdad: TODO
+- Contratos públicos y garantías observables de compatibilidad: TODO
 - Sistemas externos y límites: TODO
 - Datos sensibles o regulados: TODO
 

@@ -33,7 +33,7 @@ El estado debe describir trabajo verificado en el repositorio, no avance previst
 ## Datos, contratos e integraciones
 
 - Fuentes de verdad y autoridad de escritura: TODO
-- Contratos públicos e internos: TODO
+- Estrategia técnica de contratos, versionado y compatibilidad: TODO
 - Persistencia, migraciones, reversión y recuperación: TODO
 - Sistemas externos, comportamiento ante fallos e idempotencia: TODO
 - Datos sensibles, control de acceso, retención y auditoría: TODO
@@ -59,9 +59,9 @@ Usa los incrementos verificables e independientes más pequeños. Los estados pe
 ## Entrega y operación
 
 - Configuración y provisión de secretos: TODO
-- Procedimiento de publicación o despliegue: TODO
+- Enfoque de publicación o despliegue: TODO
 - Observabilidad y comprobaciones de salud: TODO
-- Procedimiento de reversión y recuperación: TODO
+- Enfoque de reversión y recuperación: TODO
 - Documentación que debe cambiar con la entrega: TODO
 
 ## Riesgos y decisiones abiertas

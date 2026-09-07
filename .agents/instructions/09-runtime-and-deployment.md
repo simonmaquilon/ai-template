@@ -1,11 +1,11 @@
 # Runtime and Deployment
 
-Read when touching runtime configuration, environment bindings, migrations, generated platform types, or deployment behavior.
+Read when touching runtime configuration, environment bindings, migration deployment ordering, generated platform types, or deployment behavior.
 
 - Discover the runtime and deployment targets from repository manifests, infrastructure files, and project documentation before editing.
-- Keep application, runtime, framework, platform, database, external-service, deployment-tool, and binary versions synchronized in `SECURITY.md`, including their source of truth, support status, security state, and last verification.
-- Generate platform bindings and types through the repository-owned command; preserve the source-versus-generated boundary and do not hand-edit generated output.
-- Follow the repository's rollback or recovery and data-safety policy for every migration; if none exists, propose a recovery strategy and obtain approval before applying the migration.
+- Keep application, runtime, framework, platform, database, external-service, deployment-tool, and binary versions synchronized in `SECURITY.md` under `21-document-maintenance.md`, including their source of truth, support status, security state, and last verification.
+- Treat platform bindings and types as generated artifacts under `14-code-authoring.md`; discover their runtime or platform generation requirements before using the established project workflow.
+- Apply `23-data-integrity-and-migrations.md` to persistent schema changes, migrations, and backfills; keep deployment ordering and recovery compatible with every affected target environment.
 - Deploy only to an environment explicitly named by the user; ask when none is named and leave unrelated environments untouched.
-- Use the established local asset and emulator flow instead of hard-coding platform-specific configuration.
+- When a local asset or emulator flow is configured, use it instead of hard-coding platform-specific behavior; otherwise use the documented supported environment without inventing local substitutes or configuration to bypass constraints.
 - Validate configuration with the provider or repository's supported dry-run or check command when available.

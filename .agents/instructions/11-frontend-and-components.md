@@ -3,14 +3,13 @@
 Read when touching user-facing interfaces, client routes, layouts, state, or visual components.
 
 - Detect the affected scope's framework, rendering model, language, state, routing, data-loading, and design-system conventions from manifests, configuration, and source before editing.
-- Load only the installed framework and UI skills applicable to the detected stack; never transfer conventions from another framework.
+- Load only the framework and UI skills applicable to the installed stack or an approved target stack for new work; never transfer conventions from an unrelated framework.
 - Match established server-client boundaries and framework-owned locations.
 - Keep route and screen entrypoints focused on orchestration; place presentation and business rules in the units defined by the active framework and owning domain.
 - Keep state ownership explicit and data flow predictable; never mutate inputs owned by another component.
-- Derive loading, error, and computed state from its authoritative source instead of duplicating it when practical.
-- Selection order: existing project component -> framework or design-system primitive -> semantic native element -> custom implementation.
+- Derive loading, error, and computed state from its authoritative source; duplicate it only when the framework or a measured constraint requires it, and keep the source authoritative.
+- Evaluate existing project components, framework or design-system primitives, semantic native elements, and custom implementations in that order; choose the first option that satisfies behavior, accessibility, contracts, and design, and skip incompatible options.
 - Define strict input, output, and event contracts using the project's established type system.
 - Keep reusable visual components independent from direct API or route dependencies unless they intentionally own that integration.
-- Preserve keyboard, focus, loading, error, empty, disabled, responsive, and assistive-technology behavior.
-- Verify component APIs and extension points against installed versions.
+- Preserve keyboard, focus, loading, error, empty, disabled, responsive, and assistive-technology behavior under `13-ui-design-workflow.md`.
 - Reuse established authorization, navigation, and asynchronous-state patterns.

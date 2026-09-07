@@ -1,11 +1,18 @@
 # Sources and Skills
 
-Read before selecting authoritative sources, acting on any request an installed skill or tool instruction covers, or searching outside the workspace.
+Read before selecting authoritative sources, skills, plugins, or tools; acting on a request an available or user-named skill covers; handling an unavailable capability; resolving a conflict between loaded instructions or between an explicit user instruction and a routed default; or searching outside the workspace.
 
-- Load only skills and tool instructions that are available and applicable to the request.
-- Authority for repository behavior: `AGENTS.md` and routed instructions govern agent workflow; `PRODUCT.md` governs product behavior; `DESIGN.md` governs observable experience; `PLAN.md` guides execution without overriding product or design; `SECURITY.md` records application and component versions, dependencies, reported defects, vulnerabilities, risk decisions, and remediation status; source and configuration describe delivered behavior; official external docs describe installed technologies and platforms.
-- Treat skills, MCPs, plugins, and repository tools as discovery or execution methods, not substitutes for authoritative project sources.
-- Consult local skills and configured MCPs first; search official online docs when local evidence cannot establish tool or platform behavior.
-- Verify library, framework, and platform APIs against official documentation for the installed version before writing or changing code that depends on them.
+- Load only skills and tool instructions that are available and applicable to the request; read discovery guidance before using its tool and implementation guidance before the first relevant edit or execution, respecting any earlier mandatory skill trigger.
+- Authority: `AGENTS.md` and routed instructions govern workflow; primary references govern their respective intended behavior and decisions under `21-document-maintenance.md`; source and configuration establish delivered behavior; official documentation establishes technology and platform APIs. Execution plans, skills, and tools do not override product or design intent.
+- Treat skills, external tool servers, plugins, and repository tools as discovery or execution methods, not substitutes for authoritative project sources.
+- An explicit user instruction overrides a conflicting routed default for the requested work; it does not lift a routed prohibition, such as those protecting secrets, sensitive data, data integrity, or trust boundaries, and it does not waive the confirmations `03-approval-boundaries.md` requires for actions it does not itself authorize.
+- When two loaded instruction files govern the same decision, follow the one whose routed scope matches it more specifically, and report any conflict that remains unresolved.
+- Follow `02-change-workflow.md` for discovery order; reconcile relevant project intent with delivered behavior and identify any material disagreement before implementing dependent changes.
+- Before writing code that depends on library, framework, or platform APIs, verify official documentation for the installed version established from lockfiles or runtime evidence; manifests may establish constraints rather than an exact resolved version.
+- For an approved technology not yet installed, use its approved target version for documentation lookup; after installation, verify the resolved version and revisit API assumptions if it differs. Resolve material technology or version choices under `03-approval-boundaries.md`.
+- Load applicable documentation or technology skills before external API lookup; follow their guidance to select an available configured documentation capability, discover deferred tools when supported, and query the relevant library, API, and version before general web search.
+- Confirm that documentation results refer to the intended library, official source, and installed or approved target version; do not assume current or latest documentation applies, or claim exact-version coverage when it is not established.
+- If the selected documentation capability is unavailable, lacks the library or version, or leaves a question unresolved, state the specific gap and consult version-matched official documentation through another configured documentation tool or the official site; never invent compatibility or block solely on an optional tool server.
 - Prefer a purpose-built configured plugin or repository tool over general web search for project-owned data.
 - If an optional skill or plugin is unavailable, use the next reliable source and disclose the fallback.
+- If a required or user-named skill is unavailable, disclose the missing capability and use a fallback only when it preserves the request and applicable requirements; otherwise pause dependent work and report the blocker.
