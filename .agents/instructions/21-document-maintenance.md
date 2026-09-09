@@ -4,6 +4,7 @@ Read before editing `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `SECURITY
 
 - Classify each changed fact as product intent, observable design, execution plan or status, delivered public usage, security or maintenance evidence, or detailed operation; update only the matching document owners.
 - Keep one authoritative home for each mutable fact and link or summarize it elsewhere instead of duplicating it.
+- When a fact is enforced by code, schema, or configuration, that source is its authoritative home: state the decision and name the source instead of reproducing the enumeration it holds.
 - Keep `PRODUCT.md` limited to product purpose, scope, actors, permissions, main journeys, rules, invariants, authoritative data sources, external integrations, sensitive or regulated data classifications, public contracts, domain terminology, success criteria, product risks, and unresolved product decisions.
 - Keep `DESIGN.md` limited to intended experience, visual and interaction rules, content voice and terminology, accessibility, supported states, observable acceptance criteria, and unresolved design decisions.
 - Keep `PLAN.md` limited to technical decisions, ownership, phases, delivery dependencies, validation strategy, the chosen delivery, configuration, observability, and recovery approach, verified status, technical or delivery risks, unresolved technical or delivery decisions, delivery documentation impact, and acceptance evidence; never use it to override product or design, and leave executable procedure detail to `.readme/`.
