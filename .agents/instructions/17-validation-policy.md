@@ -4,6 +4,8 @@ Read before choosing, running, or reporting validation and before closing change
 
 - Validate every change against the behavior and file types it touched before reporting it complete; when no supported check covers them, perform the closest available runtime or manual verification instead of skipping validation.
 - Run the smallest set of checks that covers changed behavior and file types, plus every check explicitly required by the project for that scope; selecting relevant suites through supported runner options is allowed.
+- Take validation output volume from the project's configured commands and reporting; add a verbosity or per-item reporting flag only when the added output is the evidence a specific failure requires.
+- Read a finished run's final summary and the failures it names; when a long run must be checked before it ends, confirm it is still running without pulling its accumulated output.
 - A passing run covers only the inputs and dependencies as they stood; after later edits, re-run every affected check after the last relevant change and never report a superseded result.
 - Validate docs and instructions with applicable syntax, structure, link, and repository-specific checks.
 - Verify structural claims against the filesystem rather than version-control status, which may omit empty directories or ignored content.
