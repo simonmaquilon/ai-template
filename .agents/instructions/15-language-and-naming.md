@@ -3,6 +3,7 @@
 Read when naming files or symbols, writing comments, scripts, commits or documentation, or handling user-visible copy.
 
 - Keep source and documentation filenames, identifiers, types, database entities, comments, operational messages, and commits in English.
+- Test case titles and other developer-facing descriptive text are not operational messages: keep them in the language the suite already uses.
 - Write new or revised comments and operational messages in English in existing files; preserve unrelated content and report remaining divergence instead of expanding scope into a full translation.
 - Preserve existing names when renaming is outside the authorized scope, and report remaining language divergence.
 - Preserve language keywords, external API names, imported symbols, and required filenames; language conventions do not override external requirements or user-visible localization.
