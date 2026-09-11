@@ -58,4 +58,5 @@ El instalador escribe además estos archivos fuera de la skill:
 
 - `.claude/agents/impeccable-*.md`: agentes de Claude Code generados; se versionan.
 - `.codex/hooks.json`: hook de diseño de Codex; se versiona.
-- `.claude/settings.local.json`: hook de diseño de Claude Code; es local a cada máquina y queda fuera del control de versiones.
+
+El hook de diseño de Claude Code se versiona en `.claude/settings.json` para que llegue a los proyectos derivados. El instalador lo reconoce ahí y no crea `.claude/settings.local.json`; si una máquina conserva una copia anterior en ese archivo, Claude Code ejecuta el hook duplicado una sola vez.
