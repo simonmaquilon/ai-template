@@ -17,7 +17,7 @@
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "skillPath": ".agents/skills/impeccable/SKILL.md",
-      "computedHash": "3afb2a5e8cb327d83f75d585494dcdb6aaaf7506cf0410cddd072b30f960efea"
+      "computedHash": "a80e96114cca1a7324c3b5b72586b93687a12a2a05302563fa81e1e30987a049"
     },
     "nuxt": {
       "source": "antfu/skills",
@@ -59,7 +59,7 @@
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/wrangler/SKILL.md",
-      "computedHash": "ad1ea153cb8cf6845af15281e67e5d24fbf35b6626ab01a1e44d6a0bc57144c2"
+      "computedHash": "4d247a243fec7e23f1247976e0e491520cb0feb397c5477022551e7b4f5cdd93"
     }
   }
 }

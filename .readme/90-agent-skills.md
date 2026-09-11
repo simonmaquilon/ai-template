@@ -36,4 +36,26 @@ Las skills viven en `.agents/skills/`. El directorio `.claude/skills` es un syml
 
 ## Problema conocido: skills omitidas
 
-Cuando el CLI avisa `Multiple current paths match these skills from <origen>`, omite esa skill en lugar de borrar o migrar la equivocada. Ocurre porque el symlink `.claude/skills` hace que la misma skill resuelva en dos rutas. La skill omitida queda intacta y sigue funcionando con la versión que tenía fijada; actualizarla requiere resolver la ambigüedad de rutas primero.
+Cuando el CLI avisa `Multiple current paths match these skills from <origen>`, omite esa skill en lugar de borrar o migrar la equivocada. Ocurre porque el symlink `.claude/skills` hace que la misma skill resuelva en dos rutas. La skill omitida queda intacta y sigue funcionando con la versión que tenía fijada. Hoy le ocurre a `impeccable`, que se actualiza como indica la sección siguiente.
+
+## Actualizar Impeccable
+
+`impeccable` se actualiza con su propio CLI y después se reinstala desde su origen para refrescar su hash en `skills-lock.json`:
+
+```bash
+# Actualizar la skill y regenerar sus agentes y hooks
+npx impeccable update --project --yes --force
+
+# Reinstalar la skill desde su origen y refrescar su hash en el lockfile
+npx skills add pbakaus/impeccable --skill impeccable --agent codex --copy --yes --full-depth
+```
+
+`--agent codex --copy` instala solo en `.agents/skills/`, que es la ruta real, y así evita la ambigüedad del symlink. El primer paso deja el binario del motor dentro de la skill y el segundo lo retira: el lanzador `scripts/impeccable` lo descarga y verifica en la caché del usuario, `~/.impeccable/bin/<versión>/`, la primera vez que se ejecuta.
+
+Tras el segundo paso, `npx impeccable check` avisa `Updates available` aunque no exista una versión nueva: la copia del origen difiere de la que genera el CLI de Impeccable, que adapta rutas y comandos a Claude Code. Ese aviso no sirve para saber si hay una actualización.
+
+El instalador escribe además estos archivos fuera de la skill:
+
+- `.claude/agents/impeccable-*.md`: agentes de Claude Code generados; se versionan.
+- `.codex/hooks.json`: hook de diseño de Codex; se versiona.
+- `.claude/settings.local.json`: hook de diseño de Claude Code; es local a cada máquina y queda fuera del control de versiones.
