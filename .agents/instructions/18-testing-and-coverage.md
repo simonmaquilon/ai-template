@@ -8,6 +8,7 @@ Read when planning, writing, or executing automated tests.
 - Keep automated tests deterministic and isolated by controlling time, randomness, external dependencies, mutable state, and execution order; use project-owned fixtures or test environments and never depend on production data or services.
 - Cover behavior at the lowest sufficient level; repeat a critical invariant across levels only when each level exercises a distinct failure boundary.
 - Preserve configured coverage thresholds and gates; do not lower thresholds, exclude affected code, or narrow required measurement scope to obtain a passing result without explicit authorization, and report available coverage changes when material.
+- When a change removes or rewrites tests, keep every assertion whose behavior survives the change, adapted to the new interface, and remove only the assertions that exercised retired behavior.
 - Fixes to executable behavior require a regression test reproducing the issue at the observable level when a compatible test harness exists; otherwise apply and report the fallback above; documentation and instruction corrections need no regression test and follow `17-validation-policy.md` instead.
 - Detect test runners, configurations, server commands, and report locations before running tests.
 - Take adopted validation strategy and test tooling decisions from `PLAN.md` and the runnable truth from delivered configuration; report material disagreement under `04-sources-and-skills.md`.

@@ -1,5 +1,30 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command | if type == \"array\" then join(\" \") else (. // \"\") end'); echo \"$cmd\" | grep -qE 'git[[:space:]]+add[[:space:]]+([^|;&]*[[:space:]])?(-A|--all|-u|--update|\\.)([[:space:]]|$)|git[[:space:]]+commit[[:space:]]+([^|;&]*[[:space:]])?(-a|--all|-am)([[:space:]]|$)' && { echo '27-version-control.md: stage the authorized change by explicit paths; bulk staging can sweep in uncommitted work from another session.' >&2; exit 2; }; exit 0"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=$(find . -type d -empty -not -path './.git/*' 2>/dev/null | git check-ignore -nv --stdin 2>/dev/null | grep '^::' | cut -f2); [ -n \"$d\" ] && echo \"Empty directories (05-repo-layout.md): $d\"; true"
+          },
+          {
+            "type": "command",
+            "command": "node .scripts/check-doc-links.mjs 2>/dev/null; true"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|apply_patch",

@@ -4,6 +4,7 @@ Read before writing or modifying code.
 
 - Complete the pre-edit workflow in `02-change-workflow.md`; obtain or refresh target-source evidence according to `10-code-indexing.md`.
 - Treat pre-existing and concurrent changes as user-owned and stop when safe integration is uncertain.
+- When the user hands over an unfinished change from another session, treat it as the in-scope baseline: review all of it against the request before building on it, and do not inherit its unverified claims.
 - Identify generated artifacts and their canonical source before editing; modify the canonical source and regenerate through the established project workflow instead of hand-editing derived output.
 - When required generated output has no configured workflow, identify the supported method through applicable skills and official documentation, resolve new tooling or dependency decisions under `03-approval-boundaries.md` and `07-dependencies-and-binaries.md`, and report the gap rather than inventing a generator.
 - Implement the simplest solution that satisfies the request; do not add speculative features, boilerplate, options, or extension points.
