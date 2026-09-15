@@ -7,7 +7,7 @@ Read before staging, committing, changing ignore rules, or composing a pull requ
 - Split unrelated changes into separate commits so each commit stands alone and can be reverted independently.
 - Never stage ignored files, build or dependency output, local environment files, or secret-bearing content under `08-storage-and-secrets.md`.
 - When an authorized change introduces a generated, temporary, tool-managed, local-environment, or secret-bearing path that must remain untracked, ensure the ignore rules cover it; do not use selective staging to hide a missing rule.
-- Before committing baseline instructions, the primary references or routing table in `AGENTS.md`, or a primary-reference or root `README.md` skeleton, apply the template-version rule under `01-meta-guidelines.md`.
+- Before committing, apply the template-version rule under `01-meta-guidelines.md` to every file it covers.
 - Discover the repository's established message convention from its existing history and follow it; write messages in English under `15-language-and-naming.md`.
 - State what changed and why in the message, and add no attribution, co-author, or tool-authorship trailers.
 - Commit on the branch the user named; when none is named, use the checked-out branch and report it instead of switching or creating one.

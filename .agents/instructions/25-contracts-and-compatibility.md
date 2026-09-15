@@ -10,5 +10,4 @@ Read before changing APIs, events, messages, webhooks, command interfaces, confi
 - Use only the established versioning and negotiation scheme; do not invent a parallel version channel, compatibility flag, or undocumented fallback.
 - Preserve compatibility while old and new producers or consumers can coexist, including asynchronous delivery, retries, duplication, reordering, and partial rollout where applicable under `24-runtime-reliability-and-observability.md`.
 - Validate both sides of each affected contract with schema, contract, integration, or compatibility tests and representative fixtures under `18-testing-and-coverage.md`.
-- Update canonical definitions, generated artifacts, types, fixtures, consumers, and owning documentation together; regenerate derived output under `14-code-authoring.md`.
 - Apply data classification and exposure rules under `08-storage-and-secrets.md` and trust-boundary rules under `22-security-and-trust-boundaries.md` to every added or changed field and operation.

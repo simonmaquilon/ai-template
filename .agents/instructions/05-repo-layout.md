@@ -1,4 +1,4 @@
-# Repo Structure
+# Repo Layout
 
 Read when moving code, removing files or directories, or deciding where a new piece belongs.
 
@@ -9,7 +9,7 @@ Read when moving code, removing files or directories, or deciding where a new pi
 - Reserve `.scripts/` for repository-owned developer or operational tasks, whether invoked manually or by repository automation, including repeatable tasks.
 - Keep `.scripts/` outside application and framework runtime dependencies.
 - Repository commands and automation may invoke `.scripts/` helpers under `06-commands-and-local-runtime.md` and `26-automated-workflows.md`.
-- Keep workflow definitions, schedules, and continuous-integration configuration out of `.scripts/` and in their platform-owned locations under `26-automated-workflows.md`.
+- Keep workflow definitions, schedules, and continuous-integration configuration out of `.scripts/`; `26-automated-workflows.md` governs where they live.
 - Keep long-running processes and required application or framework code out of `.scripts/` and in the location their framework or owning domain defines.
 - Create a top-level file or directory when required by the explicit request, approved technology, fixed template structure, or a clearly established repository ownership and layout pattern; ask before introducing a new top-level boundary without that evidence or when it changes architecture.
 - Create a directory only together with the first file it holds, except the fixed template directories that ship with a placeholder.

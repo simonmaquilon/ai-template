@@ -1,4 +1,4 @@
-# Documentation Structure
+# Documentation
 
 Read when creating, locating, naming, renaming, relocating, or licensing project documentation.
 
