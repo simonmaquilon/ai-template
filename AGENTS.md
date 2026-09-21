@@ -5,7 +5,7 @@
 - [Product](PRODUCT.md)
 - [Design](DESIGN.md)
 - [Plan](PLAN.md)
-- [Security Register](SECURITY.md)
+- [Security and Maintenance Register](SECURITY.md)
 
 ## Instruction routing
 
