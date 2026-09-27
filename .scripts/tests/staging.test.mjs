@@ -16,7 +16,12 @@ const BLOCKED = [
   'for f in a; do git add .; done', '! git add -A', "# don't sweep anything\ngit add -A", 'git --git-dir .git add -A',
   'sudo -u root git add -A', 'env -i git add -A', 'grep x <<< foo\ngit add -A', 'git add ./*',
   'git diff --name-only | xargs git add', 'git add $(git diff --name-only)', "git add -- ':!package-lock.json'", 'git add',
+  'git commit -m "msg $(git add -A)"', 'yes | git add -p', 'printf y | git add -i',
+  'git add -p < answers.txt', "xargs -d '\\n' git add", 'xargs -n 1 git add', 'xargs -I{} git add {}',
+  'git diff --name-only | git add --pathspec-from-file=-',
 ];
+// Blocked where a POSIX shell runs the command; PowerShell reads the backquote as an escape.
+const POSIX_BLOCKED = ['git commit -m "Fix `git add -A` handling"'];
 const ALLOWED = [
   'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
   'git -C docs add README.md', 'git -C docs commit -m "explicit"',
@@ -30,18 +35,19 @@ const ALLOWED = [
   "cat <<'MSG-END'\ngit add -A\nMSG-END", 'git stash -u', 'git commit --amend --no-edit', 'git add .github/workflows/x.yml',
   'git add -n .', 'git add --dry-run -A', 'git add --pathspec-from-file=paths.txt', "git add -- src ':!src/gen'",
   'git add -p', 'git add -i', 'git add -e', 'git add --patch', 'git add --interactive', 'git add --edit',
+  `git commit -m "$(cat <<'EOF'\nfix (guard): reject "x" and \`y\`\nEOF\n)"`, 'git commit -m "Use `code` here"', 'git add src/a.ts > log.txt',
 ];
 const POWERSHELL = [
   ['cd "C:\\repo\\"; git add -A', 2], ['& "C:\\Program Files\\Git\\cmd\\git.exe" add -A', 2], ['git add .\\*', 2],
   ["git commit -m @'\ndon't stage all\n'@; git status", 0], ["git commit -m @'\nx\n'@; git add -A", 2],
-  ['git commit -m "Document `"git add .`" usage" -- README.md', 0], ['git commit `\n  -am "x"', 2], ['git commit `\r\n  -am "x"', 2],
+  ['git commit -m "Document `"git add .`" usage" -- README.md', 0], ['git commit `\n  -am "x"', 2], ['git commit `\r\n  -am "x"', 2], ['git add @(git diff --name-only)', 2], ['git commit -m "msg $(git add -A)"', 2],
 ];
 
 for (const client of ['claude', 'codex']) {
   test(`${client}: the staging guard rejects bulk staging and allows explicit paths`, (t) => {
     const repo = makeRepo(t);
     const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
-    for (const command of BLOCKED) {
+    for (const command of [...BLOCKED, ...(client === 'codex' && WINDOWS ? [] : POSIX_BLOCKED)]) {
       const result = runClientHook(client, hook, repo, { input: { tool_input: { command } } });
       assert.equal(result.status, 2, `${command}: ${result.stderr}`);
       assert.match(result.stderr, /27-version-control\.md/);
