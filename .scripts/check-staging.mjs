@@ -3,11 +3,16 @@
 // runs: with --hook it reads the agent client's hook input and rejects, with
 // exit status 2 and the reason on stderr, a command that stages or commits in
 // bulk (git add with -A, --all, -u, --update, or ., and git commit with -a,
-// --all, or -am). tool_input.command may arrive as text or as an argument list.
+// --all, or -am), also when global options such as -C <path>, -c <name>=<value>,
+// or --no-pager precede the subcommand. tool_input.command may arrive as text or
+// as an argument list.
 
 import { readHookInput } from './hook-support.mjs';
 
-const BULK = /git\s+add\s+([^|;&]*\s)?(-A|--all|-u|--update|\.)(\s|$)|git\s+commit\s+([^|;&]*\s)?(-a|--all|-am)(\s|$)/;
+const GIT = String.raw`git(?:\s+(?:-[Cc]\s+(?:"[^"]*"|'[^']*'|\S+)|--[\w-]+(?:=\S+)?))*\s+`;
+const BULK = new RegExp(
+  String.raw`${GIT}add\s+([^|;&]*\s)?(-A|--all|-u|--update|\.)(\s|$)|${GIT}commit\s+([^|;&]*\s)?(-a|--all|-am)(\s|$)`,
+);
 
 const input = await readHookInput();
 const command = input.tool_input?.command;

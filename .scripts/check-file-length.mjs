@@ -5,10 +5,12 @@
 // turn stops it checks the files changed against HEAD, untracked ones included,
 // that changed after the session's turn marker; with --turn-start it only
 // writes that marker under .temp/. Run by hand it checks every file changed
-// against HEAD. A file may hold at most LIMIT lines, and one already over the
-// limit at HEAD may change but must not grow. Violations go to stderr with exit
-// status 2, which both clients feed back to the model; a stop that any Stop hook
-// already continued, or a directory outside git, passes silently.
+// against HEAD, or against the revision --base names, which continuous
+// integration passes because its fresh checkout has no local changes. A file
+// may hold at most LIMIT lines, and one already over the limit at that revision
+// may change but must not grow. Violations go to stderr with exit status 2,
+// which both clients feed back to the model; a stop that any Stop hook already
+// continued, or a directory outside git, passes silently.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
@@ -35,11 +37,12 @@ function touchedPaths(toolInput) {
   return paths;
 }
 
-// Files changed against HEAD, as [path, previous path] pairs relative to the
-// repository root; without a first commit every indexed file is new.
+// Files changed against the base revision, as [path, previous path] pairs
+// relative to the repository root; when git cannot resolve that revision, as
+// before a first commit, every indexed file is new.
 function changedPaths() {
   const paths = [];
-  const diff = git(['diff', '--name-status', '-M', '-z', 'HEAD']);
+  const diff = git(['diff', '--name-status', '-M', '-z', revision]);
   const fields = (diff ?? git(['ls-files', '-z']) ?? '').split('\0').filter(Boolean);
   for (let i = 0; i < fields.length; ) {
     if (diff === null) {
@@ -85,6 +88,8 @@ function realPath(full) {
 }
 
 const input = process.argv.includes('--hook') ? await readHookInput() : {};
+const baseFlag = process.argv.indexOf('--base');
+const revision = baseFlag === -1 ? 'HEAD' : process.argv[baseFlag + 1];
 if (input.stop_hook_active === true) process.exit(0);
 const origin = typeof input.cwd === 'string' ? resolve(input.cwd) : process.cwd();
 const root = enterRepositoryRoot();
@@ -121,7 +126,7 @@ for (const [path, previous] of candidates) {
   if (content.subarray(0, 8000).includes(0)) continue;
   const lines = lineCount(content.toString('utf8'));
   if (lines <= LIMIT) continue;
-  const before = git(['show', `HEAD:${previous ?? path}`]);
+  const before = git(['show', `${revision}:${previous ?? path}`]);
   const baseline = before === null ? null : lineCount(before);
   if (baseline !== null && baseline > LIMIT && lines <= baseline) continue;
   violations.push(`${path} (${lines} lines${baseline === null ? ', new' : `, was ${baseline}`})`);

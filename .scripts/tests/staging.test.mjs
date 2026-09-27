@@ -4,8 +4,14 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { ROOT, hookFor, makeRepo, runClientHook } from './support.mjs';
 
-const BLOCKED = ['git add -A', 'git add .', 'git add -u', 'git add --all', 'git commit -a -m wip', 'git commit -am wip', 'cd docs && git add .'];
-const ALLOWED = ['git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status'];
+const BLOCKED = [
+  'git add -A', 'git add .', 'git add -u', 'git add --all', 'git commit -a -m wip', 'git commit -am wip', 'cd docs && git add .',
+  'git -C docs add -A', 'git -C "my docs" add .', 'git -c core.autocrlf=false commit -am wip', 'git --no-pager add --all',
+];
+const ALLOWED = [
+  'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
+  'git -C docs add README.md', 'git -C docs commit -m "explicit"',
+];
 
 for (const client of ['claude', 'codex']) {
   test(`${client}: the staging guard rejects bulk staging and allows explicit paths`, (t) => {

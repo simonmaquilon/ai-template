@@ -41,6 +41,20 @@ test('a file already over the limit may change but not grow, also below the root
   assert.match(grown.stderr, /src\/nested\/legacy\.py \(201 lines, was 200\)/);
 });
 
+test('a base revision checks the files committed since it', (t) => {
+  const repo = makeRepo(t);
+  repo.git('add', '--', '.gitignore');
+  repo.git('commit', '-q', '-m', 'base');
+  repo.write('big.py', numbered(151));
+  repo.git('add', '--', 'big.py');
+  repo.git('commit', '-q', '-m', 'big');
+  const head = check(repo);
+  assert.equal(head.status, 0, head.stderr);
+  const since = repo.script('check-file-length.mjs', ['--base', 'HEAD~1']);
+  assert.equal(since.status, 2);
+  assert.match(since.stderr, /big\.py \(151 lines, new\)/);
+});
+
 for (const client of ['claude', 'codex']) {
   test(`${client}: the turn-end pass checks only files changed during the turn`, (t) => {
     const repo = makeRepo(t);
