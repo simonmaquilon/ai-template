@@ -41,7 +41,7 @@ const ALLOWED = [
 const POWERSHELL = [
   ['cd "C:\\repo\\"; git add -A', 2], ['& "C:\\Program Files\\Git\\cmd\\git.exe" add -A', 2], ['git add .\\*', 2],
   ["git commit -m @'\ndon't stage all\n'@; git status", 0], ["git commit -m @'\nx\n'@; git add -A", 2],
-  ['git commit -m "Document `"git add .`" usage" -- README.md', 0], ['git commit `\n  -am "x"', 2], ['git commit `\r\n  -am "x"', 2], ['git add @(git diff --name-only)', 2], ["$g = 'git'; & $g add -A", 2], ["git add @('src/a.ts','src/b.ts')", 0], ['git commit -m "msg $(git add -A)"', 2],
+  ['git commit -m "Document `"git add .`" usage" -- README.md', 0], ['git commit `\n  -am "x"', 2], ['git commit `\r\n  -am "x"', 2], ['git add @(git diff --name-only)', 2], ["$g = 'git'; & $g add -A", 2], ["$G = 'git'; & $g add -A", 2], ["git add @('src/a.ts','src/b.ts')", 0], ['git commit -m "msg $(git add -A)"', 2],
 ];
 
 for (const client of ['claude', 'codex']) {

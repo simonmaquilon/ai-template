@@ -34,9 +34,9 @@ function readBodies(script, i, delimiters) {
 
 // Index of the parenthesis that closes a $( ... ) whose content starts at
 // index i, skipping quoted text and here-document bodies.
-function closeParen(script, i, powershell) {
+function closeParen(script, i, powershell, limit = script.length) {
   const delimiters = [];
-  for (let depth = 1; i < script.length; i++) {
+  for (let depth = 1; i < limit; i++) {
     const c = script[i];
     if (c === (powershell ? '`' : '\\')) i++;
     else if (c === "'" || c === '"') i = readQuoted(script, i, powershell).end;
@@ -45,7 +45,7 @@ function closeParen(script, i, powershell) {
     else if (c === '(') depth++;
     else if (c === ')' && --depth === 0) return i;
   }
-  return script.length;
+  return limit;
 }
 
 // Reads the quoted text that starts at index i and returns it with the index
@@ -129,7 +129,7 @@ export function commands(script, { powershell = false } = {}) {
       i = read.end;
       delimiters = [];
       endCommand();
-    } else if (powershell && script.startsWith('@(', i) && LITERAL_LIST.test(script.slice(i + 2, closeParen(script, i + 2, true)))) {
+    } else if (powershell && script.startsWith('@(', i) && LITERAL_LIST.test(script.slice(i + 2, closeParen(script, i + 2, true, Math.min(script.length, i + 4096))))) {
       const end = closeParen(script, i + 2, true);
       endWord();
       words.push(...[...script.slice(i + 2, end).matchAll(/'([^']*)'|"([^"]*)"/g)].map((match) => match[1] ?? match[2]));
