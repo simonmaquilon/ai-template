@@ -7,8 +7,10 @@
 // exclude pathspecs, or no pathspec, as when xargs or $( ... ) supplies them,
 // and git commit with -a, --all, a short-option cluster that includes -a after
 // argument-less flags, such as -am or -qam, a whole-tree pathspec, or only
-// exclude pathspecs. A dry run stages nothing and passes. shell-commands.mjs splits the command as the shell would, so a
-// commit message, an echoed mention, or a comment is never read as a command;
+// exclude pathspecs. A dry run stages nothing and an interactive git add (-p,
+// -i, -e, or their long forms) stages only what is chosen, so both pass.
+// shell-commands.mjs splits the command as the shell would, so a commit
+// message, an echoed mention, or a comment is never read as a command.
 // PowerShell quoting applies when the client names that tool. Shell keywords,
 // environment assignments, wrappers such as env or sudo and their options, and
 // git global options may precede git, and a script a shell runs with -c, reads
@@ -45,7 +47,8 @@ function bulkGit(args) {
     (args[j].startsWith('-') ? options : paths).push(args[j]);
     if (VALUE_OPTIONS.has(args[j])) j++;
   }
-  if (options.includes('--dry-run') || (staging && options.some((option) => /^-[a-zA-Z]*n[a-zA-Z]*$/.test(option)))) return false;
+  if (options.includes('--dry-run')) return false;
+  if (staging && options.some((option) => /^--(?:patch|interactive|edit)$|^-[a-zA-Z]*[npie][a-zA-Z]*$/.test(option))) return false;
   const bulkOption = staging
     ? (option) => option === '--all' || option === '--update' || /^-[a-zA-Z]*[Au][a-zA-Z]*$/.test(option)
     : (option) => option === '--all' || /^-[einopqsvz]*a/.test(option);

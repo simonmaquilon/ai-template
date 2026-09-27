@@ -15,7 +15,7 @@ const BLOCKED = [
   'if ! git diff --quiet; then git add -A && git commit -m wip; fi', 'git diff --quiet || { git add -A; }',
   'for f in a; do git add .; done', '! git add -A', "# don't sweep anything\ngit add -A", 'git --git-dir .git add -A',
   'sudo -u root git add -A', 'env -i git add -A', 'grep x <<< foo\ngit add -A', 'git add ./*',
-  'git diff --name-only | xargs git add', 'git add $(git diff --name-only)', "git add -- ':!package-lock.json'",
+  'git diff --name-only | xargs git add', 'git add $(git diff --name-only)', "git add -- ':!package-lock.json'", 'git add',
 ];
 const ALLOWED = [
   'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
@@ -29,6 +29,7 @@ const ALLOWED = [
   `git commit -m "$(cat <<'EOF'\nfix: reject "git commit -a -m wip" in the guard\nEOF\n)"`, 'git add src/a.ts  # not -A',
   "cat <<'MSG-END'\ngit add -A\nMSG-END", 'git stash -u', 'git commit --amend --no-edit', 'git add .github/workflows/x.yml',
   'git add -n .', 'git add --dry-run -A', 'git add --pathspec-from-file=paths.txt', "git add -- src ':!src/gen'",
+  'git add -p', 'git add -i', 'git add -e', 'git add --patch', 'git add --interactive', 'git add --edit',
 ];
 const POWERSHELL = [
   ['cd "C:\\repo\\"; git add -A', 2], ['& "C:\\Program Files\\Git\\cmd\\git.exe" add -A', 2], ['git add .\\*', 2],
