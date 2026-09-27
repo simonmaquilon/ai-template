@@ -27,7 +27,7 @@ This register centralizes versions, components, dependencies, vulnerabilities, e
 
 ## Application and Platform Versions
 
-Covers the application, runtimes, databases, platforms, and external services; frameworks, libraries, CLI tools, and binaries, including build, test, and deployment tooling, belong to Libraries and Dependencies.
+Covers the application, runtimes, databases, platforms, and external services; frameworks, libraries, CLI tools, and binaries, including build, test, and deployment tooling, belong to Libraries and Dependencies. Anything only template-owned agent tooling or automation requires is recorded in the `.readme/` document that configures it, not here.
 
 | Category | Component | Declared version | Resolved or deployed version | Source of truth | Support or EOL | Security status | Verified |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -35,7 +35,7 @@ Covers the application, runtimes, databases, platforms, and external services; f
 
 ## Libraries and Dependencies
 
-Covers every direct and transitive dependency, including frameworks, CLI tools, and binaries, through this table or an approved generated inventory or SBOM linked from here. Retain declared and resolved versions, role, provenance, license, maintenance status, advisories, and verification evidence; mark anything unverified as unknown. When the detail lives outside this register, document its location, scope, update method, last verification, and security status here without duplicating its rows.
+Covers every direct and transitive dependency, including frameworks, CLI tools, and binaries, except those only template-owned agent tooling or automation requires, through this table or an approved generated inventory or SBOM linked from here. Retain declared and resolved versions, role, provenance, license, maintenance status, advisories, and verification evidence; mark anything unverified as unknown. When the detail lives outside this register, document its location, scope, update method, last verification, and security status here without duplicating its rows.
 
 | Ecosystem | Package | Role | Relationship | Declared version | Resolved version | Manifest, lockfile, or SBOM | License | Maintenance | Advisories and status | Verified |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
