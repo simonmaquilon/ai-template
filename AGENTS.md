@@ -5,6 +5,8 @@
 - [Product](PRODUCT.md)
 - [Design](DESIGN.md)
 - [Plan](PLAN.md)
+- [Test Coverage Register](TESTS.md)
+- [Bug Register](BUGS.md)
 - [Security and Maintenance Register](SECURITY.md)
 
 ## Instruction routing
@@ -28,7 +30,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 - `15-language-and-naming.md`: comment, identifier, and document languages, existing-file divergences, commits, user language, localization, and terminology.
 - `16-documentation.md`: documentation placement, canonical and third-party locations, `.readme/` naming, and on-demand licensing.
 - `17-validation-policy.md`: before choosing or reporting validation and before closing changes; validation scope, local environment drift, reruns, documentation checks, failure resolution, environment-blocked checks, and bypass prevention.
-- `18-testing-and-coverage.md`: test levels, project/framework test tooling, regression, coverage gates, and test execution.
+- `18-testing-and-coverage.md`: test levels, project/framework test tooling, regression, coverage gates, the test coverage register, and test execution.
 - `19-diagnosis-and-review.md`: debugging, root-cause analysis, reviews, audits, evidence, and findings.
 - `20-response-and-reporting.md`: concise response tone, copy-paste code blocks, clickable links, and closing reports.
 - `21-document-maintenance.md`: content ownership, synchronization triggers, authoritative evidence, update sequence, and reconciliation for root references and `.readme/` documentation; also required before closing any change to product source or configuration.
@@ -39,3 +41,4 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 - `26-automated-workflows.md`: continuous-integration, delivery, and scheduled automation configuration, required checks, automation credentials, and pinned automation dependencies.
 - `27-version-control.md`: staging scope, ignore rules, commit granularity, commit message content, branch selection, and pull-request composition.
 - `28-agent-tooling-configuration.md`: repository-declared agent clients, external tool servers, hooks, vendored skill content, tooling credentials, and cross-client consistency.
+- `29-language-servers.md`: before locating, reading, or changing code, and before enabling, installing, updating, or removing a language server; server detection, exact symbol resolution, usage sweeps, diagnostics, and fallback when none is configured.

@@ -9,7 +9,7 @@ Read before choosing, running, or reporting validation and before closing change
 - Read a finished run's final summary and the failures it names; when a long run must be checked before it ends, confirm it is still running without pulling its accumulated output.
 - A passing run covers only the inputs and dependencies as they stood; after later edits, re-run every affected check after the last relevant change and never report a superseded result.
 - A run that was interrupted, or whose final summary was never observed, has no result: re-run it before reporting, whichever session started it.
-- Validate docs and instructions with applicable syntax, structure, link, and repository-specific checks.
+- Validate docs and instructions with applicable syntax, structure, link, cited-path, and repository-specific checks.
 - Verify claims about files and directories against the filesystem rather than version-control status, which may omit empty directories or ignored content.
 - Do not bypass mandatory checks or suppress failures with bypass flags, disabled tests, persistent focus markers, exclusions, or reduced execution concurrency unless explicitly requested; targeted validation does not authorize omitting a required gate.
 - Resolve a failure the change introduced before reporting the change complete; report every other observed failure, including pre-existing failures outside the authorized scope, as a blocker or known gap under `20-response-and-reporting.md`, record it under `02-change-workflow.md`, and never present the change as validated.

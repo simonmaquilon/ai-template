@@ -2,12 +2,12 @@
 
 > Template: replace the bracketed content and keep this file as an auditable register for the entire life of the application.
 
-This register centralizes versions, components, dependencies, bugs, vulnerabilities, exceptions, and remediations. It does not replace manifests, lockfiles, deployed configuration, issue trackers, scanners, or an SBOM; it references them as evidence, and any difference must be reconciled.
+This register centralizes versions, components, dependencies, vulnerabilities, exceptions, and remediations. Functional defects of the maintained product are recorded in [BUGS.md](BUGS.md); this register holds only their security aspect. It does not replace manifests, lockfiles, deployed configuration, issue trackers, scanners, or an SBOM; it references them as evidence, and any difference must be reconciled.
 
 ## Control Rules
 
 - Use stable identifiers and ISO 8601 dates (`YYYY-MM-DD`).
-- Record one row per applicable version, component, bug, vulnerability, or risk; dependencies may be detailed here or in an approved generated inventory linked from here, without duplicating their rows.
+- Record one row per applicable version, component, vulnerability, or risk; dependencies may be detailed here or in an approved generated inventory linked from here, without duplicating their rows.
 - Retain resolved or retired entries to preserve history.
 - Do not invent versions or statuses: obtain them from verifiable sources and link the evidence.
 - Do not store secrets, personal data, or exploitable details; link a private record when necessary.
@@ -41,19 +41,13 @@ Covers every direct and transitive dependency through this table or an approved 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [ecosystem] | [package] | [production, development, build, or test] | [direct or transitive] | [range] | [exact version] | [path or identifier] | [SPDX or unverified] | [active, EOL, or unknown] | [no findings, not affected, affected, mitigated, or reference] | [YYYY-MM-DD] |
 
-## Reported Bugs
-
-Record every reported bug in the maintained product, including those with no security impact. Do not add template-maintenance findings to this skeleton intended for a derived product. Update the status and retain the row when they are resolved.
-
-| ID | Reported | Component | Affected version | Severity | Security impact | Status | Owner | Fixed version | Evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [BUG-0001] | [YYYY-MM-DD] | [component] | [version] | [low, medium, high, or critical] | [none, possible, or confirmed] | [new, confirmed, in progress, blocked, resolved, or closed] | [owner] | [version or pending] | [issue, test, or commit] |
-
 ## Vulnerabilities and Advisories
 
-| ID or CVE | Detected | Component | Affected versions | Severity | Exploitability | Status | Remediation | Target date | Evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [VULN-0001 or CVE] | [YYYY-MM-DD] | [component] | [versions] | [CVSS or criterion] | [unknown, unlikely, possible, or confirmed] | [open, not affected, mitigated, resolved, or risk accepted] | [action or fixed version] | [YYYY-MM-DD] | [advisory, scan, test, or private ticket] |
+A bug in the maintained product with possible or confirmed security impact has an entry here that cites its `BUG-…` from [BUGS.md](BUGS.md). Record its exploitability, remediation, and accepted risk only in this register; its functional status and fixed version stay in [BUGS.md](BUGS.md).
+
+| ID or CVE | Related bug | Detected | Component | Affected versions | Severity | Exploitability | Status | Remediation | Target date | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [VULN-0001 or CVE] | [BUG-0001 or none] | [YYYY-MM-DD] | [component] | [versions] | [CVSS or criterion] | [unknown, unlikely, possible, or confirmed] | [open, not affected, mitigated, resolved, or risk accepted] | [action or fixed version] | [YYYY-MM-DD] | [advisory, scan, test, or private ticket] |
 
 ## Accepted Risks and Exceptions
 
@@ -71,4 +65,4 @@ Record every reported bug in the maintained product, including those with no sec
 
 | Date | Author | Change | Reference |
 | --- | --- | --- | --- |
-| [YYYY-MM-DD] | [person or team] | [verifiable summary] | [commit, release, bug, vulnerability, or risk] |
+| [YYYY-MM-DD] | [person or team] | [verifiable summary] | [commit, release, vulnerability, or risk] |

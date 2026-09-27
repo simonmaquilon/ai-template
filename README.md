@@ -61,12 +61,14 @@ No incluyas secretos ni valores reales de producción en este repositorio.
 - [Producto](PRODUCT.md): alcance, actores y reglas de negocio.
 - [Diseño](DESIGN.md): experiencia, interfaz y criterios observables.
 - [Plan](PLAN.md): decisiones técnicas, fases, validación y avance verificado.
-- [Seguridad](SECURITY.md): inventario de versiones y dependencias, bugs reportados, vulnerabilidades, riesgos y remediaciones.
+- [Pruebas](TESTS.md): cobertura verificada por requisito o recorrido, huecos, verificaciones manuales y tests en cuarentena.
+- [Bugs](BUGS.md): registro de los bugs del producto y su estado funcional.
+- [Seguridad](SECURITY.md): inventario de versiones y dependencias, vulnerabilidades, riesgos y remediaciones.
 - Añade aquí los enlaces a documentos de operación o arquitectura en `.readme/` cuando existan.
 
 ## Pruebas y calidad
 
-[Resume qué niveles de prueba existen y enlaza la estrategia de validación en `PLAN.md` y el detalle de ejecución en `.readme/`.]
+[Resume qué niveles de prueba existen y enlaza la estrategia de validación en `PLAN.md`, la cobertura verificada en `TESTS.md` y el detalle de ejecución en `.readme/`.]
 
 ## Despliegue y operación
 

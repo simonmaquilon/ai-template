@@ -1,8 +1,8 @@
 # Document Maintenance
 
-Read before editing `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `SECURITY.md`, or any document under `.readme/`, and before closing any change that touched product source code or product configuration.
+Read before editing `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `TESTS.md`, `BUGS.md`, `SECURITY.md`, or any document under `.readme/`, and before closing any change that touched product source code or product configuration.
 
-- Classify each changed fact as product intent, observable design, execution plan or status, delivered public usage, security or maintenance evidence, or detailed operation; update only the matching document owners.
+- Classify each changed fact as product intent, observable design, execution plan or status, test coverage, defect record, delivered public usage, security or maintenance evidence, or detailed operation; update only the matching document owners.
 - Keep one authoritative home for each mutable fact and link or summarize it elsewhere instead of duplicating it.
 - When a fact is enforced by code, schema, or configuration, that source is its authoritative home: state the decision and name the source instead of reproducing the enumeration it holds.
 - Keep `PRODUCT.md` limited to product purpose, scope, actors, permissions, main journeys, rules, invariants, authoritative data sources, external integrations, sensitive or regulated data classifications, public contracts, domain terminology, success criteria, product risks, and unresolved product decisions.
@@ -10,6 +10,8 @@ Read before editing `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `SECURITY
 - Keep `PLAN.md` limited to technical decisions, ownership, phases, delivery dependencies, validation strategy, the chosen delivery, configuration, observability, and recovery approach, verified status, technical or delivery risks, unresolved technical or delivery decisions, delivery documentation impact, and acceptance evidence; never use it to override product or design, and leave executable procedure detail to `.readme/`.
 - Write `PLAN.md` at decision level: state each decision, the constraint that forced it, and the source that enforces it, never the implementation that source holds.
 - Keep reproduced implementation detail out of `PLAN.md` — identifiers, schema fields, signatures, route paths, resolved versions, and configuration values — and cite the owning source or `.readme/` document instead.
+- Keep `TESTS.md` limited to the last complete verified run, the source of the coverage threshold, verified coverage per requirement or journey, gaps and manual verifications, and flaky or quarantined tests; leave validation strategy to `PLAN.md`, defects to `BUGS.md`, and the list of individual tests to the suites and runner.
+- Keep `BUGS.md` limited to the product bug register defined by its schema and each bug's functional state; record the security state of a bug with possible or confirmed security impact only in its linked `SECURITY.md` entry.
 - Keep `SECURITY.md` limited to the auditable security and maintenance register defined by its schema, including verification evidence and remediation history.
 - Keep `README.md` as the concise public entrypoint with verified setup, commands, architecture summary, and links to deeper documentation.
 - Keep `.readme/` for durable operational, architectural, tooling, setup, and troubleshooting details derived from delivered source and configuration, never task narration or investigation history.
@@ -17,7 +19,7 @@ Read before editing `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `SECURITY
 - Treat a changed owned fact that source, configuration, tests, or user-visible copy must follow as a divergence trigger: sweep its usages under `02-change-workflow.md` and report any divergence left uncorrected by the authorized scope.
 - Ground each claim in applicable authoritative evidence: primary references for intended behavior, source and configuration for delivered behavior, and the repository code index plus current source evidence under `10-code-indexing.md` for structural claims; label planned or unverified behavior explicitly.
 - Validate commands relevant to changed facts or whose validity the documentation asserts under `03-approval-boundaries.md` and `17-validation-policy.md`; documentation maintenance does not expand authorization, and the closing report must identify material commands not executed and the evidence used instead.
-- When multiple documents are affected, update upstream intent first (`PRODUCT.md`, `DESIGN.md`), execution decisions second (`PLAN.md`), and delivered or operational records last (`SECURITY.md`, `.readme/`, `README.md`).
-- Preserve history only where the document schema requires it, such as `PLAN.md` progress and `SECURITY.md`; every other document describes the current truth.
+- When multiple documents are affected, update upstream intent first (`PRODUCT.md`, `DESIGN.md`), execution decisions second (`PLAN.md`), and delivered or operational records last (`TESTS.md`, `BUGS.md`, `SECURITY.md`, `.readme/`, `README.md`).
+- Preserve history only where the document schema requires it, such as `PLAN.md` progress, `BUGS.md`, and `SECURITY.md`; every other document describes the current truth.
 - Report material pre-existing documentation drift unrelated to the authorized changed facts without modifying it, whether it appears inside or outside the affected documents, unless the requested scope authorizes correction.
 - Before closing, reread all affected documents and correct every discrepancy caused by or relevant to the authorized changed facts in terminology, links, commands, versions, statuses, ownership, acceptance criteria, and evidence.

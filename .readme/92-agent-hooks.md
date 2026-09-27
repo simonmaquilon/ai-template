@@ -8,10 +8,10 @@ Algunas instrucciones enrutadas se hacen cumplir con hooks de los clientes de ag
 | --- | --- | --- | --- | --- |
 | Rechaza el `git add` y el `git commit` en bloque | `PreToolUse`, sobre `Bash` | `27-version-control.md` | `.claude/settings.json` | `.codex/hooks.json` |
 | Avisa de directorios vacíos no ignorados | `UserPromptSubmit` | `05-repo-layout.md` | `.claude/settings.json` | `.codex/hooks.json` |
-| Avisa de enlaces rotos en la documentación | `UserPromptSubmit` | `17-validation-policy.md` | `.claude/settings.json` | `.codex/hooks.json` |
+| Avisa de enlaces y rutas citadas rotos en la documentación | `UserPromptSubmit` | `17-validation-policy.md` | `.claude/settings.json` | `.codex/hooks.json` |
 | Revisión de diseño de Impeccable | `PostToolUse` y `Stop` | — | `.claude/settings.json` | `.codex/hooks.json` |
 
-Los tres primeros usan el mismo comando en los dos clientes. El hook de `git` lee `tool_input.command` como texto o como lista de argumentos, porque los clientes no garantizan la misma forma, y rechaza la llamada saliendo con código 2 y el motivo en stderr. Los de `UserPromptSubmit` imprimen texto plano, que ambos clientes añaden al contexto del modelo, y nunca bloquean. El de Impeccable lo regenera su instalador, como describe [Skills de agentes](90-agent-skills.md).
+Los tres primeros usan el mismo comando en los dos clientes. El hook de `git` lee `tool_input.command` como texto o como lista de argumentos, porque los clientes no garantizan la misma forma, y rechaza la llamada saliendo con código 2 y el motivo en stderr. Los de `UserPromptSubmit` imprimen texto plano, que ambos clientes añaden al contexto del modelo, y nunca bloquean. El de enlaces también avisa de las rutas del repositorio citadas entre backticks que ya no existen; qué cuenta como ruta citada lo fija la cabecera de `.scripts/check-doc-links.mjs`. El de Impeccable lo regenera su instalador, como describe [Skills de agentes](90-agent-skills.md).
 
 ## Codex: aprobación de los hooks
 
@@ -25,4 +25,4 @@ Cambiar el comando de un hook cambia su hash. Tras adoptar una versión de la pl
 
 ## Claude Code
 
-Claude Code ejecuta los hooks de `.claude/settings.json` sin aprobación previa. El archivo se versiona para que los hooks lleguen a los proyectos derivados; un proyecto conserva a su lado sus ajustes propios, como las exenciones de sandbox que registra [Sandbox de agentes](91-agent-sandbox.md).
+Claude Code ejecuta los hooks de `.claude/settings.json` sin aprobación previa. El archivo se versiona para que los hooks, y los plugins que registra [Servidores de lenguaje de agentes](93-agent-language-servers.md), lleguen a los proyectos derivados; un proyecto conserva a su lado sus ajustes propios, como las exenciones de sandbox que registra [Sandbox de agentes](91-agent-sandbox.md).

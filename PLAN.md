@@ -56,6 +56,8 @@ Usa los incrementos verificables e independientes más pequeños. Los estados pe
 - Comprobaciones de accesibilidad, compatibilidad y rendimiento: TODO
 - Comprobaciones de compilación, migración, despliegue y reversión: TODO
 
+La cobertura verificada de cada requisito o recorrido, sus huecos y los tests en cuarentena se registran en [TESTS.md](TESTS.md).
+
 ## Entrega y operación
 
 - Configuración y provisión de secretos: TODO
