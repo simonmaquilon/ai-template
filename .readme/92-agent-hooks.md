@@ -1,6 +1,6 @@
 # Hooks de agentes
 
-Algunas instrucciones enrutadas se hacen cumplir con hooks de los clientes de agente, además de estar escritas. `28-agent-tooling-configuration.md` exige que cada hook llegue a todos los clientes configurados, o que se declare por qué un cliente queda fuera, y que cite en su mensaje la regla que hace cumplir y conste en este registro; un hook de terceros consta como excepción declarada. Este archivo registra qué hook vive en cada cliente, cómo se lanza en cada sistema y qué hace falta para que se ejecute.
+Algunas instrucciones enrutadas se hacen cumplir con hooks de los clientes de agente, además de estar escritas. `28-agent-tooling-configuration.md` exige que cada hook llegue a todos los clientes configurados, o que se declare por qué un cliente queda fuera, y que cite en su mensaje la regla que hace cumplir y conste en este registro; un hook de terceros consta como excepción declarada. Este archivo registra qué hook vive en cada cliente, cómo se lanza en cada sistema y qué hace falta para que se ejecute, además de los demás ajustes que el repositorio fija en cada cliente.
 
 ## Registro
 
@@ -64,4 +64,20 @@ Cambiar el comando de un hook cambia su hash. Tras adoptar una versión de la pl
 
 Claude Code ejecuta los hooks de `.claude/settings.json` sin aprobación previa. El archivo se versiona para que los hooks, y los plugins que registra [Servidores de lenguaje de agentes](93-agent-language-servers.md), lleguen a los proyectos derivados; un proyecto conserva a su lado sus ajustes propios, como las exenciones de sandbox que registra [Sandbox de agentes](91-agent-sandbox.md).
 
-Dos ajustes de ese archivo solo existen en Claude Code. `attribution`, con `commit` y `pr` vacíos, suprime las líneas de autoría que Claude Code añadiría a commits y PRs, como pide `27-version-control.md`. En Codex esa atribución depende de un ajuste de la cuenta que el cliente consulta al servidor, no de `.codex/config.toml`, así que el repositorio no puede fijarla; si está activa, Codex pide al modelo terminar los commits con `Co-authored-by: Codex`, en contra de la regla escrita. `permissions.defaultMode` fija el modo de permisos de Claude Code; su equivalente en Codex es `approval_policy`, descrito en [Sandbox de agentes](91-agent-sandbox.md), y `.codex/config.toml` no lo fija, así que cada persona conserva el suyo.
+Además de los ajustes de presentación de la sección siguiente, dos ajustes de ese archivo cambian lo que hace el agente y solo existen en Claude Code. `attribution`, con `commit` y `pr` vacíos, suprime las líneas de autoría que Claude Code añadiría a commits y PRs, como pide `27-version-control.md`. En Codex esa atribución depende de un ajuste de la cuenta que el cliente consulta al servidor, no de `.codex/config.toml`, así que el repositorio no puede fijarla; si está activa, Codex pide al modelo terminar los commits con `Co-authored-by: Codex`, en contra de la regla escrita. `permissions.defaultMode` fija el modo de permisos de Claude Code; su equivalente en Codex es `approval_policy`, descrito en [Sandbox de agentes](91-agent-sandbox.md), y `.codex/config.toml` no lo fija, así que cada persona conserva el suyo.
+
+## Ajustes de presentación y búsqueda
+
+El repositorio fija también cómo se presentan las respuestas y si Codex busca en la web. Los heredan los proyectos derivados; en Claude Code, cada persona puede cambiarlos solo en su máquina con `.claude/settings.local.json`, y Codex solo carga `.codex/config.toml` cuando la persona confía en el proyecto.
+
+| Ajuste | Archivo | Efecto | Equivalente en el otro cliente |
+| --- | --- | --- | --- |
+| `outputStyle: "Concise"` | `.claude/settings.json` | Estilo de salida integrado en Claude Code desde la 2.1.237: la respuesta empieza por el resultado, sin introducción, narración ni resumen final. El nombre distingue mayúsculas; uno que no existe vuelve a `default` sin avisar. | No hay uno exacto; el más cercano es `model_verbosity`. |
+| `viewMode: "focus"` | `.claude/settings.json` | Cada sesión empieza en la vista de foco, que muestra solo el último mensaje, una línea por cada tanda de herramientas y la respuesta final. Necesita el renderizador de pantalla completa. | Ninguno. |
+| `tui: "fullscreen"` | `.claude/settings.json` | Usa el renderizador de pantalla completa sin parpadeo; `CLAUDE_CODE_NO_FLICKER` y `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN` lo anulan. | `alternate_screen = "always"` en la tabla `[tui]` de Codex, que el repositorio no fija. |
+| `model_verbosity = "low"` | `.codex/config.toml` | Pide respuestas breves a los modelos GPT-5 a través de la Responses API; los proveedores de Chat Completions lo ignoran. | `outputStyle: "Concise"`, que en Claude Code es una instrucción de estilo y no un parámetro del modelo. |
+| `web_search = "live"` | `.codex/config.toml` | Activa la búsqueda web en vivo sin aprobación por llamada, como `--search`. Los valores son `disabled`, `cached`, que es el de omisión, `indexed` y `live`. | La herramienta `WebSearch` de Claude Code, que se permite o se niega con reglas de permiso y no con un ajuste. |
+
+Con `web_search = "live"`, OpenAI ejecuta la búsqueda en sus servidores y consulta páginas en vivo: el texto de la consulta, que redacta el agente, sale de la máquina sin pasar por el sandbox ni por su lista de dominios. `WebSearch` de Claude Code hace lo mismo en los servidores de Anthropic. Por eso las consultas no llevan secretos, datos personales ni detalles internos del producto, como exige `08-storage-and-secrets.md`.
+
+Verificado el 2026-09-27 con Claude Code 2.1.280 y Codex CLI 0.157.1 contra la [referencia de ajustes de Claude Code](https://code.claude.com/docs/en/settings-reference), sus [estilos de salida](https://code.claude.com/docs/en/output-styles), la [referencia de configuración de Codex](https://learn.chatgpt.com/docs/config-file/config-reference) y su [búsqueda web](https://learn.chatgpt.com/docs/web-search).
