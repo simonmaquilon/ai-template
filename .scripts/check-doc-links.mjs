@@ -3,7 +3,9 @@
 // documentation this repository owns: relative Markdown links, and repository
 // paths cited in inline code outside fenced blocks. A cited path is checked only
 // when it contains a slash, carries no whitespace, wildcard, or placeholder, is
-// neither a URL nor absolute, and starts with an entry of the repository root.
+// neither a URL nor absolute, and starts with an entry of the repository root;
+// a numbered file name cited alone, as instructions cite each other, must exist
+// in .agents/instructions/ or .readme/.
 // Missing paths that git ignores are skipped because they may be absent by
 // design; without git they cannot be told apart, so no path is reported.
 // Vendored and generated documentation is excluded because its structure
@@ -22,6 +24,8 @@ const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 const FENCE = /^\s*(`{3,}|~{3,})/;
 const CODE_SPAN = /`([^`]+)`/g;
 const NOT_A_PATH = /[\s*[\]<>{}$~|]/;
+const CITED_FILE = /^\d{2}-[\w-]+\.md$/;
+const NUMBERED_DIRS = ['.agents/instructions', '.readme'];
 
 function collect(dir, recurse) {
   if (!existsSync(dir)) return [];
@@ -49,6 +53,10 @@ function citedPaths(text, rootEntries) {
     }
     if (fence) continue;
     for (const [, span] of line.matchAll(CODE_SPAN)) {
+      if (CITED_FILE.test(span)) {
+        paths.push(span);
+        continue;
+      }
       if (!span.includes('/') || NOT_A_PATH.test(span) || EXTERNAL.test(span) || span.startsWith('/')) continue;
       if (rootEntries.has(span.split('/')[0])) paths.push(span);
     }
@@ -84,7 +92,8 @@ for (const document of documents) {
     if (!existsSync(resolved)) brokenLinks.push(`${toPosix(document)} -> ${target}`);
   }
   for (const path of citedPaths(text, rootEntries)) {
-    if (!existsSync(path) && !existsSync(resolve(dirname(document), path))) missingPaths.push([document, path]);
+    const candidates = CITED_FILE.test(path) ? NUMBERED_DIRS.map((dir) => join(dir, path)) : [path, resolve(dirname(document), path)];
+    if (!candidates.some((candidate) => existsSync(candidate))) missingPaths.push([document, path]);
   }
 }
 

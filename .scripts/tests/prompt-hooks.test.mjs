@@ -32,6 +32,16 @@ for (const client of ['claude', 'codex']) {
     assert.match(result.stdout, /\.readme\/10-guide\.md -> gone\.md/);
   });
 
+  test(`${client}: the link hook reports a numbered file cited by a name that no longer exists`, (t) => {
+    const repo = makeRepo(t);
+    repo.write('.readme/10-guide.md', 'Guide.\n');
+    repo.write('.agents/instructions/02-rule.md', 'Follow `10-guide.md` and `03-retired.md`.\n');
+    const result = runClientHook(client, hookFor(client, 'UserPromptSubmit', 'check-doc-links.mjs'), repo);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /\.agents\/instructions\/02-rule\.md -> 03-retired\.md/);
+    assert.doesNotMatch(result.stdout, /10-guide\.md/);
+  });
+
   test(`${client}: the symlink hook reports a tracked link checked out as a plain file`, (t) => {
     const repo = makeRepo(t);
     const hook = hookFor(client, 'UserPromptSubmit', 'check-symlinks.mjs');
