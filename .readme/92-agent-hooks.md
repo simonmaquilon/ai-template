@@ -47,7 +47,7 @@ La plantilla soporta Windows, macOS y Linux con los dos clientes. [CI de la plan
 
 Si falta `git` o `node`, el hook deja de actuar sin bloquear nada, y el cliente solo muestra un error no bloqueante.
 
-Los hooks de Impeccable quedan fuera de esa garantía, como declara `28-agent-tooling-configuration.md`. En Claude Code usan sintaxis sh: Claude Code los lanza con `sh -c` en macOS y Linux y con Git Bash en Windows, y sin Git Bash los lanza con PowerShell, donde fallan. Además llegan a través del symlink `.claude/skills`, así que sin él no se ejecutan y no avisan. En Codex, `commandWindows` llama a `scripts/impeccable.cmd`, que su propio archivo declara aún no probado en una máquina Windows real.
+Los hooks de Impeccable quedan fuera de esa garantía; este documento declara esa exclusión y su motivo, como permite `28-agent-tooling-configuration.md`. En Claude Code usan sintaxis sh: Claude Code los lanza con `sh -c` en macOS y Linux y con Git Bash en Windows, y sin Git Bash los lanza con PowerShell, donde fallan. Además llegan a través del symlink `.claude/skills`, así que sin él no se ejecutan y no avisan. En Codex, `commandWindows` llama a `scripts/impeccable.cmd`, que su propio archivo declara aún no probado en una máquina Windows real.
 
 ## Codex: aprobación de los hooks
 
