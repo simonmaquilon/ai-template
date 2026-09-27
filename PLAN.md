@@ -15,7 +15,7 @@ El estado debe describir trabajo verificado en el repositorio, no avance previst
 ## Restricciones y decisiones técnicas
 
 - Entorno de ejecución y restricciones de versión: TODO
-- Frameworks y tecnologías establecidas: TODO
+- Decisiones técnicas derivadas del stack: TODO — El stack lo selecciona la sección `Stack` de [PRODUCT.md](PRODUCT.md) o, si no existe, el stack instalado; no lo repitas aquí.
 - Restricciones de dependencias y licencias: TODO
 - Entornos objetivo y límites de despliegue: TODO
 - Decisiones excluidas explícitamente de esta entrega: TODO

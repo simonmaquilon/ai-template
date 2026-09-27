@@ -58,8 +58,8 @@ No incluyas secretos ni valores reales de producción en este repositorio.
 
 ## Documentación
 
-- [Producto](PRODUCT.md): alcance, actores y reglas de negocio.
-- [Diseño](DESIGN.md): experiencia, interfaz y criterios observables.
+- [Producto](PRODUCT.md): plataforma, stack, usuarios, alcance, actores y reglas de negocio.
+- [Diseño](DESIGN.md): tokens de diseño normativos, experiencia, interfaz y criterios observables.
 - [Plan](PLAN.md): decisiones técnicas, fases, validación y avance verificado.
 - [Pruebas](TESTS.md): cobertura verificada por requisito o recorrido, huecos, verificaciones manuales o por agente y tests en cuarentena.
 - [Bugs](BUGS.md): registro de los bugs del producto y su estado funcional.

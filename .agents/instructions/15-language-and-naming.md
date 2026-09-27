@@ -8,6 +8,7 @@ Read when naming files or symbols, writing comments, scripts, commits or documen
 - Preserve existing names when renaming is outside the authorized scope, and report remaining language divergence.
 - Preserve language keywords, external API names, imported symbols, and required filenames; language conventions do not override external requirements or user-visible localization.
 - Author `.readme/` documentation, root `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `TESTS.md`, and `BUGS.md` in Spanish.
+- Keep every heading of `PRODUCT.md` and `DESIGN.md`, the keys of the `DESIGN.md` token frontmatter, and their schema markers in English as their skeletons define them; write the rest of their content in Spanish.
 - Author `SECURITY.md`, `AGENTS.md`, and every file under `.agents/instructions/` in English.
 - Match the user's detected language for all conversation and responses.
 - When the project has an i18n system, route user-visible copy through it and keep every supported locale synchronized; otherwise follow the established copy convention and do not introduce localization infrastructure without approval.

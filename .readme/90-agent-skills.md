@@ -89,3 +89,16 @@ El instalador escribe además estos archivos fuera de la skill:
 - `.codex/hooks.json`: hook de diseño de Codex; se versiona.
 
 El hook de diseño de Claude Code se versiona en `.claude/settings.json` para que llegue a los proyectos derivados. El instalador lo reconoce ahí y no crea `.claude/settings.local.json`; si una máquina conserva una copia anterior en ese archivo, Claude Code ejecuta el hook duplicado una sola vez.
+
+## Impeccable, `PRODUCT.md` y `DESIGN.md`
+
+Los esqueletos de `PRODUCT.md` y `DESIGN.md` siguen el formato que leen y escriben las referencias `init` y `document` de Impeccable (`reference/init.md` y `reference/document.md` de la skill), para que la skill los actualice en lugar de crear una autoridad paralela:
+
+- `PRODUCT.md` lleva el marcador `impeccable:product-schema` y las secciones de `init` en su orden; `DESIGN.md`, el frontmatter de tokens y las ocho secciones canónicas del formato DESIGN.md. Detrás van las secciones propias de la plantilla, que la skill conserva.
+- Los encabezados, las claves del frontmatter y el marcador van en inglés, y el contenido en español, como fija `15-language-and-naming.md`.
+- El frontmatter de `DESIGN.md` es la fuente normativa de los tokens que su esquema admite (colores, tipografía, radios, espaciado y componentes) y la sección `Stack` de `PRODUCT.md`, la del stack, como fijan `12-ui-theming-and-tokens.md` y `21-document-maintenance.md`. `init` solo escribe `Stack` en un proyecto nuevo; cuando falta, manda el stack instalado.
+- Los tokens que el esquema no admite, como sombras, movimiento o puntos de corte, los fija el código y los describe su sección de `DESIGN.md`; el complemento `design.json` solo los refleja.
+- Si `init` o `document` proponen contenido que ya tiene sitio en una sección propia de la plantilla, como la terminología, las métricas de éxito, las decisiones abiertas, la voz del contenido o el estándar de accesibilidad, ese contenido va a esa sección y no se duplica; las restricciones técnicas van a `PLAN.md`.
+- Mientras `Platform` conserve su `TODO`, `impeccable context` avisa de que no reconoce el valor y trata el proyecto como `web`. El aviso desaparece al escribir `web`, `ios`, `android` o `adaptive`.
+
+En `.impeccable/`, `config.json` guarda la configuración compartida y se versiona. `design.json` es el complemento de `DESIGN.md` que `document` regenera con él: el CLI no lo excluye, así que se versiona junto a `DESIGN.md` y nunca se edita a mano, como pide `14-code-authoring.md`. `config.local.json` guarda los ajustes de cada persona: el CLI lo excluye al crearlo con una entrada en `.git/info/exclude`, que solo afecta a ese clon, así que no se versiona. Cualquier otro archivo que la skill escriba bajo `.impeccable/` sigue `27-version-control.md`.
