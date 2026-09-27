@@ -3,9 +3,10 @@
 // documentation this repository owns: relative Markdown links, and repository
 // paths cited in inline code outside fenced blocks. A cited path is checked only
 // when it contains a slash, carries no whitespace, wildcard, or placeholder, is
-// neither a URL nor absolute, and starts with an entry of the repository root;
-// a numbered file name cited alone, as instructions cite each other, must exist
-// in .agents/instructions/ or .readme/.
+// neither a URL nor absolute, and starts with an entry of the repository root.
+// A numbered file name cited alone, as instructions cite each other, must name
+// one of the checked documents; its prefix of two or three digits followed by a
+// letter tells it apart from a date or a record number.
 // Missing paths that git ignores are skipped because they may be absent by
 // design; without git they cannot be told apart, so no path is reported.
 // Vendored and generated documentation is excluded because its structure
@@ -14,7 +15,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { enterRepositoryRoot, toPosix } from './hook-support.mjs';
 
 enterRepositoryRoot();
@@ -24,8 +25,7 @@ const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 const FENCE = /^\s*(`{3,}|~{3,})/;
 const CODE_SPAN = /`([^`]+)`/g;
 const NOT_A_PATH = /[\s*[\]<>{}$~|]/;
-const CITED_FILE = /^\d+-[\w-]+\.md$/;
-const NUMBERED_DIRS = ['.agents/instructions', '.readme'];
+const CITED_FILE = /^\d{2,3}-[a-z][\w-]*\.md$/;
 
 function collect(dir, recurse) {
   if (!existsSync(dir)) return [];
@@ -79,6 +79,7 @@ const documents = [
   ...collect('.readme', true),
 ];
 const rootEntries = new Set(readdirSync('.'));
+const documentNames = new Set(documents.map((document) => basename(document)));
 
 const brokenLinks = [];
 const missingPaths = [];
@@ -92,8 +93,8 @@ for (const document of documents) {
     if (!existsSync(resolved)) brokenLinks.push(`${toPosix(document)} -> ${target}`);
   }
   for (const path of citedPaths(text, rootEntries)) {
-    const candidates = CITED_FILE.test(path) ? NUMBERED_DIRS.map((dir) => join(dir, path)) : [path, resolve(dirname(document), path)];
-    if (!candidates.some((candidate) => existsSync(candidate))) missingPaths.push([document, path]);
+    const found = CITED_FILE.test(path) ? documentNames.has(path) : existsSync(path) || existsSync(resolve(dirname(document), path));
+    if (!found) missingPaths.push([document, path]);
   }
 }
 
