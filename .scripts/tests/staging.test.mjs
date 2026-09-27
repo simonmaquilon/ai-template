@@ -19,6 +19,7 @@ const BLOCKED = [
   'git commit -m "msg $(git add -A)"', 'yes | git add -p', 'printf y | git add -i',
   'git add -p < answers.txt', "xargs -d '\\n' git add", 'xargs -n 1 git add', 'xargs -I{} git add {}',
   'git diff --name-only | git add --pathspec-from-file=-', 'git add -p <<< "y"', 'yes |& git add -p', 'yes | (git add -p)',
+  'G=git; $G add -A', 'export G=git; ${G} add .',
 ];
 // Blocked where a POSIX shell may run the command; PowerShell alone reads the backquote as an escape.
 const POSIX_BLOCKED = ['git commit -m "Fix `git add -A` handling"'];
@@ -35,12 +36,12 @@ const ALLOWED = [
   "cat <<'MSG-END'\ngit add -A\nMSG-END", 'git stash -u', 'git commit --amend --no-edit', 'git add .github/workflows/x.yml',
   'git add -n .', 'git add --dry-run -A', 'git add --pathspec-from-file=paths.txt', "git add -- src ':!src/gen'",
   'git add -p', 'git add -i', 'git add -e', 'git add --patch', 'git add --interactive', 'git add --edit',
-  `git commit -m "$(cat <<'EOF'\nfix (guard): reject "x" and \`y\`\nEOF\n)"`, 'git commit -m "Use `code` here"', 'git add src/a.ts > log.txt',
+  `git commit -m "$(cat <<'EOF'\nfix (guard): reject "x" and \`y\`\nEOF\n)"`, 'git commit -m "Use `code` here"', 'git add src/a.ts > log.txt', 'G=x; echo $G',
 ];
 const POWERSHELL = [
   ['cd "C:\\repo\\"; git add -A', 2], ['& "C:\\Program Files\\Git\\cmd\\git.exe" add -A', 2], ['git add .\\*', 2],
   ["git commit -m @'\ndon't stage all\n'@; git status", 0], ["git commit -m @'\nx\n'@; git add -A", 2],
-  ['git commit -m "Document `"git add .`" usage" -- README.md', 0], ['git commit `\n  -am "x"', 2], ['git commit `\r\n  -am "x"', 2], ['git add @(git diff --name-only)', 2], ['git commit -m "msg $(git add -A)"', 2],
+  ['git commit -m "Document `"git add .`" usage" -- README.md', 0], ['git commit `\n  -am "x"', 2], ['git commit `\r\n  -am "x"', 2], ['git add @(git diff --name-only)', 2], ["$g = 'git'; & $g add -A", 2], ["git add @('src/a.ts','src/b.ts')", 0], ['git commit -m "msg $(git add -A)"', 2],
 ];
 
 for (const client of ['claude', 'codex']) {

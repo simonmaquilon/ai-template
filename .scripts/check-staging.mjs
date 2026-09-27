@@ -25,9 +25,12 @@
 // tool_input.command may arrive as text or as an argument list.
 
 import { readHookInput } from './hook-support.mjs';
+import { aliasScripts, fileScripts, makeScripts } from './hidden-commands.mjs';
 import { commands } from './shell-commands.mjs';
 
 const GIT = /^(?:.*[\\/])?git(?:\.exe)?$/i;
+const MAX_DEPTH = 8;
+let cwd = process.cwd();
 const SHELL = /^(?:.*[\\/])?(?:(?:ba|z|k|da)?sh|pwsh|powershell)(?:\.exe)?$/i;
 const KEYWORDS = new Set(['!', '{', '}', 'if', 'then', 'else', 'elif', 'fi', 'do', 'done', 'while', 'until']);
 const WRAPPERS = new Set(['command', 'env', 'exec', 'nohup', 'sudo', 'time']);
@@ -40,11 +43,17 @@ const wholeTree = (path) => WHOLE_TREE.has(path.replace(/\\/g, '/'));
 
 // Whether git arguments, global options included, stage or commit in bulk;
 // fed marks input from a pipe or redirection, and xargs paths it supplies.
-function bulkGit(args, fed, xargs) {
+function bulkGit(args, fed, xargs, depth) {
   let i = 0;
-  while (args[i]?.startsWith('-')) i += GLOBAL_VALUES.has(args[i]) ? 2 : 1;
+  const globals = [];
+  while (args[i]?.startsWith('-')) {
+    if (args[i] === '-c') globals.push(args[i + 1] ?? '');
+    i += GLOBAL_VALUES.has(args[i]) ? 2 : 1;
+  }
   const staging = args[i] === 'add' || args[i] === 'stage';
-  if (!staging && args[i] !== 'commit') return false;
+  if (!staging && args[i] !== 'commit') {
+    return aliasScripts(globals, args[i], args.slice(i + 1), cwd).some(({ script }) => bulkScript(script, false, depth + 1));
+  }
   if (staging && xargs) return true;
   const options = [];
   const paths = [];
@@ -67,39 +76,64 @@ function bulkGit(args, fed, xargs) {
   return options.some(bulkOption) || paths.some(wholeTree) || excludeOnly || (staging && paths.length === 0 && !listed);
 }
 
-function bulkCommand(words, bodies, powershell, fed) {
+function bulkCommand(words, bodies, powershell, fed, depth) {
   let i = 0;
   while (i < words.length) {
     if (words[i] === 'xargs') {
       const git = words.findIndex((word, k) => k > i && GIT.test(word));
-      return git !== -1 && bulkGit(words.slice(git + 1), true, true);
+      return git !== -1 && bulkGit(words.slice(git + 1), true, true, depth);
     }
     if (/^\w+=/.test(words[i]) || KEYWORDS.has(words[i])) i++;
     else if (WRAPPERS.has(words[i])) for (i++; words[i]?.startsWith('-'); ) i += /^-[ug]$/.test(words[i]) ? 2 : 1;
     else break;
   }
   const [name, ...args] = words.slice(i);
-  if (name === 'eval') return bulkScript(args.join(' '), powershell);
-  if (name !== undefined && SHELL.test(name)) {
+  if (name === undefined) return false;
+  if (name === 'eval') return bulkScript(args.join(' '), powershell, depth + 1);
+  if (GIT.test(name)) return bulkGit(args, fed, false, depth);
+  let hidden;
+  if (SHELL.test(name)) {
     const nested = /pwsh|powershell/i.test(name);
     const flag = args.findIndex((arg) => (nested ? /^-c(?:ommand)?$/i : /^-[a-zA-Z]*c[a-zA-Z]*$/).test(arg));
-    const scripts = flag === -1 ? bodies : [args[args[flag + 1] === '--' ? flag + 2 : flag + 1] ?? ''];
-    return scripts.some((script) => bulkScript(script, nested));
+    const file = args.find((arg) => !arg.startsWith('-'));
+    hidden = flag !== -1
+      ? [{ script: args[args[flag + 1] === '--' ? flag + 2 : flag + 1] ?? '', powershell: nested }]
+      : [...bodies.map((script) => ({ script, powershell: nested })), ...(file ? fileScripts('source', [file], cwd) : [])];
+  } else {
+    hidden = name === 'make' ? makeScripts(args, cwd) : fileScripts(name, args, cwd);
   }
-  return name !== undefined && GIT.test(name) && bulkGit(args, fed, false);
+  return hidden.some(({ script, powershell: nested }) => bulkScript(script, nested, depth + 1));
 }
 
-function bulkScript(script, powershell) {
-  return commands(script, { powershell }).some(({ words, bodies, fed }) => bulkCommand(words, bodies, powershell, fed));
+// Variables a command assigns without running anything, as [name, value] pairs.
+function assignments(words) {
+  const posix = ['export', 'local', 'declare'].includes(words[0]) ? words.slice(1) : words;
+  if (posix.length > 0 && posix.every((word) => /^\w+=/.test(word))) return posix.map((word) => word.split(/=(.*)/s).slice(0, 2));
+  const ps = /^\$(\w+)(?:=(.*))?$/s.exec(words[0] ?? '');
+  if (ps && (ps[2] !== undefined ? words.length === 1 : words[1] === '=')) return [[ps[1], ps[2] ?? words.slice(2).join(' ')]];
+  return null;
+}
+
+// Whether a script stages in bulk, substituting the variables it assigns.
+function bulkScript(script, powershell, depth = 0) {
+  if (depth > MAX_DEPTH) throw new Error('nested too deep');
+  const variables = new Map();
+  return commands(script, { powershell }).some(({ words, bodies, fed }) => {
+    const expanded = words.map((word) => word.replace(/\$\{?(\w+)\}?/g, (text, name) => variables.get(name) ?? text));
+    const assigned = assignments(expanded);
+    for (const [name, value] of assigned ?? []) variables.set(name, value);
+    return !assigned && bulkCommand(expanded, bodies, powershell, fed, depth);
+  });
 }
 
 const input = await readHookInput();
 const command = input?.tool_input?.command;
+if (typeof input?.cwd === 'string') cwd = input.cwd;
 const readings = input?.tool_name === 'PowerShell' ? [true] : process.argv.includes('--powershell') ? [true, false] : [false];
 let bulk;
 try {
   bulk = Array.isArray(command)
-    ? bulkCommand(command.map(String), [], false, false)
+    ? bulkCommand(command.map(String), [], false, false, 0)
     : readings.some((powershell) => bulkScript(String(command ?? ''), powershell));
 } catch {
   console.error('27-version-control.md: the staging guard could not read this command; split it into simpler commands.');
