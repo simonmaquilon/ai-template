@@ -61,6 +61,23 @@ for (const client of ['claude', 'codex']) {
     assert.doesNotMatch(result.stdout, /01-meta\.md|100-wide\.md/);
   });
 
+  test(`${client}: the instruction hook reports shared prefixes and wrapped rules`, (t) => {
+    const repo = makeRepo(t);
+    repo.write('AGENTS.md', '- `05-a.md`: a.\n- `05-b.md`: b.\n- `06-c.md`: c.\n');
+    repo.write('.agents/instructions/05-a.md', '# A\n\nRead when a.\n\n- A rule that is\n  wrapped onto a second line.\n');
+    repo.write('.agents/instructions/05-b.md', '# B\n\nRead when b.\n\n- One rule.\n');
+    repo.write('.agents/instructions/06-c.md', '# C\r\n\r\nRead when c.\r\n\r\n- One rule.\r\n- Another rule.\r\n');
+    repo.write('.readme/90-x.md', '# X\n');
+    repo.write('.readme/90-y.md', '# Y\n');
+    repo.write('.readme/91-z.md', '# Z\n');
+    const result = runClientHook(client, hookFor(client, 'UserPromptSubmit', 'check-instructions.mjs'), repo);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /wrapped across lines \(01-meta-guidelines\.md\): 05-a\.md:6\n/);
+    assert.match(result.stdout, /sharing a numeric prefix \(01-meta-guidelines\.md\): 05-a\.md and 05-b\.md/);
+    assert.match(result.stdout, /\.readme\/ documents sharing a numeric prefix \(16-documentation\.md\): 90-x\.md and 90-y\.md/);
+    assert.doesNotMatch(result.stdout, /06-c\.md|91-z\.md/);
+  });
+
   test(`${client}: the symlink hook reports a tracked link checked out as a plain file`, (t) => {
     const repo = makeRepo(t);
     const hook = hookFor(client, 'UserPromptSubmit', 'check-symlinks.mjs');
