@@ -20,7 +20,7 @@ const BLOCKED = [
   'git add -p < answers.txt', "xargs -d '\\n' git add", 'xargs -n 1 git add', 'xargs -I{} git add {}',
   'git diff --name-only | git add --pathspec-from-file=-', 'git add -p <<< "y"', 'yes |& git add -p', 'yes | (git add -p)',
 ];
-// Blocked where a POSIX shell runs the command; PowerShell reads the backquote as an escape.
+// Blocked where a POSIX shell may run the command; PowerShell alone reads the backquote as an escape.
 const POSIX_BLOCKED = ['git commit -m "Fix `git add -A` handling"'];
 const ALLOWED = [
   'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
@@ -47,7 +47,7 @@ for (const client of ['claude', 'codex']) {
   test(`${client}: the staging guard rejects bulk staging and allows explicit paths`, (t) => {
     const repo = makeRepo(t);
     const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
-    for (const command of [...BLOCKED, ...(client === 'codex' && WINDOWS ? [] : POSIX_BLOCKED)]) {
+    for (const command of [...BLOCKED, ...POSIX_BLOCKED]) {
       const result = runClientHook(client, hook, repo, { input: { tool_input: { command } } });
       assert.equal(result.status, 2, `${command}: ${result.stderr}`);
       assert.match(result.stderr, /27-version-control\.md/);
@@ -88,12 +88,12 @@ test('claude: the staging guard matches both of its shell tools', () => {
   assert.deepEqual(group.matcher.split('|').sort(), ['Bash', 'PowerShell']);
 });
 
-test('codex: on Windows the staging guard reads the Bash tool command with PowerShell quoting', (t) => {
+test('codex: on Windows the staging guard reads the Bash tool command both as PowerShell and as POSIX', (t) => {
   const repo = makeRepo(t);
   const hook = hookFor('codex', 'PreToolUse', 'check-staging.mjs');
   assert.match(hook.commandWindows, /--powershell/);
   assert.doesNotMatch(hook.command, /--powershell/);
-  for (const [command, status] of POWERSHELL) {
+  for (const [command, status] of [...POWERSHELL, ...POSIX_BLOCKED.map((command) => [command, 2])]) {
     const input = JSON.stringify({ tool_name: 'Bash', tool_input: { command } });
     assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook', '--powershell'], { input }).status, status, command);
     if (WINDOWS) assert.equal(runClientHook('codex', hook, repo, { input: JSON.parse(input) }).status, status, command);

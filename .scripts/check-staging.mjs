@@ -15,9 +15,10 @@
 // shell-commands.mjs splits the command as the shell would, so a commit
 // message, an echoed mention, or a comment is never read as a command, while a
 // command substitution inside it, which the shell runs, is checked.
-// PowerShell quoting applies when the client names that tool or passes
-// --powershell, as the Codex hook does on Windows, where Codex runs the command
-// of its Bash tool through PowerShell. Shell keywords,
+// PowerShell quoting applies when the client names that tool. With
+// --powershell, which the Codex hook passes on Windows, where its Bash tool
+// may run the command through PowerShell, the command is read both ways and
+// rejected when either reading finds bulk staging. Shell keywords,
 // environment assignments, wrappers such as env or sudo and their options, and
 // git global options may precede git, and a script a shell runs with -c, reads
 // from a here-document, or receives through eval is checked the same way.
@@ -94,10 +95,12 @@ function bulkScript(script, powershell) {
 
 const input = await readHookInput();
 const command = input?.tool_input?.command;
-const powershell = input?.tool_name === 'PowerShell' || process.argv.includes('--powershell');
+const readings = input?.tool_name === 'PowerShell' ? [true] : process.argv.includes('--powershell') ? [true, false] : [false];
 let bulk;
 try {
-  bulk = Array.isArray(command) ? bulkCommand(command.map(String), [], false, false) : bulkScript(String(command ?? ''), powershell);
+  bulk = Array.isArray(command)
+    ? bulkCommand(command.map(String), [], false, false)
+    : readings.some((powershell) => bulkScript(String(command ?? ''), powershell));
 } catch {
   console.error('27-version-control.md: the staging guard could not read this command; split it into simpler commands.');
   process.exit(2);
