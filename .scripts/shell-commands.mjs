@@ -90,7 +90,7 @@ export function commands(script, { powershell = false } = {}) {
     } else if (script.startsWith('<<<', i)) {
       endWord();
       i += 2;
-    } else if (c === '<' && script[i + 1] === '<' && !powershell) {
+    } else if (c === '<' && script[i + 1] === '<') {
       endWord();
       const match = HEREDOC.exec(script.slice(i, i + 256));
       if (match) delimiters.push(match[2]);

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { ROOT, hookFor, makeRepo, run, runClientHook } from './support.mjs';
+import { ROOT, WINDOWS, hookFor, makeRepo, run, runClientHook } from './support.mjs';
 
 const BLOCKED = [
   'git add -A', 'git add .', 'git add -u', 'git add --all', 'git commit -a -m wip', 'git commit -am wip', 'cd docs && git add .',
@@ -78,4 +78,16 @@ test('claude: the staging guard matches both of its shell tools', () => {
   const settings = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8'));
   const group = settings.hooks.PreToolUse.find((candidate) => JSON.stringify(candidate).includes('check-staging.mjs'));
   assert.deepEqual(group.matcher.split('|').sort(), ['Bash', 'PowerShell']);
+});
+
+test('codex: on Windows the staging guard reads the Bash tool command with PowerShell quoting', (t) => {
+  const repo = makeRepo(t);
+  const hook = hookFor('codex', 'PreToolUse', 'check-staging.mjs');
+  assert.match(hook.commandWindows, /--powershell/);
+  assert.doesNotMatch(hook.command, /--powershell/);
+  for (const [command, status] of POWERSHELL) {
+    const input = JSON.stringify({ tool_name: 'Bash', tool_input: { command } });
+    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook', '--powershell'], { input }).status, status, command);
+    if (WINDOWS) assert.equal(runClientHook('codex', hook, repo, { input: JSON.parse(input) }).status, status, command);
+  }
 });

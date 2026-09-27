@@ -11,7 +11,9 @@
 // -i, -e, or their long forms) stages only what is chosen, so both pass.
 // shell-commands.mjs splits the command as the shell would, so a commit
 // message, an echoed mention, or a comment is never read as a command.
-// PowerShell quoting applies when the client names that tool. Shell keywords,
+// PowerShell quoting applies when the client names that tool or passes
+// --powershell, as the Codex hook does on Windows, where Codex runs the command
+// of its Bash tool through PowerShell. Shell keywords,
 // environment assignments, wrappers such as env or sudo and their options, and
 // git global options may precede git, and a script a shell runs with -c, reads
 // from a here-document, or receives through eval is checked the same way.
@@ -81,7 +83,7 @@ function bulkScript(script, powershell) {
 
 const input = await readHookInput();
 const command = input?.tool_input?.command;
-const powershell = input?.tool_name === 'PowerShell';
+const powershell = input?.tool_name === 'PowerShell' || process.argv.includes('--powershell');
 const bulk = Array.isArray(command) ? bulkCommand(command.map(String), [], false) : bulkScript(String(command ?? ''), powershell);
 if (bulk) {
   console.error(
