@@ -1,10 +1,12 @@
 // Splits a command line into simple commands the way a POSIX shell, or with
 // { powershell: true } PowerShell, reads it, for the hooks that inspect a
-// command before it runs: at ;, &, |, parentheses, backquotes, $(, and line
-// ends, with quotes removed and # comments dropped. Each here-document body is
-// attached to the command that opens it; one inside a double-quoted $( ... ),
-// such as a commit message, stays part of that quoted word. It recognizes
-// words, not grammar: keywords such as if or do come back as ordinary words.
+// command before it runs: at ;, &, |, parentheses, $(, line ends, and, outside
+// PowerShell, where it escapes the next character, backquotes, with quotes
+// removed and # comments dropped. Each here-document body is attached to the
+// command that opens it; one inside a double-quoted $( ... ), such as a commit
+// message, stays part of that quoted word. An escaped line end, CRLF included,
+// continues the line. It recognizes words, not grammar: keywords such as if or
+// do come back as ordinary words.
 
 const SEPARATORS = new Set([';', '&', '|', '(', ')', '`']);
 const HEREDOC = /^<<-?[ \t]*(['"]?)([^'"\s;&|<>()]+)\1/;
@@ -46,6 +48,7 @@ function readQuoted(script, i, powershell) {
       if (match) pending.push(match[2]);
     }
     if (quote === '"' && !powershell && script[j] === '\\' && '"\\$`\n'.includes(script[j + 1] || ' ')) j++;
+    else if (quote === '"' && powershell && script[j] === '`') j++;
     text += script[j++] ?? '';
   }
   return { text, end: j };
@@ -72,8 +75,9 @@ export function commands(script, { powershell = false } = {}) {
     if (c === '#' && word === null) {
       const next = script.indexOf('\n', i);
       i = (next === -1 ? script.length : next) - 1;
-    } else if (c === '\\' && !powershell) {
-      if (script[i + 1] !== '\n') word = (word ?? '') + (script[i + 1] ?? '');
+    } else if (c === (powershell ? '`' : '\\')) {
+      if (script.startsWith('\r\n', i + 1)) i++;
+      else if (script[i + 1] !== '\n') word = (word ?? '') + (script[i + 1] ?? '');
       i++;
     } else if (powershell && c === '@' && /^['"]\r?\n/.test(script.slice(i + 1, i + 4))) {
       const close = script.indexOf(`\n${script[i + 1]}@`, i + 2);
