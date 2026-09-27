@@ -11,7 +11,7 @@ TODO — `web`, `ios`, `android` o `adaptive`.
 
 ## Stack
 
-TODO — En un proyecto nuevo, el stack elegido, o `delegated:` seguido de lo elegido y por qué. Esta sección es la fuente autoritativa del stack; elimínala cuando el código existente ya lo responda, y entonces manda el stack instalado.
+TODO — En un proyecto nuevo, el stack elegido, o `delegated:` seguido de lo elegido y por qué. Esta sección es la fuente autoritativa del stack y el código la sigue. Si el proyecto ya tenía código cuando se creó este archivo, elimínala: entonces manda el stack instalado.
 
 ## Users
 
