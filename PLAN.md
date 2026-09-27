@@ -52,11 +52,12 @@ Usa los incrementos verificables e independientes más pequeños. Los estados pe
 - Pruebas unitarias: TODO
 - Pruebas de integración y contratos: TODO
 - Pruebas de extremo a extremo o recorridos de usuario: TODO
+- Verificación interactiva en navegador por agente: TODO
 - Comprobaciones de seguridad, privacidad y autorización: TODO
 - Comprobaciones de accesibilidad, compatibilidad y rendimiento: TODO
 - Comprobaciones de compilación, migración, despliegue y reversión: TODO
 
-La cobertura verificada de cada requisito o recorrido, sus huecos y los tests en cuarentena se registran en [TESTS.md](TESTS.md).
+La cobertura verificada de cada requisito o recorrido, sus huecos, las verificaciones manuales o por agente y los tests en cuarentena se registran en [TESTS.md](TESTS.md).
 
 ## Entrega y operación
 

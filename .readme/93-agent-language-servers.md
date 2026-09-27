@@ -54,7 +54,7 @@ Un servidor de un marketplace oficial:
 
 1. Localiza el plugin del lenguaje en la tabla de plugins de inteligencia de código de la documentación de Claude Code y lee en su README qué binario necesita.
 2. Instala el binario y verifica su procedencia según `07-dependencies-and-binaries.md`.
-3. Añade `"<plugin>@claude-plugins-official": true` a `enabledPlugins` en `.claude/settings.json`.
+3. Revisa los hooks y permisos que declara el plugin, como exige `28-agent-tooling-configuration.md`, y añade `"<plugin>@claude-plugins-official": true` a `enabledPlugins` en `.claude/settings.json`.
 4. Añade su fila al registro y su sección a Binarios.
 
 Un servidor propio, sin plugin oficial:
@@ -71,7 +71,7 @@ Un servidor propio, sin plugin oficial:
    }
    ```
 
-   Claude Code carga esa carpeta como `<nombre>@skills-dir` para todos los que abren el proyecto, tras aceptar el diálogo de confianza de la carpeta. En esta plantilla `.claude/skills` es un symlink a `.agents/skills/`, como explica [Skills de agentes](90-agent-skills.md), así que el plugin vive allí y no figura en `skills-lock.json`.
+   Claude Code carga esa carpeta como `<nombre>@skills-dir` para todos los que abren el proyecto, tras aceptar el diálogo de confianza de la carpeta. En esta plantilla `.claude/skills` es un symlink a `.agents/skills/`, como explica [Skills de agentes](90-agent-skills.md), así que el plugin vive allí. Es la excepción a lo que dice ese documento: no viene de un repositorio público ni figura en `skills-lock.json`. Como `.gitattributes` marca `.agents/skills/` como vendorizado, añade al final de ese archivo `.agents/skills/<nombre>/** -linguist-vendored` para que el límite de líneas revise su código.
 2. `claude plugin validate` no lee `.lsp.json`. Si una entrada es inválida, el archivo entero se descarta y **Errors** muestra `Invalid LSP server config for ".lsp.json"`.
 3. Instala el binario, que el plugin no incluye, y verifica su procedencia.
 4. Añade su fila al registro y su sección a Binarios.

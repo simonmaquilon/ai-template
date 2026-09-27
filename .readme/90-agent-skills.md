@@ -24,6 +24,8 @@ npx skills add <owner/repo>
 
 Opciones de `update`: `-g` solo skills globales, `-p` solo skills del proyecto, `-y` omite el prompt de alcance, y uno o más nombres para acotar a skills concretas.
 
+Tras `add` o `update`, y antes de invocar la skill o dar el cambio por bueno, revisa `git diff HEAD -- '.agents/skills/*/SKILL.md'` en sus cabeceras `allowed-tools` y `hooks`, y lo que el instalador haya escrito en `.claude/settings.json` o `.codex/hooks.json`. Lo que exceda los permisos del repositorio es una decisión abierta bajo `03-approval-boundaries.md`, y lo aceptado se registra en la sección de permisos de este archivo.
+
 ## Cómo funciona la actualización
 
 El comando resuelve el alcance, lee `skills-lock.json`, descarga los hashes remotos para compararlos, identifica las desactualizadas, reinstala las que cambiaron y reescribe el lockfile. Una skill sin cambios se reinstala igualmente pero conserva su hash.
@@ -33,6 +35,27 @@ El comando resuelve el alcance, lee `skills-lock.json`, descarga los hashes remo
 ## Ubicación
 
 Las skills viven en `.agents/skills/`. El directorio `.claude/skills` es un symlink a esa ruta para que el cliente de Claude las descubra.
+
+## Permisos que se conceden las skills
+
+Una skill puede preaprobar herramientas en la cabecera `allowed-tools` de su `SKILL.md`: durante el turno en que se invoca, Claude Code ejecuta esos comandos sin pedir permiso, aunque la carpeta no tenga aceptada la confianza, y la concesión caduca con el siguiente mensaje. Las reglas `ask` y `deny` de `.claude/settings.json` prevalecen sobre esa cabecera, y Codex no la aplica. El instalador de una skill puede además escribir hooks en la configuración de los clientes.
+
+`28-agent-tooling-configuration.md` exige revisar ambas cosas antes de invocar o aceptar una skill nueva o actualizada, y registrar aquí lo aceptado. Los permisos del repositorio son los de `permissions` en `.claude/settings.json`, que no tiene reglas `allow`, así que cualquier preaprobación los excede y es una decisión abierta bajo `03-approval-boundaries.md`. Estas son las concesiones aceptadas, que heredan los proyectos derivados; si la cabecera o los hooks de una skill dejan de coincidir con su fila, lo nuevo no está aceptado y hay que revisarlo:
+
+| Skill | Concesión | Alcance real |
+| --- | --- | --- |
+| `playwright-cli` | `allowed-tools`: `Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*)` | Cualquier comando `npm` o `npx`, no solo los de Playwright. Las reglas `ask` de `.claude/settings.json` siguen pidiendo confirmación para `npm install`, `npm i` y `npm publish`. Solo actúa en Claude Code, porque Codex no aplica la cabecera; por eso esas reglas no tienen contrapartida en Codex. |
+| `impeccable` | Hooks `PostToolUse` y `Stop` que su instalador escribe en `.claude/settings.json` y `.codex/hooks.json` | Ejecutan `scripts/impeccable hook` tras cada edición y al cerrar el turno; el lanzador descarga su binario a `~/.impeccable/bin/<versión>/` la primera vez. Claude Code los ejecuta sin aprobación; Codex, tras aprobarlos, como explica [Hooks de agentes](92-agent-hooks.md). |
+
+## Navegador operado por el agente
+
+Los dos clientes cargan `playwright-cli` desde `.agents/skills/`: Codex busca ahí las skills del repositorio y Claude Code llega a través del symlink `.claude/skills`. La capacidad queda configurada en ambos en cuanto su binario está disponible, como explica la sección siguiente, y `17-validation-policy.md` solo la exige cuando `PLAN.md` la adopta. En macOS, el sandbox del cliente puede impedir que arranque el navegador; lo explica [Sandbox de agentes](91-agent-sandbox.md).
+
+## Binario de `playwright-cli`
+
+La skill no incluye el binario. Usa un `playwright-cli` global si existe; si no, `npx playwright cli`; y si tampoco, propone instalarlo globalmente. En un proyecto que tiene Playwright como dependencia prevalece la versión que fija su lockfile: comprueba antes `npx --no-install playwright --version` y, si responde, usa `npx playwright cli` aunque haya un global. Instalar `@playwright/cli` es añadir un binario bajo `07-dependencies-and-binaries.md`; si depende de una prerelease de `playwright` (compruébalo con `npm view @playwright/cli dependencies`), requiere además aprobación explícita.
+
+Sus snapshots y trazas van a `.temp/playwright-cli/`: lo fija `outputDir` en `.playwright/cli.config.json`, que la herramienta carga por defecto desde la carpeta en la que se ejecuta. Ejecútala desde la raíz del repositorio; desde otra carpeta no encuentra esa configuración y escribe en `.playwright-cli/` dentro de esa carpeta. Como todo artefacto de tarea bajo `.temp/`, se borran al cerrar la tarea, según `06-commands-and-local-runtime.md`.
 
 ## Problema conocido: skills omitidas
 

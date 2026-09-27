@@ -21,11 +21,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "d=$(find . -type d -empty -not -path './.git/*' 2>/dev/null | git check-ignore -nv --stdin 2>/dev/null | grep '^::' | cut -f2); [ -n \"$d\" ] && echo \"Empty directories (05-repo-layout.md): $d\"; true"
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && cd \"$r\" || exit 0; d=$(find . -type d -empty -not -path './.git/*' 2>/dev/null | git check-ignore -nv --stdin 2>/dev/null | grep '^::' | cut -f2); [ -n \"$d\" ] && echo \"Empty directories (05-repo-layout.md): $d\"; true"
           },
           {
             "type": "command",
-            "command": "node .scripts/check-doc-links.mjs 2>/dev/null; true"
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && cd \"$r\" || exit 0; node .scripts/check-doc-links.mjs 2>/dev/null; true"
+          },
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook --turn-start"
           }
         ]
       }
@@ -41,6 +45,15 @@
             "statusMessage": "Checking UI changes"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -53,6 +66,14 @@
             "statusMessage": "Design deep pass"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook"
+          }
+        ]
       }
     ]
   },
@@ -60,7 +81,8 @@
     "typescript-lsp@claude-plugins-official": true
   },
   "permissions": {
-    "defaultMode": "auto"
+    "defaultMode": "auto",
+    "ask": ["Bash(npm install:*)", "Bash(npm i:*)", "Bash(npm publish:*)"]
   },
   "outputStyle": "Concise",
   "viewMode": "focus",

@@ -3,6 +3,7 @@
 Read before choosing, running, or reporting validation and before closing changes.
 
 - Validate every change against the behavior and file types it touched before reporting it complete; when no supported check covers them, perform the closest available runtime or manual verification instead of skipping validation.
+- Before closing a change to a user-facing web surface, observe it in the running application through the agent-operated browser capability when `PLAN.md` records its adoption, not a `TODO`, and it is configured for the active agent client, operating the session under `06-commands-and-local-runtime.md` and stating the route, state, and viewport observed; otherwise, or when it cannot run, apply the closest-verification and blocked-command rules of this file and report the gap.
 - Run the smallest set of checks that covers changed behavior and file types, plus every check explicitly required by the project for that scope; selecting relevant suites through supported runner options is allowed.
 - Before validating against a local environment, confirm that the state the validated behavior depends on matches what the repository declares —applied schema changes, required configuration key names, generated artifacts, provisioned resources—; resolve a mismatch under `03-approval-boundaries.md` before counting the result as evidence.
 - Take validation output volume from the project's configured commands and reporting; add a verbosity or per-item reporting flag only when the added output is the evidence a specific failure requires.

@@ -15,3 +15,7 @@ Read before writing or modifying code.
 - Implementation-style precedence: technical decisions in `PLAN.md`, repository-owned documented standards, official guidance for the installed or approved target technology version, then surrounding convention; report any deliberate divergence.
 - Avoid unrelated formatting, reordering, or renaming inside authorized target files.
 - Delete the code a change makes dead instead of leaving it unreachable.
+- Keep each source file, tests included, within the line limit the repository's automated checks enforce, splitting it along responsibility boundaries before it would exceed that limit.
+- A source file already over the limit may change but must not grow.
+- Exempt documentation, data, configuration, lockfiles, binaries, and generated or vendored files from the source-file limit.
+- Mark through the repository's version-control attributes every exempt file the automated check does not recognize by itself.

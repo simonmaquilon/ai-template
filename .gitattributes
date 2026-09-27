@@ -1,0 +1,2 @@
+# Vendored agent skills, exempt from the source-file limit (see .readme/92-agent-hooks.md)
+.agents/skills/** linguist-vendored

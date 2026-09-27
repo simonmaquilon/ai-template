@@ -21,9 +21,9 @@ Enlaza cada requisito o recorrido con su definición en [PRODUCT.md](PRODUCT.md)
 | --- | --- | --- | --- | --- | --- |
 | TODO | TODO | TODO | TODO | TODO | TODO |
 
-## Huecos y verificaciones manuales
+## Huecos y verificaciones manuales o por agente
 
-| Sin prueba automática | Motivo | Verificación manual |
+| Sin prueba automática | Motivo | Verificación manual o por agente |
 | --- | --- | --- |
 | TODO | TODO | TODO |
 

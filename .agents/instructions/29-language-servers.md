@@ -5,8 +5,8 @@ Read before locating, reading, or changing code, and before enabling, installing
 - Detect the language servers the active agent client has configured, and the file types each serves, from repository-declared agent tooling configuration and its `.readme/` documentation; never assume one from the language alone.
 - Keep the configured code index as the first code-discovery capability under `10-code-indexing.md`; use a language server configured for the affected language to resolve exact definitions, references, and implementations before falling back to text searches.
 - For exhaustive usage sweeps under `02-change-workflow.md`, add the language server's references to the indexed relationships before supplementing both with scoped literal searches.
-- Resolve the diagnostics a change introduces before closing it; handle pre-existing diagnostics under `17-validation-policy.md`.
+- Resolve the error-level diagnostics a change introduces before closing it, unless the server runs a language version other than the project's; handle pre-existing diagnostics under `17-validation-policy.md`.
 - Language-server diagnostics add to the project's configured checks and never replace them.
 - When no language server is configured for the affected language or the active client, or the configured one fails to start, continue with the remaining discovery and validation capabilities; never install or enable one merely to satisfy this workflow.
-- Keep server identities, served file types, required binaries, installation commands, and verified versions in project configuration and `.readme/` documentation, never in instruction files.
+- Keep server identities, served file types, required binaries, and installation commands in project configuration and `.readme/` documentation, and their verified versions and provenance in the inventory under `07-dependencies-and-binaries.md`; never in instruction files.
 - Treat enabling, installing, updating, or removing a language server or its binary as an agent tooling change under `28-agent-tooling-configuration.md` and a binary change under `07-dependencies-and-binaries.md`.

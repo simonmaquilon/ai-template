@@ -1,6 +1,6 @@
 # Response and Reporting
 
-Read before the first substantive conversational response or final implementation report; an initial progress note required before tool use may precede loading this file.
+Read before the first substantive conversational response or final implementation report; a progress note the agent client requires before tool use may precede loading this file.
 
 - Lead directly with the requested answer, code, or command; be concise and avoid flattering preamble, restating requests, or unprompted recaps.
 - Default to the shortest response that fully answers, assuming a technical reader: no context the user already has, no restated evidence, and plain prose instead of headings, bullets, or bold unless the content is genuinely a list, a table, or a comparison.
