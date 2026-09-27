@@ -70,6 +70,19 @@ test('an unresolvable base revision falls back to the parent of HEAD', (t) => {
   assert.doesNotMatch(result.stderr, /legacy\.py/);
 });
 
+test('without a parent of HEAD, an unresolvable or missing base counts every file as new', (t) => {
+  const repo = makeRepo(t);
+  repo.write('legacy.py', numbered(200));
+  repo.git('add', '--', '.gitignore', 'legacy.py');
+  repo.git('commit', '-q', '-m', 'baseline');
+  for (const args of [['--base', '0'.repeat(40)], ['--base']]) {
+    const result = repo.script('check-file-length.mjs', args);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /is not a commit in this repository; counting every file as new/);
+    assert.match(result.stderr, /legacy\.py \(200 lines, new\)/);
+  }
+});
+
 for (const client of ['claude', 'codex']) {
   test(`${client}: the turn-end pass checks only files changed during the turn`, (t) => {
     const repo = makeRepo(t);
