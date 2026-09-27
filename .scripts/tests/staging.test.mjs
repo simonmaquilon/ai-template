@@ -7,10 +7,15 @@ import { ROOT, hookFor, makeRepo, runClientHook } from './support.mjs';
 const BLOCKED = [
   'git add -A', 'git add .', 'git add -u', 'git add --all', 'git commit -a -m wip', 'git commit -am wip', 'cd docs && git add .',
   'git -C docs add -A', 'git -C "my docs" add .', 'git -c core.autocrlf=false commit -am wip', 'git --no-pager add --all',
+  'git add ./', 'git add :/', 'git add *', 'git stage -A', 'git add -Av', 'git commit -qam wip', 'git add -A;git status',
+  '(git add -A)', 'git commit -m "wip" -a', "cat <<'EOF'\nnote\nEOF\ngit add -A",
 ];
 const ALLOWED = [
   'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
   'git -C docs add README.md', 'git -C docs commit -m "explicit"',
+  'git add ./src/app.ts', 'git add .gitignore', 'git add :/src/app.ts', 'git commit -m "fix -a flag"',
+  "git commit -m 'explain git add -A and git add .'", 'git commit -m all',
+  "git commit -F - <<'EOF'\nreject git add -A and git stage, the ./ and * pathspecs\nEOF",
 ];
 
 for (const client of ['claude', 'codex']) {
