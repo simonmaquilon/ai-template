@@ -18,7 +18,7 @@ const BLOCKED = [
   'git diff --name-only | xargs git add', 'git add $(git diff --name-only)', "git add -- ':!package-lock.json'", 'git add',
   'git commit -m "msg $(git add -A)"', 'yes | git add -p', 'printf y | git add -i',
   'git add -p < answers.txt', "xargs -d '\\n' git add", 'xargs -n 1 git add', 'xargs -I{} git add {}',
-  'git diff --name-only | git add --pathspec-from-file=-',
+  'git diff --name-only | git add --pathspec-from-file=-', 'git add -p <<< "y"', 'yes |& git add -p', 'yes | (git add -p)',
 ];
 // Blocked where a POSIX shell runs the command; PowerShell reads the backquote as an escape.
 const POSIX_BLOCKED = ['git commit -m "Fix `git add -A` handling"'];
@@ -68,6 +68,8 @@ for (const client of ['claude', 'codex']) {
     assert.equal(runClientHook(client, hook, repo, { input: quoted }).status, 0);
     assert.equal(runClientHook(client, hook, repo, { input: {} }).status, 0);
     assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook'], { input: 'null' }).status, 0);
+    const nested = { tool_input: { command: `${'echo "$('.repeat(4000)}x${')"'.repeat(4000)}` } };
+    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook'], { input: JSON.stringify(nested) }).status, 2);
   });
 
   test(`${client}: the staging guard reads PowerShell quoting when the client names that tool`, (t) => {

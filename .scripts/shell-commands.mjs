@@ -88,10 +88,11 @@ export function commands(script, { powershell = false } = {}) {
   };
   const endCommand = (piped = false) => {
     endWord();
-    if (words.length > 0) found.push({ words, bodies, fed });
+    const empty = words.length === 0;
+    if (!empty) found.push({ words, bodies, fed });
     words = [];
     bodies = [];
-    fed = piped;
+    fed = piped || (empty && fed);
     target = false;
   };
   for (let i = 0; i < script.length; i++) {
@@ -114,7 +115,7 @@ export function commands(script, { powershell = false } = {}) {
       i = read.end;
     } else if (script.startsWith('<<<', i)) {
       endWord();
-      fed = true;
+      fed = target = true;
       i += 2;
     } else if (c === '<' && script[i + 1] === '<') {
       endWord();

@@ -95,7 +95,13 @@ function bulkScript(script, powershell) {
 const input = await readHookInput();
 const command = input?.tool_input?.command;
 const powershell = input?.tool_name === 'PowerShell' || process.argv.includes('--powershell');
-const bulk = Array.isArray(command) ? bulkCommand(command.map(String), [], false, false) : bulkScript(String(command ?? ''), powershell);
+let bulk;
+try {
+  bulk = Array.isArray(command) ? bulkCommand(command.map(String), [], false, false) : bulkScript(String(command ?? ''), powershell);
+} catch {
+  console.error('27-version-control.md: the staging guard could not read this command; split it into simpler commands.');
+  process.exit(2);
+}
 if (bulk) {
   console.error(
     '27-version-control.md: stage the authorized change by explicit paths; bulk staging can sweep in uncommitted work from another session.',
