@@ -37,12 +37,12 @@ for (const client of ['claude', 'codex']) {
     repo.write('.readme/10-guide.md', 'Guide.\n');
     repo.write('.readme/guides/12-nested.md', 'Nested.\n');
     repo.write('.agents/instructions/02-rule.md', 'Follow `10-guide.md`, `12-nested.md`, `03-retired.md`, and `104-retired.md`.\n');
-    repo.write('.readme/20-log.md', 'See `2026-09-27-acta.md` and `0001-usar-postgres.md`.\n');
+    repo.write('.readme/20-log.md', 'See `2026-09-27-acta.md`, `001-usar-redis.md`, and `0001-usar-postgres.md`.\n');
     const result = runClientHook(client, hookFor(client, 'UserPromptSubmit', 'check-doc-links.mjs'), repo);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /\.agents\/instructions\/02-rule\.md -> 03-retired\.md/);
     assert.match(result.stdout, /02-rule\.md -> 104-retired\.md/);
-    assert.doesNotMatch(result.stdout, /10-guide\.md|12-nested\.md|acta|postgres/);
+    assert.doesNotMatch(result.stdout, /10-guide\.md|12-nested\.md|acta|redis|postgres/);
   });
 
   test(`${client}: the instruction hook reports unrouted and oversized instruction files`, (t) => {

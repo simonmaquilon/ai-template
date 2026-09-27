@@ -5,8 +5,9 @@
 // when it contains a slash, carries no whitespace, wildcard, or placeholder, is
 // neither a URL nor absolute, and starts with an entry of the repository root.
 // A numbered file name cited alone, as instructions cite each other, must name
-// one of the checked documents; its prefix of two or three digits followed by a
-// letter tells it apart from a date or a record number.
+// one of the checked documents; a prefix of two digits, or three without a
+// leading zero, followed by a letter tells it apart from a date or a record
+// number such as 001 or 0001.
 // Missing paths that git ignores are skipped because they may be absent by
 // design; without git they cannot be told apart, so no path is reported.
 // Vendored and generated documentation is excluded because its structure
@@ -25,7 +26,7 @@ const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 const FENCE = /^\s*(`{3,}|~{3,})/;
 const CODE_SPAN = /`([^`]+)`/g;
 const NOT_A_PATH = /[\s*[\]<>{}$~|]/;
-const CITED_FILE = /^\d{2,3}-[a-z][\w-]*\.md$/;
+const CITED_FILE = /^(?:\d{2}|[1-9]\d{2})-[a-z][\w-]*\.md$/;
 
 function collect(dir, recurse) {
   if (!existsSync(dir)) return [];
