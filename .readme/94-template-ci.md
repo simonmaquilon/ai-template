@@ -20,3 +20,13 @@ Las pruebas lanzan cada hook como lo lanza su cliente en ese sistema: Claude Cod
 - Las acciones se fijan por SHA en el workflow, con su versión en un comentario, como pide `26-automated-workflows.md`; se verificaron contra sus releases publicadas en GitHub el 2026-09-27.
 
 En un repositorio privado, cada ejecución consume los minutos de Actions incluidos en el plan de la cuenta, y los de Windows cuestan más que los de Linux.
+
+## A demanda en el repositorio de la plantilla
+
+En el repositorio de la plantilla el workflow está desactivado en GitHub, así que los pushes y los pull requests no lo lanzan ni gastan minutos. Se ejecuta a demanda:
+
+1. Actívalo con `gh workflow enable template-checks.yml`.
+2. Haz push a `main` o abre un pull request contra `main`: son los únicos eventos que lo lanzan, porque el workflow no admite ejecución manual. `gh run watch` sigue el run.
+3. Desactívalo de nuevo con `gh workflow disable template-checks.yml`.
+
+El ajuste vive en GitHub y no en el repositorio: un proyecto creado desde la plantilla hereda el workflow activo, y correrá en sus pushes y pull requests con sus propios minutos hasta que lo desactive o cambie sus disparadores.
