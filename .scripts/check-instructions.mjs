@@ -37,15 +37,19 @@ function sharedPrefixes(names) {
   return [...byPrefix.values()].filter((group) => group.length > 1).map((group) => group.join(' and '));
 }
 
-// Current names in dir that take the prefix of a file the history retired,
-// deleted or renamed to another prefix, under a different name.
+// Current names in dir that take the prefix of a file the history retired:
+// deleted, or renamed to another prefix, under a different name. A deletion
+// and an addition with the same prefix in one commit are a rename, as when a
+// rename rewrites the file too much for git to pair them.
 function reusedPrefixes(dir, names) {
-  const log = git(['log', '--format=', '--name-status', '-M', '--diff-filter=DR', '--', dir]) ?? '';
+  const log = git(['log', '--format=%x1e', '--name-status', '-M', '--diff-filter=ADR', '--', dir]) ?? '';
   const retired = [];
-  for (const [status, path, renamed] of log.split('\n').map((line) => line.split('\t'))) {
-    const inDir = path && dirname(path) === dir.replace(/\\/g, '/');
-    if (inDir && (status === 'D' || (status?.startsWith('R') && prefixOf(basename(renamed ?? '')) !== prefixOf(basename(path))))) {
-      retired.push(basename(path));
+  for (const commit of log.split('\x1e')) {
+    const entries = commit.split('\n').map((line) => line.split('\t')).filter(([, path]) => path && dirname(path) === dir);
+    const arrived = entries.filter(([status]) => status === 'A' || status.startsWith('R')).map((entry) => prefixOf(basename(entry.at(-1))));
+    for (const [status, path, renamed] of entries) {
+      const moved = status.startsWith('R') && prefixOf(basename(renamed)) !== prefixOf(basename(path));
+      if ((status === 'D' && !arrived.includes(prefixOf(basename(path)))) || moved) retired.push(basename(path));
     }
   }
   return names.flatMap((name) =>

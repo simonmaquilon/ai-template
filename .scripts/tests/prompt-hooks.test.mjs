@@ -81,20 +81,24 @@ for (const client of ['claude', 'codex']) {
   test(`${client}: the instruction hook compares prefixes by value and reports retired prefixes reused`, (t) => {
     const repo = makeRepo(t);
     const rule = (name) => repo.write(`.agents/instructions/${name}`, `# ${name}\n\nRead when needed.\n\n- One rule.\n`);
-    repo.write('AGENTS.md', ['07-a', '7-b', '08-new', '09-kept', '11-moved', '10-new'].map((name) => `- \`${name}.md\`: x.\n`).join(''));
+    repo.write('AGENTS.md', ['07-a', '7-b', '08-new', '09-kept', '11-moved', '10-new', '12-rewritten'].map((name) => `- \`${name}.md\`: x.\n`).join(''));
     for (const name of ['07-a.md', '08-old.md', '09-first.md', '10-moved.md']) rule(name);
+    repo.write('.agents/instructions/12-original.md', '# Original\n\nRead when alpha.\n\n- Alpha one.\n- Alpha two.\n');
     repo.git('add', '--', '.gitignore', 'AGENTS.md', '.agents');
     repo.git('commit', '-q', '-m', 'base');
     repo.git('rm', '-q', '--', '.agents/instructions/08-old.md');
     repo.git('mv', '.agents/instructions/09-first.md', '.agents/instructions/09-kept.md');
     repo.git('mv', '.agents/instructions/10-moved.md', '.agents/instructions/11-moved.md');
+    repo.git('rm', '-q', '--', '.agents/instructions/12-original.md');
+    repo.write('.agents/instructions/12-rewritten.md', '# Rewritten\n\nRead when omega.\n\n- Omega rule with nothing in common.\n');
+    repo.git('add', '--', '.agents/instructions/12-rewritten.md');
     repo.git('commit', '-q', '-m', 'retire');
     for (const name of ['7-b.md', '08-new.md', '10-new.md']) rule(name);
     const result = runClientHook(client, hookFor(client, 'UserPromptSubmit', 'check-instructions.mjs'), repo);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /sharing a numeric prefix \(01-meta-guidelines\.md\): 07-a\.md and 7-b\.md/);
     assert.match(result.stdout, /retired one \(01-meta-guidelines\.md\): 08-new\.md \(retired 08-old\.md\), 10-new\.md \(retired 10-moved\.md\)/);
-    assert.doesNotMatch(result.stdout, /09-kept/);
+    assert.doesNotMatch(result.stdout, /09-kept|12-rewritten/);
   });
 
   test(`${client}: the symlink hook reports a tracked link checked out as a plain file`, (t) => {
