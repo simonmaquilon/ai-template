@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Runs the template's own checks, locally or in continuous integration, on any
 // supported operating system: the hook tests under .scripts/tests with the
-// runner built into Node, the documentation link check, which fails on any
-// report, and the source-file limit, which receives the arguments given here,
-// such as --base <revision>. Exits with status 1 when any step fails.
+// runner built into Node, the documentation link check and the instruction-file
+// check, which fail on any report, and the source-file limit, which receives the
+// arguments given here, such as --base <revision>. Exits with status 1 when any
+// step fails.
 
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
@@ -18,6 +19,7 @@ const tests = readdirSync(join('.scripts', 'tests'))
 const steps = [
   ['hook tests', ['--test', ...tests], (run) => run.status === 0],
   ['documentation links', [join('.scripts', 'check-doc-links.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
+  ['instruction files', [join('.scripts', 'check-instructions.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['source-file limit', [join('.scripts', 'check-file-length.mjs'), ...process.argv.slice(2)], (run) => run.status === 0],
 ];
 

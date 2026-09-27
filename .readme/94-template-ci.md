@@ -8,6 +8,7 @@ Un único paso, `node .scripts/run-checks.mjs --base <revisión>`, que también 
 
 - las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias;
 - la comprobación de enlaces de `.scripts/check-doc-links.mjs`, que aquí falla si informa de algo;
+- la comprobación de instrucciones de `.scripts/check-instructions.mjs`, que también falla si informa de algo;
 - el límite de líneas de `.scripts/check-file-length.mjs`, sobre los archivos que cambian respecto a la revisión de `--base`; sin `--base` revisa solo los cambios sin commitear respecto a `HEAD`, que en el checkout limpio del CI no existen.
 
 Las pruebas lanzan cada hook como lo lanza su cliente en ese sistema: Claude Code, en forma exec con `node`; Codex, con `/bin/sh -c` en Linux y macOS y con `cmd.exe /C` en Windows. Lo hacen desde la raíz y desde una subcarpeta, en repositorios git desechables que crean bajo `.temp/` y borran al terminar.

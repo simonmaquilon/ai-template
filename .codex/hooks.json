@@ -27,6 +27,11 @@
           },
           {
             "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-instructions.mjs\" ] || exit 0; node \"$r/.scripts/check-instructions.mjs\"",
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-instructions.mjs')))\""
+          },
+          {
+            "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-symlinks.mjs\" ] || exit 0; node \"$r/.scripts/check-symlinks.mjs\"",
             "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-symlinks.mjs')))\""
           },
