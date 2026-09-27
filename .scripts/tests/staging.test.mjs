@@ -10,6 +10,8 @@ const BLOCKED = [
   'git add ./', 'git add :/', 'git add *', 'git stage -A', 'git add -Av', 'git commit -qam wip', 'git add -A;git status',
   '(git add -A)', 'git commit -m "wip" -a', "cat <<'EOF'\nnote\nEOF\ngit add -A", "cat > f <<'EOF' && git add -A\nnote\nEOF",
   'git add "."', "git add '*'", 'git add ..', 'git add -A>/dev/null', 'bash -lc "git add -A"', "sh -c 'git add .'",
+  'bash --norc -c "git add -A"', 'bash -o pipefail -c "git add ."', 'sh -c -- "git add -A"', "bash <<'EOF'\ngit add -A\nEOF",
+  'eval "git add -A"', 'git commit -am"wip"', 'git commit -amwip2', 'git commit -m x .', 'git add .\\', 'sudo git add -A',
 ];
 const ALLOWED = [
   'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
@@ -18,6 +20,8 @@ const ALLOWED = [
   "git commit -m 'explain git add -A and git add .'", 'git commit -m all',
   "git commit -F - <<'EOF'\nreject git add -A and git stage, the ./ and * pathspecs\nEOF",
   'git commit -uall -m wip', 'git commit -Sabc -m wip', 'git commit -m "."', 'git add ../shared/app.ts', 'bash -lc "git add src/app.ts"',
+  `git commit -m "fix: block sh -c 'git add -A'"`, `echo "sh -c 'git add -A'"`, 'git add README.md\ngrep -c "." README.md',
+  'git add src\\app.ts', 'git commit -m "msg" -- src/app.ts', 'git add -- ./docs/a.md',
 ];
 
 for (const client of ['claude', 'codex']) {
@@ -41,6 +45,8 @@ for (const client of ['claude', 'codex']) {
     const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
     const input = { tool_input: { command: ['git', 'add', '-A'] } };
     assert.equal(runClientHook(client, hook, repo, { cwd: join(repo.dir, 'docs'), input }).status, 2);
+    const quoted = { tool_input: { command: ['bash', '-lc', `git commit -m "block sh -c 'git add .'"`] } };
+    assert.equal(runClientHook(client, hook, repo, { input: quoted }).status, 0);
     assert.equal(runClientHook(client, hook, repo, { input: {} }).status, 0);
   });
 }
