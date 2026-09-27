@@ -16,6 +16,14 @@
               "${CLAUDE_PROJECT_DIR}/.scripts/check-staging.mjs",
               "--hook"
             ]
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
+              "--before"
+            ]
           }
         ]
       }
@@ -84,6 +92,34 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
               "--hook"
+            ]
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
+              "--after"
+            ]
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
+              "--after"
             ]
           }
         ]

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { hookFor, makeRepo, numbered, ruleHooks, run, runClientHook } from './support.mjs';
 
-const EVENTS = ['PreToolUse', 'UserPromptSubmit', 'PostToolUse', 'Stop'];
+const EVENTS = ['PreToolUse', 'UserPromptSubmit', 'PostToolUse', 'PostToolUseFailure', 'Stop'];
 
 for (const client of ['claude', 'codex']) {
   test(`${client}: the empty-directory hook reports empty directories git does not ignore`, (t) => {
