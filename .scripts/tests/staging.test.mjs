@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { ROOT, hookFor, makeRepo, runClientHook } from './support.mjs';
+import { ROOT, hookFor, makeRepo, run, runClientHook } from './support.mjs';
 
 const BLOCKED = [
   'git add -A', 'git add .', 'git add -u', 'git add --all', 'git commit -a -m wip', 'git commit -am wip', 'cd docs && git add .',
@@ -12,6 +12,9 @@ const BLOCKED = [
   'git add "."', "git add '*'", 'git add ..', 'git add -A>/dev/null', 'bash -lc "git add -A"', "sh -c 'git add .'",
   'bash --norc -c "git add -A"', 'bash -o pipefail -c "git add ."', 'sh -c -- "git add -A"', "bash <<'EOF'\ngit add -A\nEOF",
   'eval "git add -A"', 'git commit -am"wip"', 'git commit -amwip2', 'git commit -m x .', 'git add .\\', 'sudo git add -A',
+  'if ! git diff --quiet; then git add -A && git commit -m wip; fi', 'git diff --quiet || { git add -A; }',
+  'for f in a; do git add .; done', '! git add -A', "# don't sweep anything\ngit add -A", 'git --git-dir .git add -A',
+  'sudo -u root git add -A', 'env -i git add -A', 'grep x <<< foo\ngit add -A', 'git add ./*',
 ];
 const ALLOWED = [
   'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
@@ -22,6 +25,12 @@ const ALLOWED = [
   'git commit -uall -m wip', 'git commit -Sabc -m wip', 'git commit -m "."', 'git add ../shared/app.ts', 'bash -lc "git add src/app.ts"',
   `git commit -m "fix: block sh -c 'git add -A'"`, `echo "sh -c 'git add -A'"`, 'git add README.md\ngrep -c "." README.md',
   'git add src\\app.ts', 'git commit -m "msg" -- src/app.ts', 'git add -- ./docs/a.md',
+  `git commit -m "$(cat <<'EOF'\nfix: reject "git commit -a -m wip" in the guard\nEOF\n)"`, 'git add src/a.ts  # not -A',
+  "cat <<'MSG-END'\ngit add -A\nMSG-END", 'git stash -u', 'git commit --amend --no-edit', 'git add .github/workflows/x.yml',
+];
+const POWERSHELL = [
+  ['cd "C:\\repo\\"; git add -A', 2], ['& "C:\\Program Files\\Git\\cmd\\git.exe" add -A', 2], ['git add .\\*', 2],
+  ["git commit -m @'\ndon't stage all\n'@; git status", 0], ["git commit -m @'\nx\n'@; git add -A", 2],
 ];
 
 for (const client of ['claude', 'codex']) {
@@ -48,6 +57,16 @@ for (const client of ['claude', 'codex']) {
     const quoted = { tool_input: { command: ['bash', '-lc', `git commit -m "block sh -c 'git add .'"`] } };
     assert.equal(runClientHook(client, hook, repo, { input: quoted }).status, 0);
     assert.equal(runClientHook(client, hook, repo, { input: {} }).status, 0);
+    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook'], { input: 'null' }).status, 0);
+  });
+
+  test(`${client}: the staging guard reads PowerShell quoting when the client names that tool`, (t) => {
+    const repo = makeRepo(t);
+    const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
+    for (const [command, status] of POWERSHELL) {
+      const result = runClientHook(client, hook, repo, { input: { tool_name: 'PowerShell', tool_input: { command } } });
+      assert.equal(result.status, status, `${command}: ${result.stderr}`);
+    }
   });
 }
 
