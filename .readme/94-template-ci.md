@@ -16,7 +16,8 @@ Las pruebas lanzan cada hook como lo lanza su cliente en ese sistema: Claude Cod
 ## Cuándo y dónde
 
 - Se ejecuta en cada push a `main` y en cada pull request contra `main`.
-- La revisión base es la del pull request (`github.event.pull_request.base.sha`) o la que tenía `main` antes del push (`github.event.before`); el checkout trae todo el historial (`fetch-depth: 0`) para que exista.
+- La revisión base es la del pull request (`github.event.pull_request.base.sha`) o la que tenía `main` antes del push (`github.event.before`); el checkout trae el historial de todas las ramas y etiquetas (`fetch-depth: 0`) para que exista.
+- Si git no resuelve esa revisión, como el head anterior a un force push, que ya no está en ninguna rama y el checkout no trae, el script lo avisa y compara con el padre de `HEAD`, así que ese run solo revisa el último commit; sin padre, cuenta todos los archivos como nuevos.
 - Matriz: `ubuntu-24.04` y `windows-2025`, con Node 24.
 - El token del workflow solo tiene permiso de lectura (`contents: read`).
 - Las acciones se fijan por SHA en el workflow, con su versión en un comentario, como pide `26-automated-workflows.md`; se verificaron contra sus releases publicadas en GitHub el 2026-09-27.

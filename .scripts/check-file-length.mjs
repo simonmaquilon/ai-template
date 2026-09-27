@@ -6,7 +6,9 @@
 // that changed after the session's turn marker; with --turn-start it only
 // writes that marker under .temp/. Run by hand it checks every file changed
 // against HEAD, or against the revision --base names, which continuous
-// integration passes because its fresh checkout has no local changes. A file
+// integration passes because its fresh checkout has no local changes; when git
+// cannot resolve that revision, as with a previous head a force push left out
+// of the checkout, it warns and uses the parent of HEAD instead. A file
 // may hold at most LIMIT lines, and one already over the limit at that revision
 // may change but must not grow. Violations go to stderr with exit status 2,
 // which both clients feed back to the model; a stop that any Stop hook already
@@ -89,11 +91,16 @@ function realPath(full) {
 
 const input = process.argv.includes('--hook') ? await readHookInput() : {};
 const baseFlag = process.argv.indexOf('--base');
-const revision = baseFlag === -1 ? 'HEAD' : process.argv[baseFlag + 1];
+let revision = baseFlag === -1 ? 'HEAD' : process.argv[baseFlag + 1];
 if (input.stop_hook_active === true) process.exit(0);
 const origin = typeof input.cwd === 'string' ? resolve(input.cwd) : process.cwd();
 const root = enterRepositoryRoot();
 if (!root) process.exit(0);
+if (baseFlag !== -1 && git(['rev-parse', '--verify', '--quiet', `${revision}^{commit}`]) === null) {
+  const parent = git(['rev-parse', '--verify', '--quiet', 'HEAD^'])?.trim();
+  console.error(`check-file-length: --base ${revision} is not a commit in this repository; ${parent ? 'checking against the parent of HEAD' : 'counting every file as new'} instead.`);
+  if (parent) revision = parent;
+}
 
 const session = String(input.session_id ?? '').replace(/[^\w-]/g, '_');
 const marker = session ? join(MARKERS, session) : null;

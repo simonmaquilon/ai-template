@@ -55,6 +55,21 @@ test('a base revision checks the files committed since it', (t) => {
   assert.match(since.stderr, /big\.py \(151 lines, new\)/);
 });
 
+test('an unresolvable base revision falls back to the parent of HEAD', (t) => {
+  const repo = makeRepo(t);
+  repo.write('legacy.py', numbered(200));
+  repo.git('add', '--', '.gitignore', 'legacy.py');
+  repo.git('commit', '-q', '-m', 'baseline');
+  repo.write('big.py', numbered(151));
+  repo.git('add', '--', 'big.py');
+  repo.git('commit', '-q', '-m', 'big');
+  const result = repo.script('check-file-length.mjs', ['--base', '0'.repeat(40)]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /is not a commit in this repository; checking against the parent of HEAD/);
+  assert.match(result.stderr, /big\.py \(151 lines, new\)/);
+  assert.doesNotMatch(result.stderr, /legacy\.py/);
+});
+
 for (const client of ['claude', 'codex']) {
   test(`${client}: the turn-end pass checks only files changed during the turn`, (t) => {
     const repo = makeRepo(t);
