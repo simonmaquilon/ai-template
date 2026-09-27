@@ -14,7 +14,7 @@ import { enterRepositoryRoot } from './hook-support.mjs';
 
 const LIMIT = 25;
 const INSTRUCTIONS = join('.agents', 'instructions');
-const ROUTING_ENTRY = /^- `(\d{2}-[\w-]+\.md)`:/gm;
+const ROUTING_ENTRY = /^- `(\d+-[\w-]+\.md)`:/gm;
 
 if (!enterRepositoryRoot() || !existsSync(INSTRUCTIONS)) process.exit(0);
 

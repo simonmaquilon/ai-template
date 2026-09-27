@@ -24,7 +24,7 @@ const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 const FENCE = /^\s*(`{3,}|~{3,})/;
 const CODE_SPAN = /`([^`]+)`/g;
 const NOT_A_PATH = /[\s*[\]<>{}$~|]/;
-const CITED_FILE = /^\d{2}-[\w-]+\.md$/;
+const CITED_FILE = /^\d+-[\w-]+\.md$/;
 const NUMBERED_DIRS = ['.agents/instructions', '.readme'];
 
 function collect(dir, recurse) {

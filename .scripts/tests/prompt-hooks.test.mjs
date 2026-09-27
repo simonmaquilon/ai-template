@@ -35,16 +35,18 @@ for (const client of ['claude', 'codex']) {
   test(`${client}: the link hook reports a numbered file cited by a name that no longer exists`, (t) => {
     const repo = makeRepo(t);
     repo.write('.readme/10-guide.md', 'Guide.\n');
-    repo.write('.agents/instructions/02-rule.md', 'Follow `10-guide.md` and `03-retired.md`.\n');
+    repo.write('.agents/instructions/02-rule.md', 'Follow `10-guide.md`, `03-retired.md`, and `104-retired.md`.\n');
     const result = runClientHook(client, hookFor(client, 'UserPromptSubmit', 'check-doc-links.mjs'), repo);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /\.agents\/instructions\/02-rule\.md -> 03-retired\.md/);
+    assert.match(result.stdout, /02-rule\.md -> 104-retired\.md/);
     assert.doesNotMatch(result.stdout, /10-guide\.md/);
   });
 
   test(`${client}: the instruction hook reports unrouted and oversized instruction files`, (t) => {
     const repo = makeRepo(t);
-    repo.write('AGENTS.md', '- `01-meta.md`: meta.\n- `02-long.md`: long.\n');
+    repo.write('AGENTS.md', '- `01-meta.md`: meta.\n- `02-long.md`: long.\n- `100-wide.md`: wide.\n');
+    repo.write('.agents/instructions/100-wide.md', '# Wide\n');
     repo.write('.agents/instructions/01-meta.md', '# Meta\n');
     repo.write('.agents/instructions/02-long.md', numbered(26));
     repo.write('.agents/instructions/03-unrouted.md', '# Unrouted\n');
@@ -54,7 +56,7 @@ for (const client of ['claude', 'codex']) {
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /01-meta-guidelines\.md\): 03-unrouted\.md/);
     assert.match(result.stdout, /02-long\.md \(26 lines\)/);
-    assert.doesNotMatch(result.stdout, /01-meta\.md/);
+    assert.doesNotMatch(result.stdout, /01-meta\.md|100-wide\.md/);
   });
 
   test(`${client}: the symlink hook reports a tracked link checked out as a plain file`, (t) => {
