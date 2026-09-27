@@ -9,7 +9,7 @@ Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta
 - las instrucciones de `.agents/instructions/` y las referencias primarias y la tabla de enrutado de `AGENTS.md`;
 - los esqueletos de `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `TESTS.md`, `BUGS.md`, `SECURITY.md` y `README.md`;
 - los documentos de `.readme/` con prefijo 90 o superior;
-- la configuración de agentes que declara el repositorio (`.claude/`, `.codex/`, `.mcp.json`, `.playwright/`);
+- la configuración de agentes que declara el repositorio (`CLAUDE.md`, `.claude/`, `.codex/`, `.mcp.json`, `.playwright/`);
 - los scripts de `.scripts/` y el workflow de `.github/workflows/`;
 - las skills de `.agents/skills/` y `skills-lock.json`;
 - las reglas de la plantilla en `.gitignore`, `.gitattributes` y `.temp/.gitignore`.
@@ -37,11 +37,12 @@ git diff <commit-actual> <commit-nuevo> -- <ruta>
 
 Revisa archivo por archivo el diff entre las dos versiones, solo en las rutas de la plantilla:
 
-- Si el proyecto no modificó el archivo (`git diff <commit-actual> HEAD -- <ruta>` no muestra nada), toma la versión nueva con `git checkout <commit-nuevo> -- <ruta>`.
-- Si lo modificó por una desviación registrada en `AGENTS.md`, aplica el cambio de la plantilla a mano y conserva la desviación.
+- Si el proyecto no modificó el archivo (`git diff <commit-actual> HEAD -- <ruta>` no muestra nada), toma la versión nueva con `git restore --source=<commit-nuevo> -- <ruta>`, que también borra el archivo si la versión nueva lo retiró.
+- Si lo modificó, por una desviación registrada en `AGENTS.md` o porque la propia plantilla pide adaptarlo, como la tabla de permisos de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md) o sus reglas de `.gitignore`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
 - En las referencias primarias ya rellenadas, nunca tomes el esqueleto nuevo. Traslada solo los cambios de estructura: secciones o columnas nuevas, renombradas o retiradas, marcadores y textos de guía. Mueve el contenido existente a su nuevo sitio y deja con `TODO` lo que falte por decidir.
-- Toma `.agents/skills/` y `skills-lock.json` completos de la versión nueva, sin editar hashes a mano (`06-commands-and-local-runtime.md`), y revisa los permisos y hooks que se conceden las skills como pide [Skills de agentes](90-agent-skills.md).
+- De las skills, trae solo las carpetas de `.agents/skills/` que cambió la plantilla y sus entradas de `skills-lock.json`, copiadas tal como están en la versión nueva, sin recalcular ni editar hashes (`06-commands-and-local-runtime.md`); conserva las skills que añadió el proyecto y revisa los permisos y hooks que se conceden las que cambian, como pide [Skills de agentes](90-agent-skills.md).
 - Si la versión nueva retira una instrucción, bórrala junto con su entrada de enrutado, sin reutilizar su prefijo (`01-meta-guidelines.md`).
+- Si una instrucción nueva de la plantilla usa el prefijo de una instrucción propia del proyecto, `.scripts/check-instructions.mjs` lo avisa: la de la plantilla conserva su prefijo, y la del proyecto pasa a uno libre, con su entrada de enrutado y todas sus citas actualizadas.
 
 En el mismo cambio, fija en `.agents/template-version` la versión adoptada y registra en `AGENTS.md` cada desviación deliberada que conserves, con el enlace a la política del proyecto que la sustituye.
 
