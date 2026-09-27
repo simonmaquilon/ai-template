@@ -1,34 +1,59 @@
 # Hooks de agentes
 
-Algunas instrucciones enrutadas se hacen cumplir con hooks de los clientes de agente, además de estar escritas. `28-agent-tooling-configuration.md` exige que cada hook llegue a todos los clientes configurados, o que se declare por qué un cliente queda fuera, y que cite en su mensaje la regla que hace cumplir y conste en este registro; un hook de terceros consta como excepción declarada. Este archivo registra qué hook vive en cada cliente y qué hace falta para que se ejecute.
+Algunas instrucciones enrutadas se hacen cumplir con hooks de los clientes de agente, además de estar escritas. `28-agent-tooling-configuration.md` exige que cada hook llegue a todos los clientes configurados, o que se declare por qué un cliente queda fuera, y que cite en su mensaje la regla que hace cumplir y conste en este registro; un hook de terceros consta como excepción declarada. Este archivo registra qué hook vive en cada cliente, cómo se lanza en cada sistema y qué hace falta para que se ejecute.
 
 ## Registro
 
-| Hook | Evento | Regla que hace cumplir | Claude Code | Codex |
-| --- | --- | --- | --- | --- |
-| Rechaza el `git add` y el `git commit` en bloque | `PreToolUse`, sobre `Bash` | `27-version-control.md` | `.claude/settings.json` | `.codex/hooks.json` |
-| Avisa de directorios vacíos no ignorados | `UserPromptSubmit` | `05-repo-layout.md` | `.claude/settings.json` | `.codex/hooks.json` |
-| Avisa de enlaces y rutas citadas rotos en la documentación | `UserPromptSubmit` | `17-validation-policy.md` | `.claude/settings.json` | `.codex/hooks.json` |
-| Avisa tras cada edición de archivos de código que superan el límite de líneas y fuerza una continuación al cerrar el turno | `PostToolUse`, sobre ediciones; `Stop`; y `UserPromptSubmit`, que marca el inicio del turno | `14-code-authoring.md` | `.claude/settings.json` | `.codex/hooks.json` |
-| Revisión de diseño de Impeccable | `PostToolUse` y `Stop` | — | `.claude/settings.json` | `.codex/hooks.json` |
+Todos viven en `.claude/settings.json` y en `.codex/hooks.json`.
 
-Los cuatro primeros usan el mismo comando en los dos clientes, y los que leen archivos se sitúan antes en la raíz del repositorio (`git rev-parse --show-toplevel`), sea cual sea la carpeta en la que esté la sesión. El hook de `git` lee `tool_input.command` como texto o como lista de argumentos, porque los clientes no garantizan la misma forma, y rechaza la llamada saliendo con código 2 y el motivo en stderr. Los de `UserPromptSubmit` imprimen texto plano, que ambos clientes añaden al contexto del modelo, y nunca bloquean. El de enlaces también avisa de las rutas del repositorio citadas entre backticks que ya no existen; qué cuenta como ruta citada lo fija la cabecera de `.scripts/check-doc-links.mjs`.
+| Hook | Evento | Regla que hace cumplir | Script |
+| --- | --- | --- | --- |
+| Rechaza el `git add` y el `git commit` en bloque | `PreToolUse`, sobre la herramienta de shell | `27-version-control.md` | `.scripts/check-staging.mjs` |
+| Avisa de directorios vacíos no ignorados | `UserPromptSubmit` | `05-repo-layout.md` | `.scripts/check-empty-dirs.mjs` |
+| Avisa de enlaces y rutas citadas rotos en la documentación | `UserPromptSubmit` | `17-validation-policy.md` | `.scripts/check-doc-links.mjs` |
+| Avisa de symlinks versionados que el checkout dejó como archivos | `UserPromptSubmit` | `28-agent-tooling-configuration.md` | `.scripts/check-symlinks.mjs` |
+| Avisa tras cada edición de archivos de código que superan el límite de líneas y fuerza una continuación al cerrar el turno | `PostToolUse`, sobre ediciones; `Stop`; y `UserPromptSubmit`, que marca el inicio del turno | `14-code-authoring.md` | `.scripts/check-file-length.mjs` |
+| Revisión de diseño de Impeccable | `PostToolUse` y `Stop` | — | `scripts/impeccable` de la skill |
 
-El de longitud actúa en tres momentos. Al enviar cada mensaje deja una marca por sesión en `.temp/check-file-length/`, con el `session_id` que ambos clientes pasan al hook, y borra las marcas de sesiones sin actividad desde hace una semana. Tras cada edición revisa los archivos que esa edición tocó, también los que se alcanzan a través de un symlink, y, si alguno se pasa, sale con código 2: Claude Code le pasa el motivo al modelo y Codex sustituye con él el resultado de la herramienta, así que el agente divide el archivo en su siguiente paso. Al cerrar el turno revisa los archivos cambiados respecto a `HEAD`, incluidos los que no tienen seguimiento y los que se crearon desde la shell, pero solo los modificados después de la marca de la sesión; sin marca, los revisa todos. Así, el trabajo sin commitear de otra sesión no fuerza continuaciones, salvo que se modifique durante el turno. Si encuentra alguno, hace continuar el turno una sola vez: si el cierre ya viene de una continuación forzada por cualquier hook de `Stop` (`stop_hook_active`), deja terminar. Un archivo que ya pasaba del límite en `HEAD` puede cambiar pero no crecer; uno creado y commiteado dentro del mismo turno ya forma parte de `HEAD` y no se revisa.
+## Cómo se lanzan
+
+Los cinco primeros son scripts de Node que solo necesitan `git` y `node`. Cada uno se sitúa en la raíz del repositorio con `git rev-parse --show-toplevel`, sea cual sea la carpeta de la sesión, escribe las rutas con `/` y funciona igual en Windows, macOS y Linux, como pide `05-repo-layout.md`. Comparten `.scripts/hook-support.mjs`, que lee la entrada del hook y ejecuta git sin shell.
+
+Cada cliente los lanza a su manera, así que el comando no es el mismo en los dos:
+
+- **Claude Code** usa la forma exec: `command: "node"` y `args` con `${CLAUDE_PROJECT_DIR}/.scripts/<script>`. No pasa por ninguna shell, así que en Windows no depende de Git Bash ni de PowerShell.
+- **Codex** tiene dos variantes por hook. `command` se ejecuta en macOS y Linux con la shell de `$SHELL` (`-lc`) o con `/bin/sh`, localiza la raíz con `git rev-parse` y lanza el script; usa sintaxis sh, así que `$SHELL` tiene que ser una shell compatible con sh. `commandWindows` sustituye a `command` en Windows y se ejecuta con `cmd.exe /C`: es un `node -e` que localiza la raíz y carga el script, escrito sin caracteres que cmd.exe, sh o PowerShell interpreten dentro de comillas dobles.
+
+El hook de `git` lee `tool_input.command` como texto o como lista de argumentos, porque los clientes no garantizan la misma forma, y rechaza la llamada saliendo con código 2 y el motivo en stderr. En Claude Code su matcher es `Bash|PowerShell`: en Windows, Claude Code también ejecuta comandos con su herramienta PowerShell, que pasa el comando en el mismo campo. Codex informa su herramienta de shell como `Bash`.
+
+Los de `UserPromptSubmit` imprimen texto plano, que ambos clientes añaden al contexto del modelo, y nunca bloquean. El de enlaces también avisa de las rutas del repositorio citadas entre backticks que ya no existen; qué cuenta como ruta citada lo fija la cabecera de `.scripts/check-doc-links.mjs`. El de symlinks avisa cuando un symlink versionado, como `.claude/skills`, quedó como archivo de texto, lo que pasa en Windows si Git no puede crear symlinks; la solución está en [Skills de agentes](90-agent-skills.md).
+
+El de longitud actúa en tres momentos. Al enviar cada mensaje deja una marca por sesión en `.temp/check-file-length/`, con el `session_id` que ambos clientes pasan al hook, y borra las marcas de sesiones sin actividad desde hace una semana. Tras cada edición revisa los archivos que esa edición tocó, juzgando cada uno por su ubicación real (resuelve symlinks y las mayúsculas que guarda el sistema de archivos), y, si alguno se pasa, sale con código 2: Claude Code le pasa el motivo al modelo y Codex sustituye con él el resultado de la herramienta, así que el agente divide el archivo en su siguiente paso. Al cerrar el turno revisa los archivos cambiados respecto a `HEAD`, incluidos los que no tienen seguimiento y los que se crearon desde la shell, pero solo los modificados después de la marca de la sesión; sin marca, los revisa todos. Así, el trabajo sin commitear de otra sesión no fuerza continuaciones, salvo que se modifique durante el turno. Si encuentra alguno, hace continuar el turno una sola vez: si el cierre ya viene de una continuación forzada por cualquier hook de `Stop` (`stop_hook_active`), deja terminar. Un archivo que ya pasaba del límite en `HEAD` puede cambiar pero no crecer; uno creado y commiteado dentro del mismo turno ya forma parte de `HEAD` y no se revisa.
 
 El límite lo fija `.scripts/check-file-length.mjs`, y el aviso del hook incluye el número; qué cuenta como código lo fija `.scripts/source-files.mjs`. Un proyecto derivado exime sus archivos generados o vendorizados marcándolos en `.gitattributes` con `linguist-generated` o `linguist-vendored`, como hace la plantilla con `.agents/skills/`, y cualquier otro archivo exento que el script no reconozca, con `-source-file-limit`.
 
 El de Impeccable no hace cumplir ni cita una regla enrutada: lo instala y regenera la skill con un comando distinto por cliente (rutas `.claude/skills` y `.agents/skills`; `commandWindows` solo en Codex), como describe [Skills de agentes](90-agent-skills.md).
 
-## Requisitos
+## Sistemas y requisitos
 
-Los hooks de reglas se ejecutan en una shell POSIX y necesitan `git` y `node` en el `PATH`; el de `git` necesita además `jq`. Si falta uno, el hook deja de actuar sin bloquear nada: sin `node` no se comprueban ni los enlaces ni la longitud, y sin `jq` el hook de `git` deja pasar cualquier `git add`. Ninguno declara una variante para Windows.
+La plantilla soporta Windows, macOS y Linux con los dos clientes. [CI de la plantilla](94-template-ci.md) prueba los hooks de reglas en Windows y Linux; macOS se valida en local.
+
+| Requisito | Para qué | Sistemas |
+| --- | --- | --- |
+| `git` en el `PATH` | Todos los hooks de reglas | Todos |
+| Node en el `PATH`, versión 24 (la que prueba el CI) | Los scripts de `.scripts/` | Todos |
+| Symlinks habilitados en Git | `.claude/skills`, por el que Claude Code descubre las skills | Windows |
+| Git Bash | Los hooks de Impeccable en Claude Code | Windows |
+
+Si falta `git` o `node`, el hook deja de actuar sin bloquear nada, y el cliente solo muestra un error no bloqueante.
+
+Los hooks de Impeccable quedan fuera de esa garantía, como declara `28-agent-tooling-configuration.md`. En Claude Code usan sintaxis sh: Claude Code los lanza con `sh -c` en macOS y Linux y con Git Bash en Windows, y sin Git Bash los lanza con PowerShell, donde fallan. Además llegan a través del symlink `.claude/skills`, así que sin él no se ejecutan y no avisan. En Codex, `commandWindows` llama a `scripts/impeccable.cmd`, que su propio archivo declara aún no probado en una máquina Windows real.
 
 ## Codex: aprobación de los hooks
 
 Codex no ejecuta un hook de proyecto hasta que el usuario lo revisa. Al abrir una sesión con hooks nuevos o modificados muestra un aviso con tres opciones: `Review hooks`, `Trust all and continue` y `Continue without trusting`. Con la última, los hooks quedan desactivados y la sesión sigue sin ellos, sin avisar después.
 
-La aprobación se guarda por hook, como un hash, en la tabla `[hooks.state]` de `~/.codex/config.toml`. Es configuración del usuario y no del repositorio, así que cada máquina y cada persona aprueban por su cuenta.
+La aprobación se guarda por hook, como un hash, en la tabla `[hooks.state]` del `config.toml` del usuario: `~/.codex/config.toml` en macOS y Linux, `%USERPROFILE%\.codex\config.toml` en Windows, o el de `CODEX_HOME` si está definido. Es configuración del usuario y no del repositorio, así que cada máquina y cada persona aprueban por su cuenta.
 
 Cambiar el comando de un hook cambia su hash. Tras adoptar una versión de la plantilla que modifica un hook, Codex vuelve a pedir la aprobación y el hook no se ejecuta hasta darla.
 

@@ -71,7 +71,7 @@ Un servidor propio, sin plugin oficial:
    }
    ```
 
-   Claude Code carga esa carpeta como `<nombre>@skills-dir` para todos los que abren el proyecto, tras aceptar el diálogo de confianza de la carpeta. En esta plantilla `.claude/skills` es un symlink a `.agents/skills/`, como explica [Skills de agentes](90-agent-skills.md), así que el plugin vive allí. Es la excepción a lo que dice ese documento: no viene de un repositorio público ni figura en `skills-lock.json`. Como `.gitattributes` marca `.agents/skills/` como vendorizado, añade al final de ese archivo `.agents/skills/<nombre>/** -linguist-vendored` para que el límite de líneas revise su código.
+   Claude Code carga esa carpeta como `<nombre>@skills-dir` para todos los que abren el proyecto, tras aceptar el diálogo de confianza de la carpeta. En esta plantilla `.claude/skills` es un symlink a `.agents/skills/`, como explica [Skills de agentes](90-agent-skills.md), así que el plugin vive allí. Es la excepción a lo que dice ese documento: no viene de un repositorio público ni figura en `skills-lock.json`. Como `.gitattributes` marca `.agents/skills/` como vendorizado, añade al final de ese archivo `.agents/skills/<nombre>/** -linguist-vendored` para que el límite de líneas revise su código. En Windows, el paso requiere que el symlink exista; en un clon sin symlinks, `.claude/skills` es un archivo y la carpeta no se puede crear.
 2. `claude plugin validate` no lee `.lsp.json`. Si una entrada es inválida, el archivo entero se descarta y **Errors** muestra `Invalid LSP server config for ".lsp.json"`.
 3. Instala el binario, que el plugin no incluye, y verifica su procedencia.
 4. Añade su fila al registro y su sección a Binarios.

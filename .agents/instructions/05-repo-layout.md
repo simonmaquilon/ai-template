@@ -8,6 +8,7 @@ Read when moving code, removing files or directories, or deciding where a new pi
 - Follow existing locations and naming for commands, migrations, fixtures, assets, and generated output.
 - Reserve `.scripts/` for repository-owned developer or operational tasks, whether invoked manually or by repository automation, including repeatable tasks.
 - Keep `.scripts/` outside application and framework runtime dependencies.
+- Keep `.scripts/` helpers runnable on each operating system the repository supports, without depending on a particular shell.
 - Repository commands and automation may invoke `.scripts/` helpers under `06-commands-and-local-runtime.md` and `26-automated-workflows.md`.
 - Keep workflow definitions, schedules, and continuous-integration configuration out of `.scripts/`; `26-automated-workflows.md` governs where they live.
 - Keep long-running processes and required application or framework code out of `.scripts/` and in the location their framework or owning domain defines.

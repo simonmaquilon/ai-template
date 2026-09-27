@@ -7,11 +7,15 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command | if type == \"array\" then join(\" \") else (. // \"\") end'); echo \"$cmd\" | grep -qE 'git[[:space:]]+add[[:space:]]+([^|;&]*[[:space:]])?(-A|--all|-u|--update|\\.)([[:space:]]|$)|git[[:space:]]+commit[[:space:]]+([^|;&]*[[:space:]])?(-a|--all|-am)([[:space:]]|$)' && { echo '27-version-control.md: stage the authorized change by explicit paths; bulk staging can sweep in uncommitted work from another session.' >&2; exit 2; }; exit 0"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging.mjs",
+              "--hook"
+            ]
           }
         ]
       }
@@ -21,15 +25,33 @@
         "hooks": [
           {
             "type": "command",
-            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && cd \"$r\" || exit 0; d=$(find . -type d -empty -not -path './.git/*' 2>/dev/null | git check-ignore -nv --stdin 2>/dev/null | grep '^::' | cut -f2); [ -n \"$d\" ] && echo \"Empty directories (05-repo-layout.md): $d\"; true"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-empty-dirs.mjs"
+            ]
           },
           {
             "type": "command",
-            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && cd \"$r\" || exit 0; node .scripts/check-doc-links.mjs 2>/dev/null; true"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-doc-links.mjs"
+            ]
           },
           {
             "type": "command",
-            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook --turn-start"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-symlinks.mjs"
+            ]
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
+              "--hook",
+              "--turn-start"
+            ]
           }
         ]
       }
@@ -51,7 +73,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
+              "--hook"
+            ]
           }
         ]
       }
@@ -71,7 +97,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook"
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
+              "--hook"
+            ]
           }
         ]
       }
@@ -82,7 +112,11 @@
   },
   "permissions": {
     "defaultMode": "auto",
-    "ask": ["Bash(npm install:*)", "Bash(npm i:*)", "Bash(npm publish:*)"]
+    "ask": [
+      "Bash(npm install:*)",
+      "Bash(npm i:*)",
+      "Bash(npm publish:*)"
+    ]
   },
   "outputStyle": "Concise",
   "viewMode": "focus",

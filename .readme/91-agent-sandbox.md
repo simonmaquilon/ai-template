@@ -4,6 +4,12 @@ Los clientes de agente ejecutan los comandos del modelo dentro de un sandbox del
 
 Declarar una exención mueve un límite de permisos, así que requiere autorización bajo `03-approval-boundaries.md`.
 
+## Sistemas
+
+El sandbox de Claude Code existe en macOS, donde usa Seatbelt, y en Linux y WSL2, donde usa bubblewrap. En Windows nativo y en WSL1 no hay sandbox: los comandos no se confinan y las exenciones no tienen efecto.
+
+Codex confina los comandos con los ajustes de la sección de Codex. En Windows su sandbox se activa aparte, con `[windows] sandbox = "elevated"` o `"unelevated"` en el `config.toml`.
+
 ## Claude Code
 
 El sandbox se activa con `sandbox.enabled` en `.claude/settings.json`; mientras esté apagado no confina nada y una exención no tiene efecto. Ambos viven en la misma clave:

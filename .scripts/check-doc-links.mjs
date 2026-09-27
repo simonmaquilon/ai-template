@@ -7,11 +7,15 @@
 // Missing paths that git ignores are skipped because they may be absent by
 // design; without git they cannot be told apart, so no path is reported.
 // Vendored and generated documentation is excluded because its structure
-// belongs upstream.
+// belongs upstream. It runs from the repository root whatever directory it
+// starts in, and reports paths with forward slashes on every system.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { enterRepositoryRoot, toPosix } from './hook-support.mjs';
+
+enterRepositoryRoot();
 
 const LINK = /\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+)/g;
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -77,7 +81,7 @@ for (const document of documents) {
     const target = raw.split('#')[0];
     if (!target || EXTERNAL.test(raw)) continue;
     const resolved = resolve(dirname(document), decodeURIComponent(target));
-    if (!existsSync(resolved)) brokenLinks.push(`${document} -> ${target}`);
+    if (!existsSync(resolved)) brokenLinks.push(`${toPosix(document)} -> ${target}`);
   }
   for (const path of citedPaths(text, rootEntries)) {
     if (!existsSync(path) && !existsSync(resolve(dirname(document), path))) missingPaths.push([document, path]);
@@ -86,7 +90,7 @@ for (const document of documents) {
 
 const ignored = ignoredPaths(missingPaths.map(([, path]) => path));
 const brokenPaths = ignored
-  ? [...new Set(missingPaths.filter(([, path]) => !ignored.has(path)).map(([document, path]) => `${document} -> ${path}`))]
+  ? [...new Set(missingPaths.filter(([, path]) => !ignored.has(path)).map(([document, path]) => `${toPosix(document)} -> ${path}`))]
   : [];
 
 if (brokenLinks.length > 0) {

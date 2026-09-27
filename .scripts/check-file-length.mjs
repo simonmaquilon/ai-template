@@ -10,28 +10,15 @@
 // status 2, which both clients feed back to the model; a stop that any Stop hook
 // already continued, or a directory outside git, passes silently.
 
-import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
 import { exemptPaths, isSource } from './source-files.mjs';
 
 const LIMIT = 150;
 const PATCH_HEADER = /^\*\*\* (Add File|Update File|Move to): (.+)$/;
 const MARKERS = '.temp/check-file-length';
 const MARKER_LIFETIME = 7 * 24 * 60 * 60 * 1000;
-
-function git(args, input) {
-  const run = spawnSync('git', args, { input, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
-  return run.status === 0 ? run.stdout : null;
-}
-
-function readHookInput() {
-  try {
-    return JSON.parse(readFileSync(0, 'utf8') || '{}');
-  } catch {
-    return {};
-  }
-}
 
 // Paths an edit touched, as [path, previous path] pairs: an edit tool names one
 // file, and a patch names each file it adds, updates, or moves.
@@ -86,13 +73,23 @@ function markTurnStart(marker) {
   }
 }
 
-const input = process.argv.includes('--hook') ? readHookInput() : {};
+// Real location of a path, with the case the file system stores; a file that
+// does not exist yet keeps its name under its real directory.
+function realPath(full) {
+  for (const candidate of [() => realpathSync.native(full), () => join(realpathSync.native(dirname(full)), basename(full))]) {
+    try {
+      return candidate();
+    } catch {}
+  }
+  return full;
+}
+
+const input = process.argv.includes('--hook') ? await readHookInput() : {};
 if (input.stop_hook_active === true) process.exit(0);
-const root = git(['rev-parse', '--show-toplevel'])?.trim();
+const origin = typeof input.cwd === 'string' ? resolve(input.cwd) : process.cwd();
+const root = enterRepositoryRoot();
 if (!root) process.exit(0);
 
-const origin = typeof input.cwd === 'string' ? resolve(input.cwd) : process.cwd();
-process.chdir(root);
 const session = String(input.session_id ?? '').replace(/[^\w-]/g, '_');
 const marker = session ? join(MARKERS, session) : null;
 if (process.argv.includes('--turn-start')) {
@@ -102,16 +99,12 @@ if (process.argv.includes('--turn-start')) {
   process.exit(0);
 }
 
-// Repository-relative path, resolving symlinked directories so that a file
-// reached through a link is judged by its real location.
-const canonicalRoot = realpathSync(root);
+// Repository-relative path with forward slashes, judged by its real location so
+// that a file reached through a symlinked directory counts where it lives.
+const canonicalRoot = realpathSync.native(root);
 const inRepository = (path, base) => {
-  let full = resolve(base, path);
-  try {
-    full = join(realpathSync(dirname(full)), basename(full));
-  } catch {}
-  const local = relative(canonicalRoot, full);
-  return local && !local.startsWith('..') && !isAbsolute(local) ? local : null;
+  const local = relative(canonicalRoot, realPath(resolve(base, path)));
+  return local && !local.startsWith('..') && !isAbsolute(local) ? toPosix(local) : null;
 };
 const base = input.tool_input ? origin : root;
 const since = !input.tool_input && marker && existsSync(marker) ? statSync(marker).mtimeMs : null;

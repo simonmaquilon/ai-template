@@ -24,7 +24,7 @@ npx skills add <owner/repo>
 
 Opciones de `update`: `-g` solo skills globales, `-p` solo skills del proyecto, `-y` omite el prompt de alcance, y uno o más nombres para acotar a skills concretas.
 
-Tras `add` o `update`, y antes de invocar la skill o dar el cambio por bueno, revisa `git diff HEAD -- '.agents/skills/*/SKILL.md'` en sus cabeceras `allowed-tools` y `hooks`, y lo que el instalador haya escrito en `.claude/settings.json` o `.codex/hooks.json`. Lo que exceda los permisos del repositorio es una decisión abierta bajo `03-approval-boundaries.md`, y lo aceptado se registra en la sección de permisos de este archivo.
+Tras `add` o `update`, y antes de invocar la skill o dar el cambio por bueno, revisa `git diff HEAD -- ".agents/skills/*/SKILL.md"` en sus cabeceras `allowed-tools` y `hooks`, y lo que el instalador haya escrito en `.claude/settings.json` o `.codex/hooks.json`. Lo que exceda los permisos del repositorio es una decisión abierta bajo `03-approval-boundaries.md`, y lo aceptado se registra en la sección de permisos de este archivo.
 
 ## Cómo funciona la actualización
 
@@ -36,6 +36,12 @@ El comando resuelve el alcance, lee `skills-lock.json`, descarga los hashes remo
 
 Las skills viven en `.agents/skills/`. El directorio `.claude/skills` es un symlink a esa ruta para que el cliente de Claude las descubra.
 
+### Symlink en Windows
+
+En Windows, Git solo crea el symlink si tiene permiso para hacerlo. Hay que activar el Modo de desarrollador de Windows, o trabajar como administrador, y clonar con `git clone -c core.symlinks=true <url>`. En un clon hecho sin eso, `.claude/skills` es un archivo de texto con la ruta de destino: Claude Code no encuentra las skills, el hook de Impeccable de Claude Code no se ejecuta y los agentes de `.claude/agents/` apuntan a una ruta rota. El hook de symlinks lo avisa en cada mensaje, como explica [Hooks de agentes](92-agent-hooks.md).
+
+Para arreglar un clon existente, activa el Modo de desarrollador, ejecuta `git config core.symlinks true`, borra el archivo `.claude/skills` y restáuralo con `git checkout -- .claude/skills`.
+
 ## Permisos que se conceden las skills
 
 Una skill puede preaprobar herramientas en la cabecera `allowed-tools` de su `SKILL.md`: durante el turno en que se invoca, Claude Code ejecuta esos comandos sin pedir permiso, aunque la carpeta no tenga aceptada la confianza, y la concesión caduca con el siguiente mensaje. Las reglas `ask` y `deny` de `.claude/settings.json` prevalecen sobre esa cabecera, y Codex no la aplica. El instalador de una skill puede además escribir hooks en la configuración de los clientes.
@@ -45,11 +51,11 @@ Una skill puede preaprobar herramientas en la cabecera `allowed-tools` de su `SK
 | Skill | Concesión | Alcance real |
 | --- | --- | --- |
 | `playwright-cli` | `allowed-tools`: `Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*)` | Cualquier comando `npm` o `npx`, no solo los de Playwright. Las reglas `ask` de `.claude/settings.json` siguen pidiendo confirmación para `npm install`, `npm i` y `npm publish`. Solo actúa en Claude Code, porque Codex no aplica la cabecera; por eso esas reglas no tienen contrapartida en Codex. |
-| `impeccable` | Hooks `PostToolUse` y `Stop` que su instalador escribe en `.claude/settings.json` y `.codex/hooks.json` | Ejecutan `scripts/impeccable hook` tras cada edición y al cerrar el turno; el lanzador descarga su binario a `~/.impeccable/bin/<versión>/` la primera vez. Claude Code los ejecuta sin aprobación; Codex, tras aprobarlos, como explica [Hooks de agentes](92-agent-hooks.md). |
+| `impeccable` | Hooks `PostToolUse` y `Stop` que su instalador escribe en `.claude/settings.json` y `.codex/hooks.json` | Ejecutan `scripts/impeccable hook` tras cada edición y al cerrar el turno; el lanzador descarga su binario a `~/.impeccable/bin/<versión>/` la primera vez (en Windows, a `%USERPROFILE%\.impeccable\bin\<versión>\`, o bajo `IMPECCABLE_HOME` si está definido). Claude Code los ejecuta sin aprobación; Codex, tras aprobarlos, como explica [Hooks de agentes](92-agent-hooks.md). |
 
 ## Navegador operado por el agente
 
-Los dos clientes cargan `playwright-cli` desde `.agents/skills/`: Codex busca ahí las skills del repositorio y Claude Code llega a través del symlink `.claude/skills`. La capacidad queda configurada en ambos en cuanto su binario está disponible, como explica la sección siguiente, y `17-validation-policy.md` solo la exige cuando `PLAN.md` la adopta. En macOS, el sandbox del cliente puede impedir que arranque el navegador; lo explica [Sandbox de agentes](91-agent-sandbox.md).
+Los dos clientes cargan `playwright-cli` desde `.agents/skills/`: Codex busca ahí las skills del repositorio y Claude Code llega a través del symlink `.claude/skills`. La capacidad queda configurada en ambos en cuanto su binario está disponible, como explica la sección siguiente, y `17-validation-policy.md` solo la exige cuando `PLAN.md` la adopta. En Windows, Claude Code llega a la skill solo si el symlink existe, como explica la sección de ubicación. El sandbox del cliente puede impedir que arranque el navegador; los casos conocidos por sistema están en [Sandbox de agentes](91-agent-sandbox.md).
 
 ## Binario de `playwright-cli`
 
