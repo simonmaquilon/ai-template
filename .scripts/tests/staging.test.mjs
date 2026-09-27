@@ -8,7 +8,8 @@ const BLOCKED = [
   'git add -A', 'git add .', 'git add -u', 'git add --all', 'git commit -a -m wip', 'git commit -am wip', 'cd docs && git add .',
   'git -C docs add -A', 'git -C "my docs" add .', 'git -c core.autocrlf=false commit -am wip', 'git --no-pager add --all',
   'git add ./', 'git add :/', 'git add *', 'git stage -A', 'git add -Av', 'git commit -qam wip', 'git add -A;git status',
-  '(git add -A)', 'git commit -m "wip" -a', "cat <<'EOF'\nnote\nEOF\ngit add -A",
+  '(git add -A)', 'git commit -m "wip" -a', "cat <<'EOF'\nnote\nEOF\ngit add -A", "cat > f <<'EOF' && git add -A\nnote\nEOF",
+  'git add "."', "git add '*'", 'git add ..', 'git add -A>/dev/null', 'bash -lc "git add -A"', "sh -c 'git add .'",
 ];
 const ALLOWED = [
   'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
@@ -16,6 +17,7 @@ const ALLOWED = [
   'git add ./src/app.ts', 'git add .gitignore', 'git add :/src/app.ts', 'git commit -m "fix -a flag"',
   "git commit -m 'explain git add -A and git add .'", 'git commit -m all',
   "git commit -F - <<'EOF'\nreject git add -A and git stage, the ./ and * pathspecs\nEOF",
+  'git commit -uall -m wip', 'git commit -Sabc -m wip', 'git commit -m "."', 'git add ../shared/app.ts', 'bash -lc "git add src/app.ts"',
 ];
 
 for (const client of ['claude', 'codex']) {
