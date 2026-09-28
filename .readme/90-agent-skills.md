@@ -1,6 +1,6 @@
 # Skills de agentes
 
-Las skills de agentes se instalan desde repositorios públicos y se versionan en este repositorio bajo `.agents/skills/`. El archivo `skills-lock.json` en la raíz fija cada skill a su origen y a un hash de integridad.
+Las skills de agentes se versionan en este repositorio bajo `.agents/skills/`. Casi todas se instalan desde repositorios públicos, y `skills-lock.json`, en la raíz, fija cada una a su origen y a un hash de integridad; `commit` y `prompt` son propias de la plantilla, no figuran en el lockfile y se editan directamente en `.agents/skills/`.
 
 ## Herramienta
 
