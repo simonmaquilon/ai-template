@@ -15,6 +15,7 @@ const MAX_BYTES = 1024 * 1024;
 const MAKEFILES = ['GNUmakefile', 'makefile', 'Makefile'];
 const RULE = /^([^\t#\s][^:=]*?)\s*::?(?!=)\s*([^;]*)(?:;(.*))?$/;
 const CONDITIONAL = /^\s*(?:ifeq|ifneq|ifdef|ifndef|else|endif)\b/;
+const DEFINITION = /^([A-Za-z_][\w.-]*)\s*(\+=|\?=|:{0,3}=)\s*(.*)$/;
 const SHELL_VALUES = new Set(['-o', '+o', '-O', '+O', '--rcfile', '--init-file']);
 const PWSH_VALUES = new Set(['-executionpolicy', '-ep', '-ex', '-workingdirectory', '-wd', '-configurationname', '-inputformat', '-outputformat', '-windowstyle', '-settingsfile']);
 const quote = (arg) => `'${arg.replace(/'/g, `'\\''`)}'`;
@@ -57,7 +58,7 @@ export function shellScripts(name, args, bodies, cwd, seen) {
       return [{ script: args[args[i + 1] === '--' ? i + 2 : i + 1] ?? '', powershell }];
     }
     if (powershell && /^-f(?:ile)?$/i.test(arg)) file = args[i + 1] ?? '';
-    else if (powershell ? PWSH_VALUES.has(arg.toLowerCase()) : SHELL_VALUES.has(arg)) i++;
+    else if (powershell ? PWSH_VALUES.has(arg.toLowerCase()) : SHELL_VALUES.has(arg) || /^[-+][a-zA-Z]*[oO]$/.test(arg)) i++;
     else if (!/^[-+]/.test(arg)) file = arg;
   }
   return [...bodies.map((script) => ({ script, powershell })), ...(file ? fileScripts('source', [file], cwd, seen) : [])];
@@ -87,11 +88,17 @@ export function makeScripts(args, cwd, seen) {
   const text = path && !repeated(seen, `${path}#${targets.join(' ')}`) ? read(path) : null;
   if (text === null) return [];
   const rules = new Map();
+  const variables = new Map();
   let current = null;
   let first = null;
   for (const line of text.replace(/\\\r?\n/g, ' ').split(/\r?\n/)) {
-    const rule = line.startsWith('\t') || CONDITIONAL.test(line) ? null : RULE.exec(line);
-    if (rule) {
+    const definition = line.startsWith('\t') ? null : DEFINITION.exec(line);
+    const rule = line.startsWith('\t') || CONDITIONAL.test(line) || definition ? null : RULE.exec(line);
+    if (definition) {
+      const [, name, operator, value] = definition;
+      variables.set(name, operator === '+=' ? `${variables.get(name) ?? ''} ${value}` : value);
+      current = null;
+    } else if (rule) {
       current = rule[1].split(/\s+/).filter(Boolean);
       for (const target of current) {
         if (!rules.has(target)) rules.set(target, { prerequisites: [], recipe: [] });
@@ -114,5 +121,7 @@ export function makeScripts(args, cwd, seen) {
   };
   const visited = new Set();
   for (const target of targets.length > 0 ? targets : [first]) visit(target, visited);
-  return lines.length > 0 ? [{ script: lines.join('\n'), powershell: false }] : [];
+  // Make expands its variables, and $$ into $, before the shell sees a line.
+  const expand = (line) => line.replace(/\$\$/g, '\0').replace(/\$[({]([\w.-]+)[)}]/g, (text, name) => variables.get(name) ?? name).replace(/\0/g, '$');
+  return lines.length > 0 ? [{ script: lines.map(expand).join('\n'), powershell: false }] : [];
 }

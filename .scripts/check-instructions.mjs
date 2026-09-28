@@ -46,7 +46,7 @@ function reusedPrefixes(dir, names) {
   const retired = [];
   for (const commit of log.split('\x1e')) {
     const entries = commit.split('\n').map((line) => line.split('\t')).filter(([, path]) => path && dirname(path) === dir);
-    const arrived = entries.filter(([status]) => status === 'A' || status.startsWith('R')).map((entry) => prefixOf(basename(entry.at(-1))));
+    const arrived = entries.filter(([status]) => status === 'A').map(([, path]) => prefixOf(basename(path)));
     for (const [status, path, renamed] of entries) {
       const moved = status.startsWith('R') && prefixOf(basename(renamed)) !== prefixOf(basename(path));
       if ((status === 'D' && !arrived.includes(prefixOf(basename(path)))) || moved) retired.push(basename(path));
