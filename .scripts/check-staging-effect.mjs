@@ -18,7 +18,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSyn
 import { join, resolve } from 'node:path';
 import { isBulk } from './bulk-staging.mjs';
 import { enterRepositoryRoot, git, readHookInput } from './hook-support.mjs';
-import { braces, named } from './staged-paths.mjs';
+import { braces, namer } from './staged-paths.mjs';
 import { GIT, gitSubcommand, walk } from './staging-reader.mjs';
 
 const RECORDS = join('.temp', 'check-staging-effect');
@@ -110,7 +110,8 @@ const others = readdirSync(RECORDS)
   .filter((call) => call && (call.ended ? call.ended >= before.started : Date.now() - call.started < RUNNING));
 const calls = [before, ...others].map(read);
 const previously = new Set(before.staged);
-const unnamed = (paths) => paths.filter((path) => !calls.some((call) => call.words.some((word) => named(path, word, call.dirs, root))));
+const namers = calls.map((call) => namer(call.words, call.dirs, root));
+const unnamed = (paths) => paths.filter((path) => !namers.some((isNamed) => isNamed(path)));
 
 const gitDir = git(['rev-parse', '--git-dir'])?.trim() ?? '.git';
 if (calls[0].staging || IN_PROGRESS.some((name) => existsSync(join(gitDir, name)))) process.exit(0);

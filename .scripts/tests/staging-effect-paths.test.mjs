@@ -23,6 +23,11 @@ for (const client of ['claude', 'codex']) {
     assert.equal(call(client, repo, 'route', "git add 'pages/products/[id].vue'", route).status, 0);
     const glob = () => repo.git('add', '--', 'app/components/card.vue');
     assert.equal(call(client, repo, 'glob', "git add 'components/*.vue'", glob).status, 0);
+    const many = Array.from({ length: 800 }, (_, i) => `many/m${Math.floor(i / 40)}/f${i}.ts`);
+    for (const path of many) repo.write(path, `${path}\n`);
+    const manyStarted = Date.now();
+    assert.equal(call(client, repo, 'many', `git add -- ${many.join(' ')}`, () => repo.git('add', '--', ...many)).status, 0);
+    assert.ok(Date.now() - manyStarted < 5000, 'the after hook stays fast with many paths');
     for (const path of ['pkg/.env.example', 'pkg/src/x.ts', 'q.txt']) repo.write(path, `${path}\n`);
     assert.equal(call(client, repo, 'dotfile', 'git add .env.example', () => repo.git('add', '--', 'pkg/.env.example')).status, 0);
     const bracket = '[ -f src/x.ts ] && git add src/x.ts';
