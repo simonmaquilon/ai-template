@@ -46,7 +46,7 @@ Para arreglar un clon existente, activa el Modo de desarrollador, ejecuta `git c
 
 Una skill puede preaprobar herramientas en la cabecera `allowed-tools` de su `SKILL.md`: durante el turno en que se invoca, Claude Code ejecuta esos comandos sin pedir permiso, aunque la carpeta no tenga aceptada la confianza, y la concesión caduca con el siguiente mensaje. Las reglas `ask` y `deny` de `.claude/settings.json` prevalecen sobre esa cabecera, y Codex no la aplica. El instalador de una skill puede además escribir hooks en la configuración de los clientes.
 
-`28-agent-tooling-configuration.md` exige revisar ambas cosas antes de invocar o aceptar una skill nueva o actualizada, y registrar aquí lo aceptado. Los permisos del repositorio son los de `permissions` en `.claude/settings.json`, que no tiene reglas `allow`, así que cualquier preaprobación los excede y es una decisión abierta bajo `03-approval-boundaries.md`. Estas son las concesiones aceptadas, que heredan los proyectos derivados; si la cabecera o los hooks de una skill dejan de coincidir con su fila, lo nuevo no está aceptado y hay que revisarlo:
+`28-agent-tooling-configuration.md` exige revisar ambas cosas antes de invocar o aceptar una skill nueva o actualizada, y registrar aquí lo aceptado. `.claude/settings.json` no declara reglas `allow` en `permissions`, así que cualquier preaprobación excede los permisos del repositorio y es una decisión abierta bajo `03-approval-boundaries.md`. Estas son las concesiones aceptadas, que heredan los proyectos derivados; si la cabecera o los hooks de una skill dejan de coincidir con su fila, lo nuevo no está aceptado y hay que revisarlo:
 
 | Skill | Concesión | Alcance real |
 | --- | --- | --- |
