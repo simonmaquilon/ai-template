@@ -25,6 +25,8 @@ El sandbox se activa con `sandbox.enabled` en `.claude/settings.json`; mientras 
 
 Los patrones son globs sobre la cadena del comando, y el `*` final cubre las variantes que cuelgan del mismo prefijo. Nombran el comando tal como lo publica el repositorio —`pnpm run test:e2e`, `npm run e2e`, `bun test:e2e`, `deno task e2e`, `make e2e`—, nunca una forma tomada de este documento: `06-commands-and-local-runtime.md` establece cuál es el gestor propietario. Exceptúa el script, no el binario que invoca: el patrón alcanza también a los subprocesos que ese script lance.
 
+Una exención solo saca del sandbox una llamada si cubre todos sus comandos, y algunas formas siguen confinadas aunque los cubra, entre otras: una llamada con `cd`, `pushd` o `popd`, una sustitución de comandos, un subshell o un bloque de control, una redirección que no se limite a duplicar un descriptor como `2>&1`, o un comando que empiece por `sudo`, `eval` o `xargs`. Así, una tubería hacia `tail` o una redirección a un log bajo `.temp/` mantienen el script de E2E dentro del sandbox, y falla igual que sin exención.
+
 `excludedCommands` es una lista estática que salta el sandbox sin que el modelo intervenga, distinta del reintento fuera del sandbox que el modelo pide caso por caso y que depende de `sandbox.allowUnsandboxedCommands`. La sesión acepta `/sandbox exclude "<patrón>"` para añadir patrones sin editar el archivo.
 
 ## Codex
@@ -44,4 +46,4 @@ Codex sí evalúa reglas `allow` por comando mediante su exec policy, y una regl
 
 Chromium registra un puerto Mach al arrancar su propio sandbox. Seatbelt —el sandbox de macOS sobre el que se apoyan estos clientes— lo deniega, y cualquier runner que lo controle falla con `Permission denied` antes de levantar la aplicación.
 
-El mensaje parece un arranque E2E roto y no lo es: ningún cambio en la configuración de pruebas, en los navegadores instalados ni en las rutas de caché lo corrige. La única salida es que el comando quede fuera del sandbox.
+El mensaje parece un arranque E2E roto y no lo es: ningún cambio en la configuración de pruebas, en los navegadores instalados ni en las rutas de caché lo corrige. Tampoco `sandbox.network.allowMachLookup`, que la documentación oficial cita para Playwright: permite buscar servicios Mach, no registrarlos, y Chromium falla al registrar el suyo con `bootstrap_check_in` (comprobado el 2026-09-27 con Claude Code 2.1.280 en macOS, con `allowMachLookup: ["*"]`). La única salida es que el comando quede fuera del sandbox.
