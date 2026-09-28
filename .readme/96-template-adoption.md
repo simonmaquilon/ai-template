@@ -2,6 +2,8 @@
 
 Un proyecto derivado guarda en `.agents/template-version` la versión de la plantilla que adoptó, y `01-meta-guidelines.md` pide actualizarla solo al adoptar una versión posterior. Este documento explica cómo hacerlo sin perder el trabajo del proyecto.
 
+La plantilla mantenida es el repositorio cuyo remoto `origin` apunta a `https://github.com/simonmaquilon/ai-template.git`, como fija `01-meta-guidelines.md`; cualquier otro repositorio es un derivado. Por eso un derivado usa su propio `origin` y añade la plantilla como remoto `plantilla`, como muestra «Localizar las dos versiones».
+
 ## Qué pertenece a la plantilla
 
 Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta-guidelines.md`:
