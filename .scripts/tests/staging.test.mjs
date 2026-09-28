@@ -20,6 +20,7 @@ const BLOCKED = [
   'git add -p < answers.txt', "xargs -d '\\n' git add", 'xargs -n 1 git add', 'xargs -I{} git add {}',
   'git diff --name-only | git add --pathspec-from-file=-', 'git add -p <<< "y"', 'yes |& git add -p', 'yes | (git add -p)',
   'G=git; $G add -A', 'export G=git; ${G} add .', 'cat > n.md <<\\EOF\nhi\nEOF\ngit add -A',
+  "bash <<'EOF' 2>&1 | tail -5\ngit add -A\nEOF", "bash <<'EOF'; echo done\ngit add -A\nEOF",
 ];
 // Blocked where a POSIX shell may run the command; PowerShell alone reads the backquote as an escape.
 const POSIX_BLOCKED = ['git commit -m "Fix `git add -A` handling"'];
@@ -36,7 +37,7 @@ const ALLOWED = [
   "cat <<'MSG-END'\ngit add -A\nMSG-END", 'git stash -u', 'git commit --amend --no-edit', 'git add .github/workflows/x.yml',
   'git add -n .', 'git add --dry-run -A', 'git add --pathspec-from-file=paths.txt', "git add -- src ':!src/gen'",
   'git add -p', 'git add -i', 'git add -e', 'git add --patch', 'git add --interactive', 'git add --edit',
-  `git commit -m "$(cat <<'EOF'\nfix (guard): reject "x" and \`y\`\nEOF\n)"`, 'git commit -m "Use `code` here"', 'git add src/a.ts > log.txt', 'G=x; echo $G', 'cat > n.md <<\\EOF\nhi\nEOF\ngit add n.md',
+  `git commit -m "$(cat <<'EOF'\nfix (guard): reject "x" and \`y\`\nEOF\n)"`, 'git commit -m "Use `code` here"', 'git add src/a.ts > log.txt', 'G=x; echo $G', 'cat > n.md <<\\EOF\nhi\nEOF\ngit add n.md', "bash <<'EOF' | tail -5\ngit add src/a.ts\nEOF",
 ];
 const POWERSHELL = [
   ['cd "C:\\repo\\"; git add -A', 2], ['& "C:\\Program Files\\Git\\cmd\\git.exe" add -A', 2], ['git add .\\*', 2],

@@ -62,11 +62,13 @@ export function commands(script, { powershell = false } = {}) {
       endWord();
       fed = true;
       const match = HEREDOC.exec(script.slice(i, i + 256));
-      if (match) delimiters.push(match[2]);
+      if (match) delimiters.push({ name: match[2], opener: bodies });
       i += match ? match[0].length - 1 : 1;
     } else if (c === '\n') {
-      const read = readBodies(script, i, delimiters);
-      bodies.push(...read.bodies);
+      // A body feeds the command that opens it, even when the line goes on, and
+      // also the line's last command, which a pipe may hand it to.
+      const read = readBodies(script, i, delimiters.map(({ name }) => name));
+      read.bodies.forEach((body, k) => new Set([delimiters[k].opener, bodies]).forEach((target) => target.push(body)));
       i = read.end;
       delimiters = [];
       endCommand();

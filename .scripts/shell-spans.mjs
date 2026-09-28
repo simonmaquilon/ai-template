@@ -6,6 +6,7 @@
 
 export const HEREDOC = /^<<-?[ \t]*\\?(['"]?)([^'"\s;&|<>()\\]+)\1/;
 const LITERAL_LIST = /^\s*(?:'[^']*'|"[^"$`]*")(?:\s*,\s*(?:'[^']*'|"[^"$`]*"))*\s*$/;
+const LIST_SCAN = 4096;
 const LIST_START = /^\s*(?:'[^']*'|"[^"$`]*")(?:\s*,\s*(?:'[^']*'|"[^"$`]*"))*(?:\s*,?\s*(?:'[^']*|"[^"$`]*)?)$/;
 
 // Reads the bodies of the here-documents that start after the newline at index
@@ -67,10 +68,10 @@ export function readQuoted(script, i, powershell) {
 }
 
 // The index of the parenthesis that closes a PowerShell @( ... ) opened at
-// index i when it only lists quoted strings, or -1. The scan stops at LIMIT
-// characters unless what it has read so far is still such a list.
+// index i when it only lists quoted strings, or -1. The scan stops at
+// LIST_SCAN characters unless what it has read so far is still such a list.
 export function literalListEnd(script, i) {
-  const limit = Math.min(script.length, i + 4096);
+  const limit = Math.min(script.length, i + LIST_SCAN);
   let end = closeParen(script, i + 2, true, limit);
   if (end === limit && limit < script.length && LIST_START.test(script.slice(i + 2, limit))) end = closeParen(script, i + 2, true);
   return end < script.length && LITERAL_LIST.test(script.slice(i + 2, end)) ? end : -1;

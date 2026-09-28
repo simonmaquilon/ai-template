@@ -25,6 +25,9 @@ for (const client of ['claude', 'codex']) {
     assert.equal(call(client, repo, 'glob', "git add 'components/*.vue'", glob).status, 0);
     const many = Array.from({ length: 800 }, (_, i) => `many/m${Math.floor(i / 40)}/f${i}.ts`);
     for (const path of many) repo.write(path, `${path}\n`);
+    repo.write('h.txt', 'h\n');
+    const script = "bash <<'EOF' | tail -5\ngit add h.txt\nEOF";
+    assert.equal(call(client, repo, 'heredoc', script, () => repo.git('add', '--', 'h.txt')).status, 0);
     const manyStarted = Date.now();
     assert.equal(call(client, repo, 'many', `git add -- ${many.join(' ')}`, () => repo.git('add', '--', ...many)).status, 0);
     assert.ok(Date.now() - manyStarted < 5000, 'the after hook stays fast with many paths');
