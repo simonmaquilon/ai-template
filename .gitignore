@@ -28,7 +28,8 @@ $RECYCLE.BIN/
 # Local agent overrides
 .claude/settings.local.json
 
-# Impeccable working artifacts; its shared configuration stays versioned (see .readme/90-agent-skills.md)
+# Impeccable working artifacts and per-person settings; its shared configuration stays versioned (see .readme/90-agent-skills.md)
+.impeccable/config.local.json
 .impeccable/mocks/
 .impeccable/review/
 .impeccable/build/
