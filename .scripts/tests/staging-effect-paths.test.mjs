@@ -18,6 +18,11 @@ for (const client of ['claude', 'codex']) {
     assert.equal(call(client, repo, 'pushd', 'pushd pkg; popd; git add c.txt', () => repo.git('add', '--', 'c.txt')).status, 0);
     assert.equal(call(client, repo, 'workdir', 'git add w.ts', () => repo.git('add', '--', 'src/w.ts')).status, 0);
     assert.equal(call(client, repo, 'assign', '$null = git add p.txt', () => repo.git('add', '--', 'p.txt')).status, 0);
+    for (const path of ['app/pages/products/[id].vue', 'app/components/card.vue']) repo.write(path, `${path}\n`);
+    const route = () => repo.git('add', '--', 'app/pages/products/[id].vue');
+    assert.equal(call(client, repo, 'route', "git add 'pages/products/[id].vue'", route).status, 0);
+    const glob = () => repo.git('add', '--', 'app/components/card.vue');
+    assert.equal(call(client, repo, 'glob', "git add 'components/*.vue'", glob).status, 0);
     for (const path of ['pkg/.env.example', 'pkg/src/x.ts', 'q.txt']) repo.write(path, `${path}\n`);
     assert.equal(call(client, repo, 'dotfile', 'git add .env.example', () => repo.git('add', '--', 'pkg/.env.example')).status, 0);
     const bracket = '[ -f src/x.ts ] && git add src/x.ts';

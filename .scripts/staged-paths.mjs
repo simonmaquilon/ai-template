@@ -20,23 +20,30 @@ export function braces(word) {
 // dirs, with git pathspec patterns, where * and ? also match / and :/ starts at
 // the root; a pattern needs a literal character to name anything. A relative
 // word, without its leading ./ or ../ parts, also names a path that ends with
-// it, since Codex does not pass the hook the working directory a command sets.
+// it, literally or as a pattern, brackets included, since Codex does not pass
+// the hook the working directory a command sets.
 export function named(path, word, dirs, root) {
   const spec = word.replace(/^--pathspec-from-file=/, '');
   const plain = toPosix(spec).replace(/^(?:\.\.?\/)+/, '').replace(/\/$/, '');
-  if (plain && !/^\.\.?(?:\/|$)/.test(plain) && !plain.startsWith(':') && !isAbsolute(plain) && !/[*?[]/.test(plain)) {
+  if (plain && !/^\.\.?(?:\/|$)/.test(plain) && !plain.startsWith(':') && !isAbsolute(plain)) {
     if (path === plain || path.startsWith(`${plain}/`) || path.endsWith(`/${plain}`) || path.includes(`/${plain}/`)) return true;
+    if (matches(path, plain, '(?:.*/)?')) return true;
   }
   return dirs.some((dir) => {
     const target = toPosix(spec.startsWith(':/') ? spec.slice(2) : relative(root, resolve(dir, spec))).replace(/\/$/, '');
     if (!target || target.startsWith('..') || isAbsolute(target)) return false;
-    if (path === target || path.startsWith(`${target}/`)) return true;
-    if (!/[*?[]/.test(target) || !/[^*?/[\]]/.test(target)) return false;
-    const escaped = target.replace(/[.+^${}()|\\]/g, '\\$&').replace(/\*\*\//g, '\0').replace(/\*+/g, '.*').replace(/\?/g, '.');
-    try {
-      return new RegExp(`^${escaped.replace(/\0/g, '(?:.*/)?')}$`).test(path);
-    } catch {
-      return false;
-    }
+    return path === target || path.startsWith(`${target}/`) || matches(path, target, '');
   });
+}
+
+// Whether a git pathspec pattern, after prefix, matches the whole path; a word
+// without a wildcard or without a literal character is no pattern.
+function matches(path, pattern, prefix) {
+  if (!/[*?[]/.test(pattern) || !/[^*?/[\]]/.test(pattern)) return false;
+  const escaped = pattern.replace(/[.+^${}()|\\]/g, '\\$&').replace(/\*\*\//g, '\0').replace(/\*+/g, '.*').replace(/\?/g, '.');
+  try {
+    return new RegExp(`^${prefix}${escaped.replace(/\0/g, '(?:.*/)?')}$`).test(path);
+  } catch {
+    return false;
+  }
 }
