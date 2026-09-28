@@ -2,28 +2,8 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { WINDOWS, hookFor, makeRepo, runClientHook } from './support.mjs';
-
-const input = (dir, id, command) => ({ session_id: 'session', tool_use_id: id, cwd: dir, tool_input: { command } });
-const hook = (client, event, repo, id, command, dir = repo.dir) =>
-  runClientHook(client, hookFor(client, event, 'check-staging-effect.mjs'), repo, { input: input(dir, id, command) });
-const before = (client, repo, id, command, dir) => hook(client, 'PreToolUse', repo, id, command, dir);
-const after = (client, repo, id, command, dir) => hook(client, 'PostToolUse', repo, id, command, dir);
-
-// Runs a tool call: the before hook, what the command did, and the after hook.
-function call(client, repo, id, command, effect, dir) {
-  assert.equal(before(client, repo, id, command, dir).status, 0);
-  effect();
-  return after(client, repo, id, command, dir);
-}
-
-function baseRepo(t) {
-  const repo = makeRepo(t);
-  repo.write('base.txt', 'base\n');
-  repo.git('add', '--', '.gitignore', 'base.txt');
-  repo.git('commit', '-q', '-m', 'base');
-  return repo;
-}
+import { after, baseRepo, before, call } from './effect-support.mjs';
+import { WINDOWS, hookFor } from './support.mjs';
 
 for (const client of ['claude', 'codex']) {
   test(`${client}: the effect hook reports paths a command staged or committed without naming them`, (t) => {
@@ -92,32 +72,6 @@ for (const client of ['claude', 'codex']) {
     assert.equal(before(client, repo, 'blocked', 'git add -A').status, 0);
     const records = readdirSync(join(repo.dir, '.temp', 'check-staging-effect'));
     assert.ok(!records.includes('blocked.json'));
-  });
-}
-
-for (const client of ['claude', 'codex']) {
-  test(`${client}: the effect hook names paths from undone directory changes, workdirs, and PowerShell assignments`, (t) => {
-    const repo = baseRepo(t);
-    for (const path of ['a.txt', 'b.txt', 'c.txt', 'pkg/keep.txt', 'src/w.ts', 'p.txt']) repo.write(path, `${path}\n`);
-    const sub = join(repo.dir, 'pkg');
-    const top = 'cd "$(git rev-parse --show-toplevel)" && git add a.txt && git commit -m a';
-    const commitA = () => {
-      repo.git('add', '--', 'a.txt');
-      repo.git('commit', '-q', '-m', 'a');
-    };
-    assert.equal(call(client, repo, 'toplevel', top, commitA, sub).status, 0);
-    assert.equal(call(client, repo, 'subshell', '(cd pkg && ls) && git add b.txt', () => repo.git('add', '--', 'b.txt')).status, 0);
-    assert.equal(call(client, repo, 'pushd', 'pushd pkg; popd; git add c.txt', () => repo.git('add', '--', 'c.txt')).status, 0);
-    assert.equal(call(client, repo, 'workdir', 'git add w.ts', () => repo.git('add', '--', 'src/w.ts')).status, 0);
-    assert.equal(call(client, repo, 'assign', '$null = git add p.txt', () => repo.git('add', '--', 'p.txt')).status, 0);
-    for (const path of ['pkg/.env.example', 'pkg/src/x.ts', 'q.txt']) repo.write(path, `${path}\n`);
-    assert.equal(call(client, repo, 'dotfile', 'git add .env.example', () => repo.git('add', '--', 'pkg/.env.example')).status, 0);
-    const bracket = '[ -f src/x.ts ] && git add src/x.ts';
-    assert.equal(call(client, repo, 'bracket', bracket, () => repo.git('add', '--', 'pkg/src/x.ts'), sub).status, 0);
-    const objects = Array.from({ length: 30 }, (_, i) => `{ input:'a${i}', expected:${i} }`).join(', ');
-    const started = Date.now();
-    assert.equal(call(client, repo, 'objects', `node -e "const cases=[${objects}]" && git add q.txt`, () => repo.git('add', '--', 'q.txt')).status, 0);
-    assert.ok(Date.now() - started < 5000);
   });
 }
 

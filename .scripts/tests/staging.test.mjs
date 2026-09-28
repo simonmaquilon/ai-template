@@ -80,6 +80,8 @@ for (const client of ['claude', 'codex']) {
       const result = runClientHook(client, hook, repo, { input: { tool_name: 'PowerShell', tool_input: { command } } });
       assert.equal(result.status, status, `${command}: ${result.stderr}`);
     }
+    const redirected = { tool_name: 'PowerShell', tool_input: { command: 'git add src/a.ts *> $null' } };
+    assert.equal(runClientHook(client, hook, repo, { input: redirected }).status, 0);
   });
 }
 

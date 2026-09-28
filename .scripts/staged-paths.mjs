@@ -19,13 +19,13 @@ export function braces(word) {
 // Whether a repository-relative path is named by a word resolved from one of
 // dirs, with git pathspec patterns, where * and ? also match / and :/ starts at
 // the root; a pattern needs a literal character to name anything. A relative
-// word also names a path that ends with it, since Codex does not pass the hook
-// the working directory a command sets for itself.
+// word, without its leading ./ or ../ parts, also names a path that ends with
+// it, since Codex does not pass the hook the working directory a command sets.
 export function named(path, word, dirs, root) {
   const spec = word.replace(/^--pathspec-from-file=/, '');
-  const plain = toPosix(spec).replace(/^\.\//, '').replace(/\/$/, '');
+  const plain = toPosix(spec).replace(/^(?:\.\.?\/)+/, '').replace(/\/$/, '');
   if (plain && !/^\.\.?(?:\/|$)/.test(plain) && !plain.startsWith(':') && !isAbsolute(plain) && !/[*?[]/.test(plain)) {
-    if (path.endsWith(`/${plain}`) || path.includes(`/${plain}/`)) return true;
+    if (path === plain || path.startsWith(`${plain}/`) || path.endsWith(`/${plain}`) || path.includes(`/${plain}/`)) return true;
   }
   return dirs.some((dir) => {
     const target = toPosix(spec.startsWith(':/') ? spec.slice(2) : relative(root, resolve(dir, spec))).replace(/\/$/, '');

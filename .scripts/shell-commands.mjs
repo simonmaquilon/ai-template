@@ -136,7 +136,7 @@ export function commands(script, { powershell = false } = {}) {
       i = end;
     } else if (SEPARATORS.has(c) || ((c === '$' || (powershell && c === '@')) && script[i + 1] === '(')) {
       endCommand(c === '|' && script[i + 1] !== '|' && script[i - 1] !== '|');
-    } else if (c === ' ' || c === '\t' || c === '\r' || c === '<' || c === '>') {
+    } else if (c === ' ' || c === '\t' || c === '\r' || c === '<' || c === '>' || (powershell && c === '*' && script[i + 1] === '>')) {
       endWord();
       if (c === '<' || c === '>') target = true;
       if (c === '<') fed = true;

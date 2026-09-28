@@ -67,18 +67,32 @@ const before = existsSync(record) ? load(record) : null;
 if (!before || before.ended) process.exit(0);
 writeFileSync(record, JSON.stringify({ ...before, ended: Date.now() }));
 
+// Paths a --pathspec-from-file list names, read from its file.
+function listedPaths(args, dir) {
+  const index = args.findIndex((arg) => arg.startsWith('--pathspec-from-file'));
+  const file = index === -1 ? null : args[index].includes('=') ? args[index].split('=')[1] : args[index + 1];
+  if (!file || file === '-') return [];
+  try {
+    return readFileSync(resolve(dir, file), 'utf8').split(/[\0\r\n]+/).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 // Words of every command a call runs, in POSIX and PowerShell readings; the
 // directories they may resolve from: the call's, the root, and any that cd,
-// pushd, or Set-Location names, since a subshell, script, or popd may undo it;
+// pushd, Set-Location, or Push-Location names, since a subshell, script, or popd may undo it;
 // and whether any command is git that stages by its nature, such as stash.
 function read(call) {
   const words = [];
   const dirs = new Set([call.cwd, root]);
   let staging = false;
   const visit = ({ name, args }) => {
-    const target = /^(?:cd|pushd|set-location|sl|chdir)$/i.test(name) ? args.find((arg) => !arg.startsWith('-')) : null;
+    const target = /^(?:cd|pushd|set-location|push-location|sl|chdir)$/i.test(name) ? args.find((arg) => !arg.startsWith('-')) : null;
     if (target && !/[$~]/.test(target)) dirs.add(resolve(call.cwd, target));
-    for (const word of [name, ...args]) for (const expanded of braces(word)) words.push(expanded);
+    for (const word of [name, ...args, ...listedPaths(args, call.cwd)]) {
+      for (const part of new Set([word, ...word.split(/[\s,]+/).filter(Boolean)])) for (const expanded of braces(part)) words.push(expanded);
+    }
     if (GIT.test(name) && SELF_STAGING.has(args[gitSubcommand(args).index])) staging = true;
     return false;
   };
