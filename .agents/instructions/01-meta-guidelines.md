@@ -8,7 +8,8 @@ Read before adding, renaming, removing, or editing any file under `.agents/instr
 - Derived projects retain the adopted baseline version; completing or editing their product documents and local policies does not increment it. Update it when adopting a newer template release, following the adoption procedure in the template-owned `.readme/` documentation, and record deliberate baseline deviations in root `AGENTS.md` with links to routed project-specific policy.
 - Without a prior template commit, preserve a verifiable inherited baseline version; for a newly created template with no inherited version, initialize it to 1. Do not infer a release number when baseline provenance is ambiguous.
 - Root `AGENTS.md` holds the primary references and the instruction routing table; keep every operational rule in the files it routes to under `.agents/instructions/`.
-- Every instruction file needs a routing entry in `AGENTS.md` stating when to load it.
+- Every instruction file needs a routing entry in `AGENTS.md` that starts by stating when to load it, consistent with the file's scope line, followed by the subjects it governs.
+- Place each routing entry as an unindented list item under the `AGENTS.md` heading of its group and, where the group is subdivided, of its phase or area; those headings only name groups, phases, and areas and hold no rules.
 - This file holds prefix `01`; give every other file a unique numeric prefix used as a stable identifier, not a reading order.
 - When retiring a file, absorb the rules that must survive into the file that now owns them, remove its routing entry from `AGENTS.md`, and never reuse its prefix.
 - Before adding, materially editing, renaming, renumbering, or retiring a rule, check repository-declared agent tooling for citations or enforcement; when found, update that configuration in the same change under `28-agent-tooling-configuration.md`.

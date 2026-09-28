@@ -2,7 +2,7 @@
 
 Read when touching runtime configuration, environment bindings, migration deployment ordering, generated platform types, or deployment behavior.
 
-- Before editing, discover the selected stack from the stack section of `PRODUCT.md`, or from the installed stack when that section is absent, and the runtime, deployment targets, selected tools, and environments from `PLAN.md` first, then from repository manifests, infrastructure files, and project documentation.
+- Before editing, discover the selected stack under `04-sources-and-skills.md`, and the runtime, deployment targets, selected tools, and environments from `PLAN.md` first, then from repository manifests, infrastructure files, and project documentation.
 - Keep application, runtime, platform, database, and external-service versions synchronized in `SECURITY.md` under `21-document-maintenance.md`, including their source of truth, support status, security state, and last verification; record libraries, frameworks, CLI tools, and binaries, and anything only template-owned agent tooling or automation requires, where `07-dependencies-and-binaries.md` records them.
 - Treat platform bindings and types as generated artifacts under `14-code-authoring.md`; discover their runtime or platform generation requirements before using the established project workflow.
 - Apply `23-data-integrity-and-migrations.md` to persistent schema changes, migrations, and backfills; keep deployment ordering and recovery compatible with every affected target environment.

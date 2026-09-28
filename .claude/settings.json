@@ -154,12 +154,7 @@
     "typescript-lsp@claude-plugins-official": true
   },
   "permissions": {
-    "defaultMode": "auto",
-    "ask": [
-      "Bash(npm install:*)",
-      "Bash(npm i:*)",
-      "Bash(npm publish:*)"
-    ]
+    "defaultMode": "auto"
   },
   "outputStyle": "Concise",
   "viewMode": "focus",

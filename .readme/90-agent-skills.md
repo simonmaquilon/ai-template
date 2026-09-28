@@ -50,7 +50,7 @@ Una skill puede preaprobar herramientas en la cabecera `allowed-tools` de su `SK
 
 | Skill | Concesión | Alcance real |
 | --- | --- | --- |
-| `playwright-cli` | `allowed-tools`: `Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*)` | Cualquier comando `npm` o `npx`, no solo los de Playwright. Las reglas `ask` de `.claude/settings.json` siguen pidiendo confirmación para `npm install`, `npm i` y `npm publish`. Solo actúa en Claude Code, porque Codex no aplica la cabecera; por eso esas reglas no tienen contrapartida en Codex. |
+| `playwright-cli` | `allowed-tools`: `Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*)` | Cualquier comando `npm` o `npx`, no solo los de Playwright, incluidos `npm install`, `npm i` y `npm publish`: `.claude/settings.json` no declara reglas `ask` que pidan confirmación para ellos. Solo actúa en Claude Code, porque Codex no aplica la cabecera. |
 | `impeccable` | Hooks `PostToolUse` y `Stop` que su instalador escribe en `.claude/settings.json` y `.codex/hooks.json` | Ejecutan `scripts/impeccable hook` tras cada edición y al cerrar el turno; el lanzador descarga su binario a `~/.impeccable/bin/<versión>/` la primera vez (en Windows, a `%USERPROFILE%\.impeccable\bin\<versión>\`, o bajo `IMPECCABLE_HOME` si está definido). Claude Code los ejecuta sin aprobación; Codex, tras aprobarlos, como explica [Hooks de agentes](92-agent-hooks.md). |
 
 ## Navegador operado por el agente
@@ -96,7 +96,7 @@ Los esqueletos de `PRODUCT.md` y `DESIGN.md` siguen el formato que leen y escrib
 
 - `PRODUCT.md` lleva el marcador `impeccable:product-schema` y las secciones de `init` en su orden; `DESIGN.md`, el frontmatter de tokens y las ocho secciones canónicas del formato DESIGN.md. Detrás van las secciones propias de la plantilla, que la skill conserva.
 - Los encabezados, las claves del frontmatter y el marcador van en inglés, y el contenido en español, como fija `15-language-and-naming.md`.
-- El frontmatter de `DESIGN.md` es la fuente normativa de los tokens que su esquema admite (colores, tipografía, radios, espaciado y componentes) y la sección `Stack` de `PRODUCT.md`, la del stack, como fijan `12-ui-theming-and-tokens.md` y `21-document-maintenance.md`. `init` solo escribe `Stack` en un proyecto nuevo; cuando falta, manda el stack instalado.
+- El frontmatter de `DESIGN.md` es la fuente normativa de los tokens que su esquema admite (colores, tipografía, radios, espaciado y componentes) y la sección `Stack` de `PRODUCT.md`, la del stack, como fijan `12-ui-theming-and-tokens.md` y `21-document-maintenance.md`. `init` solo escribe `Stack` en un proyecto nuevo; cuando falta, manda el stack instalado, como define `04-sources-and-skills.md`.
 - Los tokens que el esquema no admite, como sombras, movimiento o puntos de corte, los fija el código y los describe su sección de `DESIGN.md`; el complemento `design.json` solo los refleja.
 - Si `init` o `document` proponen contenido que ya tiene sitio en una sección propia de la plantilla, como la terminología, las métricas de éxito, las decisiones abiertas, la voz del contenido o el estándar de accesibilidad, ese contenido va a esa sección y no se duplica; las restricciones técnicas van a `PLAN.md`.
 - Mientras `Platform` conserve su `TODO`, `impeccable context` avisa de que no reconoce el valor y trata el proyecto como `web`. El aviso desaparece al escribir `web`, `ios`, `android` o `adaptive`.

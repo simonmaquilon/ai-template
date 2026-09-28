@@ -6,7 +6,7 @@ Read after implementing a change specified under `30-change-specification.md`, w
 - Before editing to fix an unmet criterion, write a fix directive naming the criterion, the evidence as file and line or failing output, the confirmed cause or labeled hypothesis under `19-diagnosis-and-review.md`, the minimal fix, and the check to re-run.
 - Apply only directives within the specification; report a finding outside it under `19-diagnosis-and-review.md` instead of fixing it.
 - A cycle is one directive applied and its check re-run; count cycles and repeated failures per criterion.
-- End the loop with success when every criterion has passing evidence and every check `17-validation-policy.md` requires for the change passes; add no improvement, refactor, or criterion beyond the specification.
+- End the loop with success when every criterion has passing evidence and every check `17-validation-policy.md` requires for the change passes; add no criterion, improvement, or refactor beyond the specification, consistent with the closed scope of `02-change-workflow.md` and the simplest-solution rule of `14-code-authoring.md`.
 - When the same failure —same check, same assertion or error, same location— follows two consecutive directives without a new confirmed cause, stop fixing that criterion and diagnose it under `19-diagnosis-and-review.md`; continue only with a new confirmed cause, which resets this count.
 - Stop fixing a criterion after three cycles without passing evidence, even when each cycle found a new cause.
 - When a directive would change a criterion, an affected contract, or the scope, stop the loop and re-enter the gate of `30-change-specification.md`.
