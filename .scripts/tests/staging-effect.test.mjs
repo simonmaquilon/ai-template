@@ -110,6 +110,14 @@ for (const client of ['claude', 'codex']) {
     assert.equal(call(client, repo, 'pushd', 'pushd pkg; popd; git add c.txt', () => repo.git('add', '--', 'c.txt')).status, 0);
     assert.equal(call(client, repo, 'workdir', 'git add w.ts', () => repo.git('add', '--', 'src/w.ts')).status, 0);
     assert.equal(call(client, repo, 'assign', '$null = git add p.txt', () => repo.git('add', '--', 'p.txt')).status, 0);
+    for (const path of ['pkg/.env.example', 'pkg/src/x.ts', 'q.txt']) repo.write(path, `${path}\n`);
+    assert.equal(call(client, repo, 'dotfile', 'git add .env.example', () => repo.git('add', '--', 'pkg/.env.example')).status, 0);
+    const bracket = '[ -f src/x.ts ] && git add src/x.ts';
+    assert.equal(call(client, repo, 'bracket', bracket, () => repo.git('add', '--', 'pkg/src/x.ts'), sub).status, 0);
+    const objects = Array.from({ length: 30 }, (_, i) => `{ input:'a${i}', expected:${i} }`).join(', ');
+    const started = Date.now();
+    assert.equal(call(client, repo, 'objects', `node -e "const cases=[${objects}]" && git add q.txt`, () => repo.git('add', '--', 'q.txt')).status, 0);
+    assert.ok(Date.now() - started < 5000);
   });
 }
 

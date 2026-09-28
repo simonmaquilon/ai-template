@@ -52,11 +52,13 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
     const assigned = assignments(expanded);
     for (const [name, value] of assigned ?? []) variables.set(key(name), value);
     // A PowerShell $name = <command> also runs that command.
-    if (assigned) return expanded[1] === '=' && expanded.length > 2 && run(expanded.slice(2), bodies, fed);
-    return run(expanded, bodies, fed);
+    if (assigned) return expanded[1] === '=' && expanded.length > 2 && run(expanded.slice(2), bodies, fed, true);
+    return run(expanded, bodies, fed, false);
   });
 
-  function run(expanded, bodies, fed) {
+  // value marks the right-hand side of an assignment, which may be a plain
+  // value, such as a path, rather than a command naming a file to run.
+  function run(expanded, bodies, fed, value) {
     let i = 0;
     while (i < expanded.length) {
       if (expanded[i] === 'xargs') {
@@ -78,7 +80,7 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
     } else if (SHELL.test(name)) {
       hidden = shellScripts(name, args, bodies, cwd, seen);
     } else {
-      hidden = name === 'make' ? makeScripts(args, cwd, seen) : fileScripts(name, args, cwd, seen);
+      hidden = value ? [] : name === 'make' ? makeScripts(args, cwd, seen) : fileScripts(name, args, cwd, seen);
     }
     return hidden.some(nested);
   }

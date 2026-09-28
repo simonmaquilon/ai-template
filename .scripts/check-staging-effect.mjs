@@ -15,9 +15,10 @@
 // commits are not judged.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { isBulk } from './bulk-staging.mjs';
-import { enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
+import { enterRepositoryRoot, git, readHookInput } from './hook-support.mjs';
+import { braces, named } from './staged-paths.mjs';
 import { GIT, gitSubcommand, walk } from './staging-reader.mjs';
 
 const RECORDS = join('.temp', 'check-staging-effect');
@@ -66,12 +67,6 @@ const before = existsSync(record) ? load(record) : null;
 if (!before || before.ended) process.exit(0);
 writeFileSync(record, JSON.stringify({ ...before, ended: Date.now() }));
 
-// Brace expansions of a word, such as a/{b,c} into a/b and a/c.
-function braces(word) {
-  const match = /^(.*?)\{([^{}]*,[^{}]*)\}(.*)$/s.exec(word);
-  return match ? match[2].split(',').flatMap((part) => braces(`${match[1]}${part}${match[3]}`)) : [word];
-}
-
 // Words of every command a call runs, in POSIX and PowerShell readings; the
 // directories they may resolve from: the call's, the root, and any that cd,
 // pushd, or Set-Location names, since a subshell, script, or popd may undo it;
@@ -95,33 +90,13 @@ function read(call) {
   return { words, dirs: [...dirs], staging };
 }
 
-// Whether a repository-relative path is named by a word resolved from one of
-// dirs, with git pathspec patterns, where * and ? also match / and :/ starts at
-// the root; a pattern needs a literal character to name anything. A relative
-// word also names a path that ends with it, since Codex does not pass the hook
-// the working directory a command sets for itself.
-function named(path, word, dirs) {
-  const spec = word.replace(/^--pathspec-from-file=/, '');
-  const plain = toPosix(spec).replace(/^\.\//, '').replace(/\/$/, '');
-  if (plain && !plain.startsWith('.') && !plain.startsWith(':') && !isAbsolute(plain) && !/[*?[]/.test(plain)) {
-    if (path.endsWith(`/${plain}`) || path.includes(`/${plain}/`)) return true;
-  }
-  return dirs.some((dir) => {
-    const target = toPosix(spec.startsWith(':/') ? spec.slice(2) : relative(root, resolve(dir, spec))).replace(/\/$/, '');
-    if (!target || target.startsWith('..') || isAbsolute(target)) return false;
-    if (path === target || path.startsWith(`${target}/`)) return true;
-    if (!/[*?[]/.test(target) || !/[^*?/[\]]/.test(target)) return false;
-    const escaped = target.replace(/[.+^${}()|\\]/g, '\\$&').replace(/\*\*\//g, '\0').replace(/\*+/g, '.*').replace(/\?/g, '.');
-    return new RegExp(`^${escaped.replace(/\0/g, '(?:.*/)?')}$`).test(path);
-  });
-}
-
 const others = readdirSync(RECORDS)
   .filter((name) => name !== `${id}.json`)
   .map((name) => load(join(RECORDS, name)))
   .filter((call) => call && (call.ended ? call.ended >= before.started : Date.now() - call.started < RUNNING));
 const calls = [before, ...others].map(read);
-const unnamed = (paths) => paths.filter((path) => !calls.some((call) => call.words.some((word) => named(path, word, call.dirs))));
+const previously = new Set(before.staged);
+const unnamed = (paths) => paths.filter((path) => !calls.some((call) => call.words.some((word) => named(path, word, call.dirs, root))));
 
 const gitDir = git(['rev-parse', '--git-dir'])?.trim() ?? '.git';
 if (calls[0].staging || IN_PROGRESS.some((name) => existsSync(join(gitDir, name)))) process.exit(0);
@@ -136,10 +111,10 @@ if (after && !judged) {
   judged = (since !== -1 || !before.head) && range.length > 0 && range.every(([, subject]) => /^commit( \((?:amend|initial)\))?:/.test(subject));
   const base = before.head ?? git(['hash-object', '-t', 'tree', '--stdin'], '')?.trim();
   const committed = judged && base ? (git(['diff', '--name-only', '-z', base, after]) ?? '').split('\0').filter(Boolean) : [];
-  const added = unnamed(committed.filter((path) => !before.staged.includes(path)));
+  const added = unnamed(committed.filter((path) => !previously.has(path)));
   if (added.length > 0) problems.push(`it committed in ${after.slice(0, 7)} paths it neither names nor had staged: ${added.join(', ')}. Report the commit; do not rewrite it without authorization`);
 }
-const appeared = judged ? unnamed(staged().filter((path) => !before.staged.includes(path))) : [];
+const appeared = judged ? unnamed(staged().filter((path) => !previously.has(path))) : [];
 if (appeared.length > 0) {
   problems.push(`these paths became staged during it without being named: ${appeared.join(', ')}. If it staged them, unstage them with git restore --staged -- <path>; if another session or the user did, leave them and report it`);
 }
