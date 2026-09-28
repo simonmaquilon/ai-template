@@ -17,11 +17,11 @@ El plugin solo indica qué comando arranca el servidor y qué extensiones atiend
 ### `typescript-language-server`
 
 ```bash
-npm install -g typescript-language-server "typescript@<7"
+npm install -g typescript-language-server@6.0.1 typescript@6.0.3
 typescript-language-server --version
 ```
 
-El servidor envuelve `tsserver`, que TypeScript 7 ya no incluye. Por eso el `typescript` global se limita a versiones anteriores a la 7: el comando del README del plugin, sin rango, instala TypeScript 7 y el servidor no arranca (`Could not find a valid TypeScript installation`).
+El servidor envuelve `tsserver`, que TypeScript 7 ya no incluye. Por eso el `typescript` global se fija en una versión anterior a la 7: el comando del README del plugin, sin rango, instala TypeScript 7 y el servidor no arranca (`Could not find a valid TypeScript installation`). El comando fija las dos versiones verificadas de la tabla de abajo; cambiarlas es una actualización que `07-dependencies-and-binaries.md` somete a aprobación.
 
 El servidor usa el TypeScript del proyecto cuando `node_modules/typescript` trae `tsserver`, y solo recurre al global cuando el proyecto no lo trae, como en esta plantilla. Un proyecto en TypeScript 7 cae al global sin avisar, así que sus diagnósticos no corresponden a la versión del proyecto.
 

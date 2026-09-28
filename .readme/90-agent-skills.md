@@ -4,22 +4,22 @@ Las skills de agentes se instalan desde repositorios públicos y se versionan en
 
 ## Herramienta
 
-Las gestiona el CLI [`vercel-labs/skills`](https://github.com/vercel-labs/skills), que se ejecuta con `npx` sin instalarse como dependencia del proyecto.
+Las gestiona el CLI [`vercel-labs/skills`](https://github.com/vercel-labs/skills), que se ejecuta con `npx` sin instalarse como dependencia del proyecto. Los comandos de este documento fijan su versión, `skills@1.7.0`, publicada con atestación de procedencia desde `vercel-labs/skills`, y la del CLI de Impeccable, `impeccable@4.1.0`, publicada sin atestación, ambas verificadas el 2026-09-28 en el registro de npm; cambiarlas es una actualización que `07-dependencies-and-binaries.md` somete a aprobación.
 
 ## Comandos
 
 ```bash
 # Actualizar las skills del proyecto a su última versión
-npx skills update -p
+npx skills@1.7.0 update -p
 
 # Sin prompts interactivos
-npx skills update -p -y
+npx skills@1.7.0 update -p -y
 
 # Actualizar una skill concreta
-npx skills update nuxt
+npx skills@1.7.0 update nuxt
 
 # Añadir una skill nueva
-npx skills add <owner/repo>
+npx skills@1.7.0 add <owner/repo>
 ```
 
 Opciones de `update`: `-g` solo skills globales, `-p` solo skills del proyecto, `-y` omite el prompt de alcance, y uno o más nombres para acotar a skills concretas.
@@ -73,15 +73,15 @@ Cuando el CLI avisa `Multiple current paths match these skills from <origen>`, o
 
 ```bash
 # Actualizar la skill y regenerar sus agentes y hooks
-npx impeccable update --project --yes --force
+npx impeccable@4.1.0 update --project --yes --force
 
 # Reinstalar la skill desde su origen y refrescar su hash en el lockfile
-npx skills add pbakaus/impeccable --skill impeccable --agent codex --copy --yes --full-depth
+npx skills@1.7.0 add pbakaus/impeccable --skill impeccable --agent codex --copy --yes --full-depth
 ```
 
 `--agent codex --copy` instala solo en `.agents/skills/`, que es la ruta real, y así evita la ambigüedad del symlink. El primer paso deja el binario del motor dentro de la skill y el segundo lo retira: el lanzador `scripts/impeccable` lo descarga y verifica en la caché del usuario, `~/.impeccable/bin/<versión>/`, la primera vez que se ejecuta.
 
-Tras el segundo paso, `npx impeccable check` avisa `Updates available` aunque no exista una versión nueva: la copia del origen difiere de la que genera el CLI de Impeccable, que adapta rutas y comandos a Claude Code. Ese aviso no sirve para saber si hay una actualización.
+Tras el segundo paso, `npx impeccable@4.1.0 check` avisa `Updates available` aunque no exista una versión nueva: la copia del origen difiere de la que genera el CLI de Impeccable, que adapta rutas y comandos a Claude Code. Ese aviso no sirve para saber si hay una actualización.
 
 El instalador escribe además estos archivos fuera de la skill:
 
