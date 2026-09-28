@@ -11,7 +11,7 @@
 
 ## Instruction routing
 
-Instruction files live in `.agents/instructions/`. Load every file whose scope matches the request before acting, plus any file a loaded rule cites, and only those.
+Instruction files live in `.agents/instructions/`. Load every file whose scope matches the request before acting, plus any file cited by a loaded rule that applies to the request, and only those.
 
 ### Governance
 
