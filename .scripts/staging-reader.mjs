@@ -5,7 +5,8 @@
 // git command xargs runs. It then descends into what the command runs beyond
 // its text through hidden-commands.mjs: eval, a shell's -c or file script, a
 // here-document fed to a shell, a sourced or path-run file, make targets, and
-// git aliases. visit({ name, args, fed, xargs }) returns true to stop, and walk
+// git aliases; a PowerShell $name = <command> runs its command too.
+// visit({ name, args, fed, xargs }) returns true to stop, and walk
 // returns whether it stopped; nesting deeper than MAX_DEPTH throws. A script
 // may also be an argument list, read as one command.
 
@@ -50,7 +51,12 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
     const expanded = words.map((word) => word.replace(/\$\{?(\w+)\}?/g, (text, name) => variables.get(key(name)) ?? text));
     const assigned = assignments(expanded);
     for (const [name, value] of assigned ?? []) variables.set(key(name), value);
-    if (assigned) return false;
+    // A PowerShell $name = <command> also runs that command.
+    if (assigned) return expanded[1] === '=' && expanded.length > 2 && run(expanded.slice(2), bodies, fed);
+    return run(expanded, bodies, fed);
+  });
+
+  function run(expanded, bodies, fed) {
     let i = 0;
     while (i < expanded.length) {
       if (expanded[i] === 'xargs') {
@@ -75,5 +81,5 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
       hidden = name === 'make' ? makeScripts(args, cwd, seen) : fileScripts(name, args, cwd, seen);
     }
     return hidden.some(nested);
-  });
+  }
 }

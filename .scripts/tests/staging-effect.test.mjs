@@ -95,6 +95,24 @@ for (const client of ['claude', 'codex']) {
   });
 }
 
+for (const client of ['claude', 'codex']) {
+  test(`${client}: the effect hook names paths from undone directory changes, workdirs, and PowerShell assignments`, (t) => {
+    const repo = baseRepo(t);
+    for (const path of ['a.txt', 'b.txt', 'c.txt', 'pkg/keep.txt', 'src/w.ts', 'p.txt']) repo.write(path, `${path}\n`);
+    const sub = join(repo.dir, 'pkg');
+    const top = 'cd "$(git rev-parse --show-toplevel)" && git add a.txt && git commit -m a';
+    const commitA = () => {
+      repo.git('add', '--', 'a.txt');
+      repo.git('commit', '-q', '-m', 'a');
+    };
+    assert.equal(call(client, repo, 'toplevel', top, commitA, sub).status, 0);
+    assert.equal(call(client, repo, 'subshell', '(cd pkg && ls) && git add b.txt', () => repo.git('add', '--', 'b.txt')).status, 0);
+    assert.equal(call(client, repo, 'pushd', 'pushd pkg; popd; git add c.txt', () => repo.git('add', '--', 'c.txt')).status, 0);
+    assert.equal(call(client, repo, 'workdir', 'git add w.ts', () => repo.git('add', '--', 'src/w.ts')).status, 0);
+    assert.equal(call(client, repo, 'assign', '$null = git add p.txt', () => repo.git('add', '--', 'p.txt')).status, 0);
+  });
+}
+
 test('claude: the effect hook also runs after a command that fails', () => {
   assert.ok(hookFor('claude', 'PostToolUseFailure', 'check-staging-effect.mjs'));
 });

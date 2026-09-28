@@ -4,17 +4,15 @@
 // --before, as a PreToolUse hook on the shell tool, it records under .temp/ the
 // staged paths and HEAD for that tool call, unless bulk-staging.mjs already
 // rejects the command; with --after, as a PostToolUse hook, it compares and
-// keeps the record, marked finished, for a day. Exit status 2, which both
-// clients feed back to the model, reports paths that became staged during the
-// call without any of its commands naming them, by path, directory, brace
-// expansion, or git pathspec pattern from the directory cd or Set-Location left,
-// asking the agent to unstage them only if it staged them; and a commit the
-// call made, as the reflog records it, with paths it neither named nor had
-// staged, which it reports without undoing. Paths named by an overlapping call,
-// one still running that started within RUNNING or one that finished after
-// this one started, count as named. Calls that run git commands staging by
-// their nature, such as stash, merge, or apply, operations in progress, and
-// HEAD moves other than commits are not judged.
+// keeps the record, marked finished, for a day. Exit status 2, fed back to the
+// model, reports paths staged during the call that none of its commands names,
+// asking to unstage them only if the call staged them, and a commit the call
+// made, as the reflog records it, with paths it neither named nor had staged,
+// without undoing it. Paths named by an overlapping call, one still running
+// that started within RUNNING or one that finished after this one started,
+// count as named. Calls that run git commands staging by their nature, such as
+// stash, merge, or apply, operations in progress, and HEAD moves other than
+// commits are not judged.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
@@ -74,38 +72,48 @@ function braces(word) {
   return match ? match[2].split(',').flatMap((part) => braces(`${match[1]}${part}${match[3]}`)) : [word];
 }
 
-// Words of every command a call runs, in POSIX and PowerShell readings, each
-// with the directory cd, pushd, or Set-Location left it in, and whether any is
-// a git command that stages by its nature, such as stash, merge, or apply.
+// Words of every command a call runs, in POSIX and PowerShell readings; the
+// directories they may resolve from: the call's, the root, and any that cd,
+// pushd, or Set-Location names, since a subshell, script, or popd may undo it;
+// and whether any command is git that stages by its nature, such as stash.
 function read(call) {
   const words = [];
+  const dirs = new Set([call.cwd, root]);
   let staging = false;
+  const visit = ({ name, args }) => {
+    const target = /^(?:cd|pushd|set-location|sl|chdir)$/i.test(name) ? args.find((arg) => !arg.startsWith('-')) : null;
+    if (target && !/[$~]/.test(target)) dirs.add(resolve(call.cwd, target));
+    for (const word of [name, ...args]) for (const expanded of braces(word)) words.push(expanded);
+    if (GIT.test(name) && SELF_STAGING.has(args[gitSubcommand(args).index])) staging = true;
+    return false;
+  };
   for (const powershell of [false, true]) {
-    let dir = call.cwd;
-    const visit = ({ name, args }) => {
-      if (/^(?:cd|pushd|set-location|sl|chdir)$/i.test(name)) dir = resolve(dir, args.find((arg) => !arg.startsWith('-')) ?? '.');
-      for (const word of [name, ...args]) for (const expanded of braces(word)) words.push([expanded, dir]);
-      if (GIT.test(name) && SELF_STAGING.has(args[gitSubcommand(args).index])) staging = true;
-      return false;
-    };
     try {
       walk(call.command, { powershell, cwd: call.cwd, visit });
     } catch {}
   }
-  return { words, staging };
+  return { words, dirs: [...dirs], staging };
 }
 
-// Whether a repository-relative path is named by a word of a command run in dir,
-// with git pathspec patterns, where * and ? also match / and :/ starts at the
-// root; a pattern needs a literal character to name anything.
-function named(path, word, dir) {
+// Whether a repository-relative path is named by a word resolved from one of
+// dirs, with git pathspec patterns, where * and ? also match / and :/ starts at
+// the root; a pattern needs a literal character to name anything. A relative
+// word also names a path that ends with it, since Codex does not pass the hook
+// the working directory a command sets for itself.
+function named(path, word, dirs) {
   const spec = word.replace(/^--pathspec-from-file=/, '');
-  const target = toPosix(spec.startsWith(':/') ? spec.slice(2) : relative(root, resolve(dir, spec))).replace(/\/$/, '');
-  if (!target || target.startsWith('..') || isAbsolute(target)) return false;
-  if (path === target || path.startsWith(`${target}/`)) return true;
-  if (!/[*?[]/.test(target) || !/[^*?/[\]]/.test(target)) return false;
-  const escaped = target.replace(/[.+^${}()|\\]/g, '\\$&').replace(/\*\*\//g, '\0').replace(/\*+/g, '.*').replace(/\?/g, '.');
-  return new RegExp(`^${escaped.replace(/\0/g, '(?:.*/)?')}$`).test(path);
+  const plain = toPosix(spec).replace(/^\.\//, '').replace(/\/$/, '');
+  if (plain && !plain.startsWith('.') && !plain.startsWith(':') && !isAbsolute(plain) && !/[*?[]/.test(plain)) {
+    if (path.endsWith(`/${plain}`) || path.includes(`/${plain}/`)) return true;
+  }
+  return dirs.some((dir) => {
+    const target = toPosix(spec.startsWith(':/') ? spec.slice(2) : relative(root, resolve(dir, spec))).replace(/\/$/, '');
+    if (!target || target.startsWith('..') || isAbsolute(target)) return false;
+    if (path === target || path.startsWith(`${target}/`)) return true;
+    if (!/[*?[]/.test(target) || !/[^*?/[\]]/.test(target)) return false;
+    const escaped = target.replace(/[.+^${}()|\\]/g, '\\$&').replace(/\*\*\//g, '\0').replace(/\*+/g, '.*').replace(/\?/g, '.');
+    return new RegExp(`^${escaped.replace(/\0/g, '(?:.*/)?')}$`).test(path);
+  });
 }
 
 const others = readdirSync(RECORDS)
@@ -113,7 +121,7 @@ const others = readdirSync(RECORDS)
   .map((name) => load(join(RECORDS, name)))
   .filter((call) => call && (call.ended ? call.ended >= before.started : Date.now() - call.started < RUNNING));
 const calls = [before, ...others].map(read);
-const unnamed = (paths) => paths.filter((path) => !calls.some((call) => call.words.some(([word, dir]) => named(path, word, dir))));
+const unnamed = (paths) => paths.filter((path) => !calls.some((call) => call.words.some((word) => named(path, word, call.dirs))));
 
 const gitDir = git(['rev-parse', '--git-dir'])?.trim() ?? '.git';
 if (calls[0].staging || IN_PROGRESS.some((name) => existsSync(join(gitDir, name)))) process.exit(0);
