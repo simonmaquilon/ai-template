@@ -7,6 +7,12 @@
       "skillPath": "skills/cloudflare/SKILL.md",
       "computedHash": "163d684e39202f0073a15b84181d6bc1c825092d66947193daefd153102e2839"
     },
+    "context7-mcp": {
+      "source": "upstash/context7",
+      "sourceType": "github",
+      "skillPath": "skills/context7-mcp/SKILL.md",
+      "computedHash": "38728e71e4773f70b3e7d2a2c90b1b0466ba7829603d790b05e0a3ab12f8e569"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
