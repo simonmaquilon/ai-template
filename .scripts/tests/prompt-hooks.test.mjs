@@ -14,6 +14,7 @@ for (const client of ['claude', 'codex']) {
     repo.write('sub/keep.txt', 'kept\n');
     repo.write('reserved/.gitkeep', '');
     mkdirSync(join(repo.dir, 'reserved', 'empty-child'));
+    assert.equal(repo.git('init', '-q', 'nested').status, 0);
     const hook = hookFor(client, 'UserPromptSubmit', 'check-empty-dirs.mjs');
     const result = runClientHook(client, hook, repo, { cwd: join(repo.dir, 'sub') });
     assert.equal(result.status, 0, result.stderr);
@@ -22,7 +23,7 @@ for (const client of ['claude', 'codex']) {
     assert.doesNotMatch(result.stdout, /ignored-empty/);
     assert.equal(existsSync(join(repo.dir, 'empty')), false);
     assert.equal(existsSync(join(repo.dir, 'reserved', 'empty-child')), false);
-    for (const path of ['reserved/.gitkeep', 'sub/keep.txt', '.temp/ignored-empty', '.git']) {
+    for (const path of ['reserved/.gitkeep', 'sub/keep.txt', '.temp/ignored-empty', '.git', 'nested/.git/refs/heads']) {
       assert.equal(existsSync(join(repo.dir, path)), true, path);
     }
   });
