@@ -6,7 +6,7 @@ El workflow `.github/workflows/template-checks.yml` comprueba en GitHub Actions 
 
 Un único paso, `node .scripts/run-checks.mjs --base <revisión>`, que también se ejecuta en local desde cualquier carpeta del repositorio, con o sin `--base`, y termina con código 1 si falla algo:
 
-- las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias, entre ellas las de los hooks de staging por texto y por efecto y la limpieza de carpetas con preservación de contenido, metadatos Git y directorios bloqueados;
+- las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias, entre ellas las de los hooks de staging por texto y por efecto y la limpieza de carpetas con preservación de contenido, metadatos Git y directorios bloqueados, además de los avisos de seguridad y sus límites de lectura y exposición de datos;
 - la comprobación de enlaces de `.scripts/check-doc-links.mjs`, que aquí falla si informa de algo;
 - la comprobación de la estructura de las instrucciones y de los prefijos de `.readme/` de `.scripts/check-instructions.mjs`, que también falla si informa de algo;
 - el límite de líneas de `.scripts/check-file-length.mjs`, sobre los archivos que cambian respecto a la revisión de `--base`; sin `--base` revisa solo los cambios sin commitear respecto a `HEAD`, que en el checkout limpio del CI no existen.

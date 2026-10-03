@@ -15,13 +15,14 @@ Todos viven en `.claude/settings.json` y en `.codex/hooks.json`. Cada handler de
 | Avisa de archivos de instrucciones sin entrada de enrutado en `AGENTS.md`, que superan su límite de líneas, con reglas partidas en varias líneas o con prefijo repetido o retirado, y de documentos de `.readme/` con prefijo repetido o retirado | `UserPromptSubmit` | `01-meta-guidelines.md` y `16-documentation.md` | `.scripts/check-instructions.mjs` |
 | Avisa de symlinks versionados que el checkout dejó como archivos | `UserPromptSubmit` | `28-agent-tooling-configuration.md` | `.scripts/check-symlinks.mjs` |
 | Avisa tras cada edición de archivos de código que superan el límite de líneas y fuerza una continuación al cerrar el turno | `PostToolUse`, sobre ediciones; `Stop`; y `UserPromptSubmit`, que marca el inicio del turno | `14-code-authoring.md` | `.scripts/check-file-length.mjs` |
+| Señala patrones de seguridad que requieren comprobar su contexto después de editar | `PostToolUse`, sobre ediciones | `32-security-review-workflow.md` | `.scripts/check-security.mjs` |
 | Revisión de diseño de Impeccable | `PostToolUse` y `Stop` | — | `scripts/impeccable` de la skill |
 
 El hook de directorios elimina primero los hijos vacíos y después sus padres si también quedan vacíos. Vuelve a comprobar que cada carpeta esté vacía antes de intentar borrarla y usa borrado no recursivo: conserva cualquier carpeta con archivos, incluido `.gitkeep`, y omite los directorios ignorados por Git, los symlinks y cualquier directorio `.git`, también en repositorios anidados. Conserva también las carpetas temporalmente bloqueadas por otro proceso (`EBUSY`), habituales en Windows; una ejecución posterior vuelve a evaluarlas. Informa solo de las rutas eliminadas; si no puede consultar qué directorios ignora Git, no elimina nada.
 
 ## Cómo se lanzan
 
-Los siete primeros son scripts de Node que solo necesitan `git` y `node`. Cada uno se sitúa en la raíz del repositorio con `git rev-parse --show-toplevel`, sea cual sea la carpeta de la sesión, escribe las rutas con `/` y funciona igual en Windows, macOS y Linux, como pide `05-repo-layout.md`. Comparten `.scripts/hook-support.mjs`, que lee la entrada del hook y ejecuta git sin shell.
+Los ocho primeros son scripts de Node que solo necesitan `git` y `node`. Cada uno se sitúa en la raíz del repositorio con `git rev-parse --show-toplevel`, sea cual sea la carpeta de la sesión, escribe las rutas con `/` y funciona igual en Windows, macOS y Linux, como pide `05-repo-layout.md`. Comparten `.scripts/hook-support.mjs`, que lee la entrada del hook y ejecuta git sin shell.
 
 Cada cliente los lanza a su manera, así que el comando no es el mismo en los dos:
 
@@ -43,6 +44,10 @@ El límite lo fija `.scripts/check-file-length.mjs`, y el aviso del hook incluye
 Los dos eventos de Impeccable corresponden a pases distintos del mismo detector: tras editar aplica las reglas inmediatas y al cerrar aplica el conjunto completo sobre los archivos UI tocados, sin repetir hallazgos ya comunicados. No sustituyen las revisiones de [Flujo de diseño y revisión de UI](90-agent-skills.md#flujo-de-diseño-y-revisión-de-ui).
 
 El de Impeccable no hace cumplir ni cita una regla enrutada: lo instala y regenera la skill con un comando distinto por cliente (rutas `.claude/skills` y `.agents/skills`; `commandWindows` solo en Codex), como describe [Skills de agentes](90-agent-skills.md).
+
+El hook de seguridad no bloquea: emite archivo, línea, categoría y orientación, sin copiar código ni valores detectados. Revisa los archivos que nombra la edición o el patch, resuelve su ubicación real y omite rutas externas, ignoradas, generadas, vendorizadas, archivos `.env`, directorios conocidos de credenciales, `.codex/auth.json` y archivos binarios. Las rutas se escapan para no convertir nombres de archivo en mensajes de control. Lee como máximo 1 MiB por archivo y muestra hasta 20 candidatos por archivo; informa cuando no puede revisar un archivo por tamaño o lectura. Sus reglas viven en `.scripts/security-patterns.mjs`; son heurísticas con posibles falsos positivos y negativos, no un parser ni una auditoría. Pueden señalar código preexistente en el archivo editado: el agente comprueba el diff y sus controles antes de corregirlo.
+
+La revisión semántica del diff al finalizar se realiza mediante la skill y las instrucciones compartidas, como describe [Seguridad durante el desarrollo](90-agent-skills.md#seguridad-durante-el-desarrollo). No se añade un hook de `Stop` ni una revisión adicional en cada commit. El hook de ediciones no observa escrituras desde la shell; esas modificaciones quedan dentro de la revisión final del diff.
 
 ## Sistemas y requisitos
 

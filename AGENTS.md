@@ -65,6 +65,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 - `08-storage-and-secrets.md`: when touching storage, buckets, media, sensitive data, credentials, environment files, or secrets; storage boundaries, secret handling, data classification, and lifecycle controls.
 - `22-security-and-trust-boundaries.md`: before changing authentication, authorization, externally reachable surfaces, sessions, permissions, sensitive operations, untrusted data ingestion, or audit behavior; trust boundaries, untrusted input, abuse controls, and security validation.
+- `32-security-review-workflow.md`: before implementing or reviewing source code, runtime configuration, dependencies, or automated workflows; continuous security guidance, edit-hook candidates, scoped task-diff review, evidence, and coordination with independent verification.
 - `23-data-integrity-and-migrations.md`: before changing persistent schemas, migrations, backfills, transactional workflows, stored-data transformations, or compatibility between data readers and writers; atomicity, recovery, migration application, and data validation.
 
 #### Platform and contracts

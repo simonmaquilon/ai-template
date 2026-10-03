@@ -25,8 +25,9 @@ $RECYCLE.BIN/
 # Repository-owned temporary artifacts
 .temp/
 
-# Local agent overrides
+# Local agent overrides and credentials
 .claude/settings.local.json
+.codex/auth.json
 
 # Impeccable working artifacts and per-person settings; its shared configuration stays versioned (see .readme/90-agent-skills.md)
 .impeccable/config.local.json

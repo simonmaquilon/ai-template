@@ -96,6 +96,18 @@ El instalador escribe además estos archivos fuera de la skill:
 
 El hook de diseño de Claude Code se versiona en `.claude/settings.json` para que llegue a los proyectos derivados. El instalador lo reconoce ahí y no crea `.claude/settings.local.json`; si una máquina conserva una copia anterior en ese archivo, Claude Code ejecuta el hook duplicado una sola vez.
 
+## Seguridad durante el desarrollo
+
+`32-security-review-workflow.md` exige consultar guía de seguridad antes de implementar, revisar los avisos después de editar y comprobar el diff de la tarea antes de terminar. La skill configurada es [Cloudflare `security-audit`](https://github.com/cloudflare/security-audit-skill), compartida por Claude Code y Codex mediante `.agents/skills/security-audit/` y el symlink `.claude/skills`.
+
+Se adoptó el commit `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8`, publicado por Cloudflare, con licencia MIT; `skills-lock.json` fija ese ref y su hash de contenido. No declara `allowed-tools`, hooks ni dependencias externas de runtime: incluye documentación y validadores de Node sin paquetes externos. Los validadores de la auditoría completa no se ejecutan como parte del aviso al editar. Adoptar una versión posterior sigue la aprobación y revisión de permisos de las reglas de dependencias y tooling.
+
+Durante la construcción se usa su **guidance mode**: leer las secciones necesarias, aplicar sus criterios a las decisiones y hacer una revisión focalizada del diff. No se inicia automáticamente su auditoría de seis fases ni se generan sus informes. El hook propio `Checking security patterns` solo aporta candidatos locales; el agente confirma su contexto con la skill. No ejecuta el código revisado, no llama a un modelo separado, no envía archivos a un servicio adicional y no modifica los archivos detectados.
+
+La revisión final incluye los commits creados durante la tarea, los cambios preparados y sin preparar y los archivos nuevos dentro del alcance. La revisión independiente, cuando se exige, incorpora seguridad a la misma ronda de `31-verification-loop.md`. Los avisos por edición no cuentan como rondas independientes. Las reproducciones de seguridad siguen los requisitos de aislamiento de la skill; si el harness no puede proporcionar todos, se limita la revisión a código fuente y se informa lo pendiente sin afirmar validación dinámica.
+
+Una auditoría completa requiere petición explícita y comprobar antes que su metodología, presupuesto, artefactos y múltiples verificadores sean compatibles con los límites autorizados del repositorio. Esta instalación no amplía esos límites. Los hallazgos persistentes se registran donde indiquen las reglas de documentación; no se crea un registro paralelo para la revisión cotidiana.
+
 ## Flujo de diseño y revisión de UI
 
 `13-ui-design-workflow.md` define cuándo se diseña, critica, audita y refina una interfaz. Impeccable es la skill configurada para ejecutar esas revisiones en Claude Code y Codex. La secuencia es diseño previo → implementación con detectores → `critique` → `audit` cuando corresponda → `polish` si hay hallazgos visuales → verificación final.
