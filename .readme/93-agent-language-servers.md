@@ -25,7 +25,7 @@ El servidor envuelve `tsserver`, que TypeScript 7 ya no incluye. Por eso el `typ
 
 El servidor usa el TypeScript del proyecto cuando `node_modules/typescript` trae `tsserver`, y solo recurre al global cuando el proyecto no lo trae, como en esta plantilla. Un proyecto en TypeScript 7 cae al global sin avisar, así que sus diagnósticos no corresponden a la versión del proyecto.
 
-Versiones y procedencia verificadas el 2026-09-26:
+Versiones y procedencia verificadas al fijarlas:
 
 | Paquete | Versión | Licencia | Origen | Verificación |
 | --- | --- | --- | --- | --- |

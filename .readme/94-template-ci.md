@@ -20,9 +20,9 @@ Las pruebas de salida verifican el contrato JSON documentado de los hooks; no re
 - Se ejecuta en cada push a `main` y en cada pull request contra `main`.
 - La revisión base es la del pull request (`github.event.pull_request.base.sha`) o la que tenía `main` antes del push (`github.event.before`); el checkout trae el historial de todas las ramas y etiquetas (`fetch-depth: 0`) para que exista.
 - Si git no resuelve esa revisión, como el head anterior a un force push, que ya no está en ninguna rama y el checkout no trae, el script lo avisa y compara con el padre de `HEAD`, así que ese run solo revisa el último commit; sin padre, cuenta todos los archivos como nuevos.
-- Matriz: `ubuntu-24.04` y `windows-2025`, con Node 24.
+- Matriz: Linux y Windows; las imágenes de runner y la versión de Node las fija el workflow.
 - El token del workflow solo tiene permiso de lectura (`contents: read`).
-- Las acciones se fijan por SHA en el workflow, con su versión en un comentario, como pide `26-automated-workflows.md`; se verificaron contra sus releases publicadas en GitHub el 2026-09-27.
+- Las acciones se fijan por SHA en el workflow, con su versión en un comentario, como pide `26-automated-workflows.md`; cada SHA se verifica contra la release publicada en GitHub al fijarlo.
 
 En un repositorio privado, cada ejecución consume los minutos de Actions incluidos en el plan de la cuenta, y los de Windows cuestan más que los de Linux.
 
