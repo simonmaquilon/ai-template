@@ -22,12 +22,12 @@ function walk(dir) {
     const path = dir ? `${dir}/${entry.name}` : entry.name;
     if (entry.isDirectory() && entry.name !== '.git' && !ignored.has(path)) walk(path);
   }
-  if (!dir) return;
+  if (!dir || readdirSync(dir).length > 0) return;
   try {
     rmdirSync(dir);
     removed.push(dir);
   } catch (error) {
-    if (!['ENOTEMPTY', 'EEXIST', 'ENOENT'].includes(error.code)) throw error;
+    if (!['ENOTEMPTY', 'EEXIST', 'ENOENT', 'EBUSY'].includes(error.code)) throw error;
   }
 }
 walk('');

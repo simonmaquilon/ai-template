@@ -17,7 +17,7 @@ Todos viven en `.claude/settings.json` y en `.codex/hooks.json`. Cada handler de
 | Avisa tras cada edición de archivos de código que superan el límite de líneas y fuerza una continuación al cerrar el turno | `PostToolUse`, sobre ediciones; `Stop`; y `UserPromptSubmit`, que marca el inicio del turno | `14-code-authoring.md` | `.scripts/check-file-length.mjs` |
 | Revisión de diseño de Impeccable | `PostToolUse` y `Stop` | — | `scripts/impeccable` de la skill |
 
-El hook de directorios elimina primero los hijos vacíos y después sus padres si también quedan vacíos. Usa borrado no recursivo: conserva cualquier carpeta con archivos, incluido `.gitkeep`, y omite los directorios ignorados por Git, los symlinks y cualquier directorio `.git`, también en repositorios anidados. Informa de las rutas eliminadas; si no puede consultar qué directorios ignora Git, no elimina nada.
+El hook de directorios elimina primero los hijos vacíos y después sus padres si también quedan vacíos. Vuelve a comprobar que cada carpeta esté vacía antes de intentar borrarla y usa borrado no recursivo: conserva cualquier carpeta con archivos, incluido `.gitkeep`, y omite los directorios ignorados por Git, los symlinks y cualquier directorio `.git`, también en repositorios anidados. Conserva también las carpetas temporalmente bloqueadas por otro proceso (`EBUSY`), habituales en Windows; una ejecución posterior vuelve a evaluarlas. Informa solo de las rutas eliminadas; si no puede consultar qué directorios ignora Git, no elimina nada.
 
 ## Cómo se lanzan
 
