@@ -40,7 +40,7 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-empty-dirs.mjs"
             ],
-            "statusMessage": "Checking empty directories"
+            "statusMessage": "Removing empty directories"
           },
           {
             "type": "command",

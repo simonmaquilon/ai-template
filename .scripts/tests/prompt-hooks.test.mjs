@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { hookFor, makeRepo, numbered, ruleHooks, run, runClientHook } from './support.mjs';
@@ -7,17 +7,24 @@ import { hookFor, makeRepo, numbered, ruleHooks, run, runClientHook } from './su
 const EVENTS = ['PreToolUse', 'UserPromptSubmit', 'PostToolUse', 'PostToolUseFailure', 'Stop'];
 
 for (const client of ['claude', 'codex']) {
-  test(`${client}: the empty-directory hook reports empty directories git does not ignore`, (t) => {
+  test(`${client}: the empty-directory hook removes empty trees and preserves occupied and ignored directories`, (t) => {
     const repo = makeRepo(t);
     mkdirSync(join(repo.dir, 'empty', 'inner'), { recursive: true });
     mkdirSync(join(repo.dir, '.temp', 'ignored-empty'), { recursive: true });
     repo.write('sub/keep.txt', 'kept\n');
+    repo.write('reserved/.gitkeep', '');
+    mkdirSync(join(repo.dir, 'reserved', 'empty-child'));
     const hook = hookFor(client, 'UserPromptSubmit', 'check-empty-dirs.mjs');
     const result = runClientHook(client, hook, repo, { cwd: join(repo.dir, 'sub') });
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /05-repo-layout\.md/);
     assert.match(result.stdout, /\.\/empty\/inner/);
     assert.doesNotMatch(result.stdout, /ignored-empty/);
+    assert.equal(existsSync(join(repo.dir, 'empty')), false);
+    assert.equal(existsSync(join(repo.dir, 'reserved', 'empty-child')), false);
+    for (const path of ['reserved/.gitkeep', 'sub/keep.txt', '.temp/ignored-empty', '.git']) {
+      assert.equal(existsSync(join(repo.dir, path)), true, path);
+    }
   });
 
   test(`${client}: the link hook reports broken links with forward slashes`, (t) => {

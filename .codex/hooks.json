@@ -26,7 +26,7 @@
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-empty-dirs.mjs\" ] || exit 0; node \"$r/.scripts/check-empty-dirs.mjs\"",
             "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-empty-dirs.mjs')))\"",
-            "statusMessage": "Checking empty directories"
+            "statusMessage": "Removing empty directories"
           },
           {
             "type": "command",

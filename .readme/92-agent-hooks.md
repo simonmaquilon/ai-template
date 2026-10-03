@@ -10,12 +10,14 @@ Todos viven en `.claude/settings.json` y en `.codex/hooks.json`. Cada handler de
 | --- | --- | --- | --- |
 | Rechaza el `git add` y el `git commit` en bloque | `PreToolUse`, sobre la herramienta de shell | `27-version-control.md` | `.scripts/check-staging.mjs` |
 | Detecta por su efecto el staging o el commit de rutas que el comando no nombra | `PreToolUse` y, en Claude Code, `PostToolUse` y `PostToolUseFailure`; en Codex, `PostToolUse`; sobre la herramienta de shell | `27-version-control.md` | `.scripts/check-staging-effect.mjs` |
-| Avisa de directorios vacíos no ignorados | `UserPromptSubmit` | `05-repo-layout.md` | `.scripts/check-empty-dirs.mjs` |
+| Elimina directorios vacíos no ignorados | `UserPromptSubmit` | `05-repo-layout.md` | `.scripts/check-empty-dirs.mjs` |
 | Avisa de enlaces y rutas citadas rotos en la documentación | `UserPromptSubmit` | `17-validation-policy.md` | `.scripts/check-doc-links.mjs` |
 | Avisa de archivos de instrucciones sin entrada de enrutado en `AGENTS.md`, que superan su límite de líneas, con reglas partidas en varias líneas o con prefijo repetido o retirado, y de documentos de `.readme/` con prefijo repetido o retirado | `UserPromptSubmit` | `01-meta-guidelines.md` y `16-documentation.md` | `.scripts/check-instructions.mjs` |
 | Avisa de symlinks versionados que el checkout dejó como archivos | `UserPromptSubmit` | `28-agent-tooling-configuration.md` | `.scripts/check-symlinks.mjs` |
 | Avisa tras cada edición de archivos de código que superan el límite de líneas y fuerza una continuación al cerrar el turno | `PostToolUse`, sobre ediciones; `Stop`; y `UserPromptSubmit`, que marca el inicio del turno | `14-code-authoring.md` | `.scripts/check-file-length.mjs` |
 | Revisión de diseño de Impeccable | `PostToolUse` y `Stop` | — | `scripts/impeccable` de la skill |
+
+El hook de directorios elimina primero los hijos vacíos y después sus padres si también quedan vacíos. Usa borrado no recursivo: conserva cualquier carpeta con archivos, incluido `.gitkeep`, y omite los directorios ignorados por Git, los symlinks y `.git`. Informa de las rutas eliminadas; si no puede consultar qué directorios ignora Git, no elimina nada.
 
 ## Cómo se lanzan
 
