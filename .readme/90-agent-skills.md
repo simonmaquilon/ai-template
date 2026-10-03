@@ -96,6 +96,25 @@ El instalador escribe además estos archivos fuera de la skill:
 
 El hook de diseño de Claude Code se versiona en `.claude/settings.json` para que llegue a los proyectos derivados. El instalador lo reconoce ahí y no crea `.claude/settings.local.json`; si una máquina conserva una copia anterior en ese archivo, Claude Code ejecuta el hook duplicado una sola vez.
 
+## Flujo de diseño y revisión de UI
+
+`13-ui-design-workflow.md` define cuándo se diseña, critica, audita y refina una interfaz. Impeccable es la skill configurada para ejecutar esas revisiones en Claude Code y Codex. La secuencia es diseño previo → implementación con detectores → `critique` → `audit` cuando corresponda → `polish` si hay hallazgos visuales → verificación final.
+
+| Etapa | Ejecución con Impeccable |
+| --- | --- |
+| Diseño previo | Consultar `PRODUCT.md`, `DESIGN.md` y la interfaz existente. Seguir `reference/new-work.md` para UI nueva o rediseñada y registrar jerarquía, distribución, interacción y estados en la especificación de la tarea. En ajustes pequeños, registrar lo que se preserva. `shape` queda disponible si la tarea requiere descubrimiento de UX; no se añade una entrevista a cada ajuste. |
+| Implementación | Mantener los hooks `Checking UI changes` y `Design deep pass`. Son el detector automático; no equivalen a una crítica ni a una auditoría del producto. |
+| Crítica | Ejecutar el procedimiento `$impeccable critique` una vez por tarea que cambie UI, incluidos estilos y textos. Resolver objetivos concretos y cubrir todas las superficies afectadas; pueden requerirse varios objetivos dentro de la misma ronda. |
+| Auditoría | Ejecutar `$impeccable audit` cuando los criterios de aceptación entreguen una pantalla o flujo funcional completo, nuevo o modificado. Usar su referencia nativa cuando corresponda y limitar el informe a las superficies afectadas. |
+| Refinamiento | Ejecutar `$impeccable polish` cuando los hallazgos requieran correcciones visuales dentro del alcance autorizado. Conservar identidad, contenido y comportamiento; no convertir el refinamiento en un rediseño. |
+| Confirmación | Comprobar las correcciones sobre la experiencia renderizada y repetir los checks afectados. Reutilizar evidencia aún válida y respetar el límite de rondas de la regla; no repetir revisiones completas indefinidamente. |
+
+`critique`, `audit` y `polish` son procedimientos de la skill, no nuevos hooks ni subcomandos shell equivalentes. Antes de ejecutarlos se leen sus referencias: [critique](../.agents/skills/impeccable/reference/critique.md), [audit](../.agents/skills/impeccable/reference/audit.md), [audit nativo](../.agents/skills/impeccable/reference/audit.native.md) y [polish](../.agents/skills/impeccable/reference/polish.md). El lanzador `scripts/impeccable` proporciona contexto, detector y almacenamiento de informes; por sí solo no ejecuta la evaluación de diseño del agente.
+
+La crítica prescribe dos evaluaciones aisladas: diseño y evidencia del detector/navegador. Cuando `31-verification-loop.md` exige verificación independiente, se coordinan en la etapa de revisión de UI, después de pasar los demás checks de implementación, como una sola ronda sobre la especificación y el diff, con acceso al repositorio y sin compartir hallazgos antes de la síntesis. Se respetan las autorizaciones de la skill y de `03-approval-boundaries.md`; esta política no preautoriza subagentes ni amplía permisos. Las observaciones del detector son evidencia complementaria, no prueba de que la experiencia esté validada.
+
+Se reúnen los hallazgos de crítica y auditoría antes de corregirlos; los que excedan el alcance se informan. El refinamiento consume esos hallazgos y no inicia otra verificación independiente. La ausencia de navegador, detector u otra capacidad se declara según las reglas de fuentes y validación, sin afirmar una revisión completa. Una tarea sin cambios de UI no activa este flujo. Los hooks globales no incorporan estas obligaciones: se heredan a través de las instrucciones compartidas del repositorio.
+
 ## Impeccable, `PRODUCT.md` y `DESIGN.md`
 
 Los esqueletos de `PRODUCT.md` y `DESIGN.md` siguen el formato que leen y escriben las referencias `init` y `document` de Impeccable (`reference/init.md` y `reference/document.md` de la skill), para que la skill los actualice en lugar de crear una autoridad paralela:

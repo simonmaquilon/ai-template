@@ -40,6 +40,8 @@ El de longitud actúa en tres momentos. Al enviar cada mensaje deja una marca po
 
 El límite lo fija `.scripts/check-file-length.mjs`, y el aviso del hook incluye el número; qué cuenta como código lo fija `.scripts/source-files.mjs`. Un proyecto derivado exime sus archivos generados o vendorizados marcándolos en `.gitattributes` con `linguist-generated` o `linguist-vendored`, como hace la plantilla con `.agents/skills/`, y cualquier otro archivo exento que el script no reconozca, con `-source-file-limit`.
 
+Los dos eventos de Impeccable corresponden a pases distintos del mismo detector: tras editar aplica las reglas inmediatas y al cerrar aplica el conjunto completo sobre los archivos UI tocados, sin repetir hallazgos ya comunicados. No sustituyen las revisiones de [Flujo de diseño y revisión de UI](90-agent-skills.md#flujo-de-diseño-y-revisión-de-ui).
+
 El de Impeccable no hace cumplir ni cita una regla enrutada: lo instala y regenera la skill con un comando distinto por cliente (rutas `.claude/skills` y `.agents/skills`; `commandWindows` solo en Codex), como describe [Skills de agentes](90-agent-skills.md).
 
 ## Sistemas y requisitos

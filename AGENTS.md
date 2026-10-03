@@ -59,7 +59,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 - `11-frontend-and-components.md`: when touching user-facing interfaces, client routes, layouts, state, or visual components; framework detection, state ownership, data loading, component boundaries, and accessibility.
 - `12-ui-theming-and-tokens.md`: when changing theme entrypoints, design tokens, colors, or color modes; token declaration, semantic tokens, color-mode coverage, and accessible contrast.
-- `13-ui-design-workflow.md`: before creating, redesigning, auditing, or changing UI or UX; design references, visual evidence, rendered validation, accessibility criteria, and design-system consistency.
+- `13-ui-design-workflow.md`: before creating, redesigning, auditing, or changing UI or UX; design references, pre-edit design, per-task critique, complete-screen and flow audits, scoped polish, bounded visual verification, accessibility criteria, and design-system consistency.
 
 #### Data and security
 
