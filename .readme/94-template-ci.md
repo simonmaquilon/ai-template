@@ -6,12 +6,14 @@ El workflow `.github/workflows/template-checks.yml` comprueba en GitHub Actions 
 
 Un único paso, `node .scripts/run-checks.mjs --base <revisión>`, que también se ejecuta en local desde cualquier carpeta del repositorio, con o sin `--base`, y termina con código 1 si falla algo:
 
-- las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias, entre ellas las de los hooks de staging por texto y por efecto y la limpieza de carpetas con preservación de contenido, metadatos Git y directorios bloqueados, además de los avisos de seguridad y sus límites de lectura y exposición de datos;
+- las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias, entre ellas las de los hooks de staging por texto y por efecto y la limpieza de carpetas con preservación de contenido, metadatos Git y directorios bloqueados, además de los avisos de seguridad, su JSON de contexto para ambos clientes y sus límites de lectura y exposición de datos;
+- la integridad de la skill de Cloudflare contra `computedHash` en `skills-lock.json`, con el checksum de su licencia adicional verificado por separado;
+- los tests vendorizados `validate-findings.test.cjs` y `validate-coverage-ledger.test.cjs` de esa skill, con sus fixtures temporales dentro de `.temp/` y sin iniciar una auditoría;
 - la comprobación de enlaces de `.scripts/check-doc-links.mjs`, que aquí falla si informa de algo;
 - la comprobación de la estructura de las instrucciones y de los prefijos de `.readme/` de `.scripts/check-instructions.mjs`, que también falla si informa de algo;
 - el límite de líneas de `.scripts/check-file-length.mjs`, sobre los archivos que cambian respecto a la revisión de `--base`; sin `--base` revisa solo los cambios sin commitear respecto a `HEAD`, que en el checkout limpio del CI no existen.
 
-Las pruebas lanzan cada hook como lo lanza su cliente en ese sistema: Claude Code, en forma exec con `node`; Codex, con `/bin/sh -c` en Linux y macOS y con `cmd.exe /C` en Windows. Lo hacen desde la raíz y desde una subcarpeta, en repositorios git desechables que crean bajo `.temp/` y borran al terminar.
+Las pruebas de salida verifican el contrato JSON documentado de los hooks; no realizan una sesión real de modelo ni prueban la inserción en el transcript del cliente. Las pruebas lanzan cada hook como lo lanza su cliente en ese sistema: Claude Code, en forma exec con `node`; Codex, con `/bin/sh -c` en Linux y macOS y con `cmd.exe /C` en Windows. Lo hacen desde la raíz y desde una subcarpeta, en repositorios git desechables que crean bajo `.temp/` y borran al terminar.
 
 ## Cuándo y dónde
 

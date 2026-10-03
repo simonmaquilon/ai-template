@@ -13,6 +13,11 @@ const MAX_BYTES = 1024 * 1024;
 const FORMATS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.astro', '.html',
   '.py', '.sh', '.bash', '.zsh', '.rb', '.php', '.go', '.java', '.cs', '.rs', '.json', '.yaml', '.yml', '.toml']);
 const RULE = '32-security-review-workflow.md';
+function emitContext(message) {
+  console.log(JSON.stringify({
+    hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: message },
+  }));
+}
 const input = await readHookInput();
 const origin = typeof input.cwd === 'string' ? resolve(input.cwd) : process.cwd();
 const root = enterRepositoryRoot();
@@ -27,7 +32,7 @@ if (paths.length === 0) process.exit(0);
 
 const visible = git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']);
 if (visible === null) {
-  console.log(`Security guidance (${RULE}): edit not scanned; repository file inventory unavailable.`);
+  emitContext(`Security guidance (${RULE}): edit not scanned; repository file inventory unavailable.`);
   process.exit(0);
 }
 const indexed = new Set(visible.split('\0').filter(Boolean));
@@ -53,14 +58,14 @@ const ignored = spawnSync('git', ['check-ignore', '--no-index', '-z', '--stdin']
   input: [...candidates.keys()].join('\0'), encoding: 'utf8', maxBuffer: 1024 * 1024,
 });
 if (ignored.status !== 0 && ignored.status !== 1) {
-  console.log(`Security guidance (${RULE}): edit not scanned; ignore rules unavailable.`);
+  emitContext(`Security guidance (${RULE}): edit not scanned; ignore rules unavailable.`);
   process.exit(0);
 }
 for (const path of ignored.stdout.split('\0')) candidates.delete(path);
 if (candidates.size === 0) process.exit(0);
 const attrs = git(['check-attr', '-z', '--stdin', 'linguist-generated', 'linguist-vendored'], [...candidates.keys()].join('\0'));
 if (attrs === null) {
-  console.log(`Security guidance (${RULE}): edit not scanned; file attributes unavailable.`);
+  emitContext(`Security guidance (${RULE}): edit not scanned; file attributes unavailable.`);
   process.exit(0);
 }
 const fields = attrs.split('\0');
@@ -107,5 +112,5 @@ for (const [local, full] of candidates) {
   }
 }
 if (warnings.length > 0) {
-  console.log(`Security guidance (${RULE}): candidates require context; they are not confirmed vulnerabilities.\n${warnings.join('\n')}`);
+  emitContext(`Security guidance (${RULE}): candidates require context; they are not confirmed vulnerabilities.\n${warnings.join('\n')}`);
 }
