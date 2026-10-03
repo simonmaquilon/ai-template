@@ -8,7 +8,7 @@ Un único paso, `node .scripts/run-checks.mjs --base <revisión>`, que también 
 
 - las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias, entre ellas las de los hooks de staging por texto y por efecto y la limpieza de carpetas con preservación de contenido, metadatos Git y directorios bloqueados, además de los avisos de seguridad, su JSON de contexto para ambos clientes y sus límites de lectura y exposición de datos;
 - la integridad de la skill de Cloudflare contra `computedHash` en `skills-lock.json`, con el checksum de su licencia adicional verificado por separado;
-- los tests vendorizados `validate-findings.test.cjs` y `validate-coverage-ledger.test.cjs` de esa skill, con sus fixtures temporales dentro de `.temp/` y sin iniciar una auditoría;
+- los tests vendorizados `validate-findings.test.cjs` y `validate-coverage-ledger.test.cjs` de esa skill, con sus fixtures temporales dentro de `.temp/` y sin iniciar una auditoría. En Windows se informan como `SKIP` y no se ejecutan: sus validadores rechazan cualquier entrada cuando Node no ofrece `O_NOFOLLOW` y `O_NONBLOCK`;
 - la comprobación de enlaces de `.scripts/check-doc-links.mjs`, que aquí falla si informa de algo;
 - la comprobación de la estructura de las instrucciones y de los prefijos de `.readme/` de `.scripts/check-instructions.mjs`, que también falla si informa de algo;
 - el límite de líneas de `.scripts/check-file-length.mjs`, sobre los archivos que cambian respecto a la revisión de `--base`; sin `--base` revisa solo los cambios sin commitear respecto a `HEAD`, que en el checkout limpio del CI no existen.

@@ -2,13 +2,13 @@
 // Runs the template's own checks, locally or in continuous integration, on any
 // supported operating system: the hook tests under .scripts/tests with the
 // runner built into Node, adopted Cloudflare skill integrity and validator tests,
-// the documentation link check and the instruction-file
+// the latter skipped where the validators cannot run, the documentation link check and the instruction-file
 // check, which fail on any report, and the source-file limit, which receives the
 // arguments given here, such as --base <revision>. Exits with status 1 when any
 // step fails.
 
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { constants, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { enterRepositoryRoot } from './hook-support.mjs';
 
@@ -19,18 +19,25 @@ const tests = readdirSync(join('.scripts', 'tests'))
 
 const vendor = join('.agents', 'skills', 'security-audit');
 const vendorTemp = mkdtempSync(resolve('.temp', 'security-vendor-'));
+// The vendored validators reject every input where these flags are missing, as on Windows.
+const safeOpen = [constants.O_NOFOLLOW, constants.O_NONBLOCK].every((flag) => Number.isInteger(flag) && flag !== 0);
 const steps = [
   ['hook tests', ['--test', ...tests], (run) => run.status === 0],
   ['Cloudflare skill integrity', [join('.scripts', 'check-security-skill.mjs')], (run) => run.status === 0],
   ['Cloudflare skill tests', ['--test', join(vendor, 'validate-findings.test.cjs'), join(vendor, 'validate-coverage-ledger.test.cjs')],
-    (run) => run.status === 0, { ...process.env, TMPDIR: vendorTemp, TEMP: vendorTemp, TMP: vendorTemp }],
+    (run) => run.status === 0, { ...process.env, TMPDIR: vendorTemp, TEMP: vendorTemp, TMP: vendorTemp },
+    safeOpen ? null : 'its validators need O_NOFOLLOW and O_NONBLOCK, which this platform lacks'],
   ['documentation links', [join('.scripts', 'check-doc-links.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['instruction files', [join('.scripts', 'check-instructions.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['source-file limit', [join('.scripts', 'check-file-length.mjs'), ...process.argv.slice(2)], (run) => run.status === 0],
 ];
 
 let failed = false;
-for (const [name, args, passes, env] of steps) {
+for (const [name, args, passes, env, skip] of steps) {
+  if (skip) {
+    console.log(`SKIP ${name}: ${skip}`);
+    continue;
+  }
   const run = spawnSync(process.execPath, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env });
   process.stdout.write(run.stdout ?? '');
   process.stderr.write(run.stderr ?? '');
