@@ -10,4 +10,5 @@ Read before the first substantive conversational response or final implementatio
 - Do not close with pending work, next steps, or an offer to continue unless the user asked for them, the work is blocked, or requested scope was deliberately left out.
 - For changes, report the outcome, the cause when established, relevant changed files or domains, and validation; include exclusions, risks, or pending work only when material, using detail proportional to the change.
 - State the validation commands or methods actually used and their results; include suites, runners, test counts, or coverage only when available and relevant, and disclose material validation gaps.
+- In a report that lists criteria, checks, or changes with their state, start each line with one marker: ✅ met or done, ❌ failed, ⏸ pending or awaiting a decision, ⚠️ risk; use these markers only for such lines, never as decoration.
 - Apply `21-document-maintenance.md` when its scope matches; mention updated documents and explain unchanged documents only when a reader would reasonably expect an update.
