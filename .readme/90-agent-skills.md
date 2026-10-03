@@ -67,7 +67,7 @@ Sus snapshots y trazas van a `.temp/playwright-cli/`: lo fija `outputDir` en `.p
 
 `/prompt-deep <borrador>` aplica la skill `prompt` y, con el prompt ya revisado, escribe un plan en `.temp/plans/<AAAA-MM-DD>-<slug>/`: fragmentos en `build/`, scripts para aplicar y revertir cada fragmento en `patch/`, scripts de verificación repetibles en `check/` y la evidencia con el informe en `review/`. Solo crea plan para prompts de implementación y no ejecuta fragmentos ni scripts hasta que se le pide. En Claude Code solo se invoca a mano, porque su cabecera declara `disable-model-invocation`.
 
-Los planes se conservan al cerrar la tarea, como excepción de `06-commands-and-local-runtime.md` a la limpieza de `.temp/`, hasta que el usuario los borra. Sus scripts son de shell POSIX: en Windows necesitan Git Bash.
+Los planes se conservan al cerrar la tarea, como excepción de `06-commands-and-local-runtime.md` a la limpieza de `.temp/`, hasta que el usuario los borra. Sus scripts son módulos de Node (`.mjs`), así que funcionan igual en Windows, macOS y Linux sin requisitos adicionales.
 
 ## Problema conocido: skills omitidas
 
