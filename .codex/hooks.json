@@ -7,12 +7,14 @@
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-staging.mjs\" ] || exit 0; node \"$r/.scripts/check-staging.mjs\" --hook",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-staging.mjs')))\" -- --hook --powershell"
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-staging.mjs')))\" -- --hook --powershell",
+            "statusMessage": "Checking explicit Git staging"
           },
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-staging-effect.mjs\" ] || exit 0; node \"$r/.scripts/check-staging-effect.mjs\" --before",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-staging-effect.mjs')))\" -- --before --powershell"
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-staging-effect.mjs')))\" -- --before --powershell",
+            "statusMessage": "Recording staging before command"
           }
         ]
       }
@@ -23,27 +25,32 @@
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-empty-dirs.mjs\" ] || exit 0; node \"$r/.scripts/check-empty-dirs.mjs\"",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-empty-dirs.mjs')))\""
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-empty-dirs.mjs')))\"",
+            "statusMessage": "Checking empty directories"
           },
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-doc-links.mjs\" ] || exit 0; node \"$r/.scripts/check-doc-links.mjs\"",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-doc-links.mjs')))\""
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-doc-links.mjs')))\"",
+            "statusMessage": "Checking documentation links"
           },
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-instructions.mjs\" ] || exit 0; node \"$r/.scripts/check-instructions.mjs\"",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-instructions.mjs')))\""
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-instructions.mjs')))\"",
+            "statusMessage": "Checking instruction routing and format"
           },
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-symlinks.mjs\" ] || exit 0; node \"$r/.scripts/check-symlinks.mjs\"",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-symlinks.mjs')))\""
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-symlinks.mjs')))\"",
+            "statusMessage": "Checking tracked symbolic links"
           },
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook --turn-start",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-file-length.mjs')))\" -- --hook --turn-start"
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-file-length.mjs')))\" -- --hook --turn-start",
+            "statusMessage": "Starting file-length tracking"
           }
         ]
       }
@@ -67,7 +74,8 @@
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-file-length.mjs')))\" -- --hook"
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-file-length.mjs')))\" -- --hook",
+            "statusMessage": "Checking edited file lengths"
           }
         ]
       },
@@ -77,7 +85,8 @@
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-staging-effect.mjs\" ] || exit 0; node \"$r/.scripts/check-staging-effect.mjs\" --after",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-staging-effect.mjs')))\" -- --after"
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-staging-effect.mjs')))\" -- --after",
+            "statusMessage": "Checking staging after command"
           }
         ]
       }
@@ -99,7 +108,8 @@
           {
             "type": "command",
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook",
-            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-file-length.mjs')))\" -- --hook"
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}import(u.pathToFileURL(p.join(r,'.scripts','check-file-length.mjs')))\" -- --hook",
+            "statusMessage": "Checking file lengths before finishing"
           }
         ]
       }

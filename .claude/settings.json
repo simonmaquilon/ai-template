@@ -16,7 +16,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-staging.mjs",
               "--hook"
-            ]
+            ],
+            "statusMessage": "Checking explicit Git staging"
           },
           {
             "type": "command",
@@ -24,7 +25,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
               "--before"
-            ]
+            ],
+            "statusMessage": "Recording staging before command"
           }
         ]
       }
@@ -37,28 +39,32 @@
             "command": "node",
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-empty-dirs.mjs"
-            ]
+            ],
+            "statusMessage": "Checking empty directories"
           },
           {
             "type": "command",
             "command": "node",
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-doc-links.mjs"
-            ]
+            ],
+            "statusMessage": "Checking documentation links"
           },
           {
             "type": "command",
             "command": "node",
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-instructions.mjs"
-            ]
+            ],
+            "statusMessage": "Checking instruction routing and format"
           },
           {
             "type": "command",
             "command": "node",
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-symlinks.mjs"
-            ]
+            ],
+            "statusMessage": "Checking tracked symbolic links"
           },
           {
             "type": "command",
@@ -67,7 +73,8 @@
               "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
               "--hook",
               "--turn-start"
-            ]
+            ],
+            "statusMessage": "Starting file-length tracking"
           }
         ]
       }
@@ -93,7 +100,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
               "--hook"
-            ]
+            ],
+            "statusMessage": "Checking edited file lengths"
           }
         ]
       },
@@ -106,7 +114,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
               "--after"
-            ]
+            ],
+            "statusMessage": "Checking staging after command"
           }
         ]
       }
@@ -121,7 +130,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
               "--after"
-            ]
+            ],
+            "statusMessage": "Checking staging after failed command"
           }
         ]
       }
@@ -145,7 +155,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
               "--hook"
-            ]
+            ],
+            "statusMessage": "Checking file lengths before finishing"
           }
         ]
       }

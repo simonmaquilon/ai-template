@@ -4,7 +4,7 @@ Algunas instrucciones enrutadas se hacen cumplir con hooks de los clientes de ag
 
 ## Registro
 
-Todos viven en `.claude/settings.json` y en `.codex/hooks.json`.
+Todos viven en `.claude/settings.json` y en `.codex/hooks.json`. Cada handler declara un `statusMessage` descriptivo de su función; Codex lo usa como etiqueta en la revisión de hooks y ambos clientes lo muestran durante su ejecución. Los mensajes distinguen las comprobaciones anteriores y posteriores al comando, el inicio del seguimiento y el cierre del turno.
 
 | Hook | Evento | Regla que hace cumplir | Script |
 | --- | --- | --- | --- |
