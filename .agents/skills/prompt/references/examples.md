@@ -4,13 +4,13 @@ These examples show form, not project facts. Verify every project claim before u
 
 ## Open decision
 
-Rule illustrated: `393f26e:.agents/skills/prompt/SKILL.md`, Goals line 23 and Workflow step 5 line 43. The illustrative draft asks for a report and names two delivery options without choosing one.
+The illustrative draft asks for a report and names two delivery options without choosing one.
 
 > Open decision — delivery: Recommended: leave delivery pending because the destination is unsettled. Alternatives: publish to the team wiki; email the report to the requester. Ask the requester to choose before resolving delivery under any option, including the recommendation. Continue drafting the report. Report delivery as pending if unanswered.
 
 ## Findings line
 
-Rule illustrated: `393f26e:.agents/skills/prompt/SKILL.md`, Output lines 119, 121, 125, and 127. Use this form only after verifying an internal project contradiction that bears on the authorized work. Place it after the improved prompt's fenced block; replace both evidence markers with actual project paths and lines.
+Use this form only after verifying an internal project contradiction that bears on the authorized work. Place it after the improved prompt's fenced block; replace both evidence markers with actual project paths and lines.
 
 > Findings:
 > - `<verified-guide-path>:<line>` prescribes one check, but `<verified-manifest-path>:<line>` defines another; carried in the prompt's validation sentence.

@@ -78,27 +78,14 @@ When a draft targets a project, read [references/project-inspection-and-validati
         - Coverage: These limits govern every command this skill runs, including those step 10 uses to measure state and verify causal claims and those its subagents run.
         - Cleanup: Stop every server or other process this skill started, and close every browser session it opened, as soon as the measurements that need them end, and in any case before opening a further round of questions or returning the prompt; then confirm that each port they held is free and each browser session is closed.
 12. Before returning, check the rewritten prompt against this list:
-    - every path and command exists and was verified where a reachable target project applies, was confirmed by the user where the project was unreachable, is one the prompt tells the executor to create, is marked as a placeholder, or belongs to a draft with no target project;
-    - every named test or artifact covers what the prompt claims it covers;
-    - every acceptance criterion is observable and, in an implementation prompt or a prompt for standalone code, numbered, with the failure modes that apply included in the list;
-    - every causal claim carried as an instruction was verified or is marked as a hypothesis;
-    - every open question the session could not put to the user is written as an open decision in the form Goals defines, or as a placeholder where a rule calls for one;
-    - every prompt whose validation takes exclusive control of a shared local resource requires the executor to release it when done;
-    - no gap was closed by an assumption;
-    - no detail was invented;
-    - where a target project was reachable, every state claim about it was measured rather than carried from the draft, or recorded as not measured with its reason when the limits of step 11 blocked the measurement, and where it was not reachable, the user confirmed the claim or the prompt states it as unverified;
-    - where a target project was reachable, every validation command the prompt names carries the result measured under step 11, or is recorded as not measured with its reason;
-    - every run the prompt defers names who runs it; one deferred to automation was measured as running for the destination the work goes to, and a prompt that authorizes a push, merge, publish, or deploy requires the broader run before it;
-    - where a target project was reachable, every defect the draft reports was reproduced under step 11, or is stated as unconfirmed with a requirement to reproduce it first;
-    - every visual observation this skill made concerns what the draft asks to fix or change, and no account appears in the prompt by its password;
-    - every artifact the prompt names as one to change was confirmed to bear on the authorized change;
-    - every concrete particular the requested output must contain is supplied by the draft, the user's answers, or the target project, or carried as an open decision or a placeholder;
-    - every placeholder this skill adds uses the `[TODO: what is missing]` form and, when the prompt carries more than one or uses one in more than one place, is collected in the prompt's inputs block, while variables the draft defines for its own use, such as template slots, stay as written;
-    - every specific the target project could not confirm was asked about where step 5 or step 10 sends it to the user or, in a session that cannot receive a reply, carried as a placeholder or open decision; one that neither sends to the user is kept as the draft states it and marked in the prompt as unverified, and a draft with no target project keeps its specifics as written;
+    - every acceptance criterion is observable and, in an implementation prompt or a prompt for standalone code, numbered, with the failure modes that apply included in the list, and none makes a baseline observation binding unless its source makes it one;
+    - every observable requirement of the task statement is covered by a numbered criterion, and the Spec Gate and the closure audit judge against every requirement the prompt states, not only its numbered criteria and decisions;
     - every constraint and acceptance criterion traces to the draft, the user, the target project, or a rule of this skill that mandates it, and everything the task must achieve is in the draft, including the exact text a draft approves, or in a user's answer that covers it at the extent the prompt gives it, or is carried as an open decision;
-    - each label used is written in the language of the improved prompt;
-    - every contradicted claim of the draft is reported under corrections;
-    - every verified self-contradiction of the project that bears on the authorized work is reported under findings.
+    - where a target project was reachable, every state claim, causal claim, reported defect, and validation command the prompt carries was measured, verified, or reproduced under steps 10 and 11, or is recorded as not measured, unconfirmed, or a hypothesis with its reason, and where it was not reachable, the user confirmed the claim or the prompt states it as unverified;
+    - no gap was closed by an assumption and no detail was invented: every gap was asked about or, in a session that cannot receive a reply, carried as an open decision in the form Goals defines or as a placeholder, and a specific that neither step 5 nor step 10 sends to the user is kept as the draft states it and marked in the prompt as unverified;
+    - every placeholder this skill adds uses the `[TODO: what is missing]` form, while variables the draft defines for its own use, such as template slots, stay as written;
+    - every artifact the prompt names as one to change was confirmed to bear on the authorized change;
+    - every run the prompt defers names who runs it.
 
     This list is verified by reading the rewritten prompt and what this session did to prepare it; it never adds a section, label, or heading to it. A condition the prompt already satisfies implicitly needs no visible text to prove it.
 
