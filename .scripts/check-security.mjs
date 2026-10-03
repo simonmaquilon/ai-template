@@ -22,13 +22,19 @@ const input = await readHookInput();
 const origin = typeof input.cwd === 'string' ? resolve(input.cwd) : process.cwd();
 const root = enterRepositoryRoot();
 if (!root) process.exit(0);
-const canonicalRoot = realpathSync.native(root);
 const tool = input.tool_input ?? {};
 const rawPatch = tool.command ?? tool.input ?? tool.patch;
 const patch = Array.isArray(rawPatch) ? rawPatch.join('\n') : typeof rawPatch === 'string' ? rawPatch : '';
 const paths = typeof tool.file_path === 'string' ? [tool.file_path]
   : [...patch.matchAll(/^\*\*\* (?:Add File|Update File|Move to): (.+)$/gm)].map((match) => match[1].trim());
 if (paths.length === 0) process.exit(0);
+let canonicalRoot;
+try {
+  canonicalRoot = realpathSync.native(root);
+} catch {
+  emitContext(`Security guidance (${RULE}): edit not scanned; repository path unavailable.`);
+  process.exit(0);
+}
 
 const visible = git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']);
 if (visible === null) {

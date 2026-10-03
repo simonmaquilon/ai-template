@@ -30,6 +30,27 @@ await import('../.scripts/check-security.mjs');
   assert.doesNotMatch(result.stdout, /eval\(input\)/);
 });
 
+test('security guidance reports an unresolvable repository root as model context', (t) => {
+  const repo = makeRepo(t);
+  repo.write('sample.js', 'eval(input);\n');
+  repo.write('.temp/deny-root.mjs', `
+import fs from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
+fs.realpathSync.native = (path) => {
+  const error = new Error('Synthetic denied root');
+  error.code = 'EACCES';
+  throw error;
+};
+syncBuiltinESMExports();
+await import('../.scripts/check-security.mjs');
+`);
+  const scan = (toolInput) => run(process.execPath, ['.temp/deny-root.mjs'], {
+    cwd: repo.dir, input: JSON.stringify({ cwd: repo.dir, hook_event_name: 'PostToolUse', tool_input: toolInput }),
+  });
+  assert.match(postToolContext(scan({ file_path: 'sample.js' })), /edit not scanned; repository path unavailable/);
+  assert.equal(postToolContext(scan({})), '');
+});
+
 test('security guidance reports eligible read failures without leaking source', (t) => {
   const repo = makeRepo(t);
   repo.write('blocked.js', 'eval(input);\n');
