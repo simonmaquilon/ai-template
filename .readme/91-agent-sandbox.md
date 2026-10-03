@@ -29,6 +29,19 @@ Una exención solo saca del sandbox una llamada si cubre todos sus comandos, y a
 
 `excludedCommands` es una lista estática que salta el sandbox sin que el modelo intervenga, distinta del reintento fuera del sandbox que el modelo pide caso por caso y que depende de `sandbox.allowUnsandboxedCommands`. La sesión acepta `/sandbox exclude "<patrón>"` para añadir patrones sin editar el archivo.
 
+### Configuración de la plantilla
+
+`.claude/settings.json` activa el sandbox con estos ajustes:
+
+- `enabled` y `autoAllowBashIfSandboxed`: cada comando corre confinado y se aprueba sin preguntar; solo escribe en el proyecto y en el temporal del sistema.
+- `network.allowedDomains: ["*"]`: salida a cualquier dominio sin confirmación.
+- `network.allowLocalBinding`: en macOS permite levantar servidores en `127.0.0.1`, como hacen los runners de pruebas.
+- Sin `filesystem.denyRead`: por decisión del usuario, el sandbox puede leer las credenciales del equipo (`~/.ssh`, `~/.aws`, los tokens de `gh` o `wrangler`) por si una tarea las necesita.
+- `permissions.deny` bloquea comandos de sistema que ninguna tarea necesita (`sudo`, `dd`, `mkfs`, `shutdown`…). Comparan prefijos de texto, así que no sustituyen al confinamiento.
+- `permissions.ask` pide confirmación solo para lo que el sandbox no protege: descartar cambios sin commit del árbol, que puede ser trabajo de otra sesión (`git reset --hard`, `git clean`, `git checkout --`, `git restore`, `git stash drop`), y las escrituras remotas (`git push`, los `gh` que crean, fusionan o cambian algo, `npm publish`). Borrar archivos dentro del proyecto (`rm -r`), reescribir el historial local (`git rebase`) o borrar ramas locales no pide confirmación: lo versionado se recupera con git.
+
+Las cachés de los gestores de paquetes viven bajo `.temp/` para no abrir escrituras fuera del proyecto. El `.npmrc` de la raíz fija `cache=.temp/npm-cache`, que npm resuelve desde el directorio en el que se ejecuta. Un proyecto con otro gestor apunta la caché de ese gestor a `.temp/<gestor>-cache` en su propio archivo de configuración; si no lo hace, el sandbox bloquea la escritura y el comando se repite fuera del sandbox con confirmación.
+
 ## Codex
 
 No existe exención por comando. Las palancas son de sesión completa, en `.codex/config.toml` o por bandera de invocación:
@@ -39,6 +52,8 @@ No existe exención por comando. Las palancas son de sesión completa, en `.code
 | `[sandbox_workspace_write]` | `writable_roots`, `network_access`, `exclude_tmpdir_env_var`, `exclude_slash_tmp` |
 | `approval_policy`           | cómo escala a aprobación del usuario un comando denegado                          |
 | `default_permissions`       | perfil de permisos por omisión; `:danger-full-access` desactiva el confinamiento  |
+
+La plantilla no declara `sandbox_mode` en `.codex/config.toml`, así que Codex usa sus valores por omisión; se dejó fuera deliberadamente al configurar el sandbox de Claude Code.
 
 Codex sí evalúa reglas `allow` por comando mediante su exec policy, y una regla `allow` incluye el bypass del sandbox, pero esas reglas se alimentan de `requirements.toml`, que es configuración gestionada por la organización y no se define por proyecto.
 

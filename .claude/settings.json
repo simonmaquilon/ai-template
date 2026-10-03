@@ -5,6 +5,44 @@
     "pr": "",
     "sessionUrl": false
   },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "network": {
+      "allowedDomains": ["*"],
+      "allowLocalBinding": true
+    }
+  },
+  "permissions": {
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(dd *)",
+      "Bash(mkfs*)",
+      "Bash(diskutil erase*)",
+      "Bash(shutdown *)",
+      "Bash(reboot*)",
+      "Bash(launchctl *)",
+      "Bash(chmod -R *)",
+      "Bash(chown -R *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean *)",
+      "Bash(git checkout -- *)",
+      "Bash(git restore *)",
+      "Bash(git stash drop*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr close*)",
+      "Bash(gh release *)",
+      "Bash(gh repo *)",
+      "Bash(gh workflow run*)",
+      "Bash(gh secret *)",
+      "Bash(npm publish*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
