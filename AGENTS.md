@@ -32,7 +32,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 #### Specification
 
-- `30-change-specification.md`: before the first edit of every implementation or code change, and whenever its acceptance criteria, affected contracts, or scope must change; specification content, acceptance criteria and their checks, the specification gate, test-first criteria, and specification revisions.
+- `30-change-specification.md`: before the first edit of every implementation or code change, and whenever its acceptance criteria, affected contracts, or scope must change; specification content, acceptance criteria and their checks, preservation criteria, the specification gate, test-first criteria, and specification revisions.
 
 #### Implementation
 
@@ -42,7 +42,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 #### Verification
 
-- `31-verification-loop.md`: after implementing a specified change, whenever one of its checks fails, and before reporting it complete; fix directives, loop cycles, stop conditions, unvalidated closings, and independent verification.
+- `31-verification-loop.md`: after implementing a specified change, whenever one of its checks fails, and before reporting it complete; fix directives, loop cycles, stop conditions, over-correction reports, unvalidated closings, and independent verification.
 - `17-validation-policy.md`: before choosing, running, or reporting validation and before closing changes; validation scope, local environment drift, reruns, documentation checks, agent-operated browser verification of web surfaces, failure resolution, environment-blocked checks, and bypass prevention.
 - `18-testing-and-coverage.md`: when planning, writing, or executing automated tests, deciding the test level a change needs, or recording coverage, gaps, or manual or agent-operated verification; test levels, what counts as automated coverage, project/framework test tooling, regression, coverage gates, the test coverage register, and test execution.
 - `19-diagnosis-and-review.md`: when debugging, reviewing, or auditing code, configuration, documentation, instructions, or runtime behavior; root-cause analysis, evidence, findings, and diagnosis-only boundaries.
