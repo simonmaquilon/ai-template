@@ -1,6 +1,6 @@
 # Skills de agentes
 
-Las skills de agentes se versionan en este repositorio bajo `.agents/skills/`. Casi todas se instalan desde repositorios públicos, y `skills-lock.json`, en la raíz, fija cada una a su origen y a un hash de integridad; `commit` y `prompt` son propias de la plantilla, no figuran en el lockfile y se editan directamente en `.agents/skills/`.
+Las skills de agentes se versionan en este repositorio bajo `.agents/skills/`. Casi todas se instalan desde repositorios públicos, y `skills-lock.json`, en la raíz, fija cada una a su origen y a un hash de integridad; `commit`, `prompt` y `prompt-deep` son propias de la plantilla, no figuran en el lockfile y se editan directamente en `.agents/skills/`.
 
 ## Herramienta
 
@@ -61,7 +61,13 @@ Los dos clientes cargan `playwright-cli` desde `.agents/skills/`: Codex busca ah
 
 La skill no incluye el binario. Usa un `playwright-cli` global si existe; si no, `npx playwright cli`; y si tampoco, propone instalarlo globalmente. En un proyecto que tiene Playwright como dependencia prevalece la versión que fija su lockfile: comprueba antes `npx --no-install playwright --version` y, si responde, usa `npx playwright cli` aunque haya un global. Instalar `@playwright/cli` es añadir un binario bajo `07-dependencies-and-binaries.md`; si depende de una prerelease de `playwright` (compruébalo con `npm view @playwright/cli dependencies`), requiere además aprobación explícita.
 
-Sus snapshots y trazas van a `.temp/playwright-cli/`: lo fija `outputDir` en `.playwright/cli.config.json`, que la herramienta carga por defecto desde la carpeta en la que se ejecuta. Ejecútala desde la raíz del repositorio; desde otra carpeta no encuentra esa configuración y escribe en `.playwright-cli/` dentro de esa carpeta. Como todo artefacto de tarea bajo `.temp/`, se borran al cerrar la tarea, según `06-commands-and-local-runtime.md`.
+Sus snapshots y trazas van a `.temp/playwright-cli/`: lo fija `outputDir` en `.playwright/cli.config.json`, que la herramienta carga por defecto desde la carpeta en la que se ejecuta. Ejecútala desde la raíz del repositorio; desde otra carpeta no encuentra esa configuración y escribe en `.playwright-cli/` dentro de esa carpeta. Como todo artefacto de tarea bajo `.temp/` fuera de `.temp/plans/`, se borran al cerrar la tarea, según `06-commands-and-local-runtime.md`.
+
+## Planes de cambio con `prompt-deep`
+
+`/prompt-deep <borrador>` aplica la skill `prompt` y, con el prompt ya revisado, escribe un plan en `.temp/plans/<AAAA-MM-DD>-<slug>/`: fragmentos en `build/`, scripts para aplicar y revertir cada fragmento en `patch/`, scripts de verificación repetibles en `check/` y la evidencia con el informe en `review/`. Solo crea plan para prompts de implementación y no ejecuta fragmentos ni scripts hasta que se le pide. En Claude Code solo se invoca a mano, porque su cabecera declara `disable-model-invocation`.
+
+Los planes se conservan al cerrar la tarea, como excepción de `06-commands-and-local-runtime.md` a la limpieza de `.temp/`, hasta que el usuario los borra. Sus scripts son de shell POSIX: en Windows necesitan Git Bash.
 
 ## Problema conocido: skills omitidas
 
