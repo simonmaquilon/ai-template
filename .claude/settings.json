@@ -28,12 +28,6 @@
     ],
     "ask": [
       "Bash(git push *)",
-      "Bash(git reset --hard*)",
-      "Bash(git clean *)",
-      "Bash(git checkout -- *)",
-      "Bash(git restore *)",
-      "Bash(git stash drop*)",
-      "Bash(gh pr create*)",
       "Bash(gh pr merge*)",
       "Bash(gh pr close*)",
       "Bash(gh release *)",
