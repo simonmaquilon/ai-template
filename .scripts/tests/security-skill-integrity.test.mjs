@@ -4,8 +4,9 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { ROOT, WINDOWS, makeRepo } from './support.mjs';
 
-// Computed by the skills@1.7.0 computeSkillFolderHash itself: locale ordering
-// puts a.md before B.md, nested names use '/', and .git and node_modules are skipped.
+// Computed by computeSkillFolderHash of the skills CLI version that STACK.md
+// pins: locale ordering puts a.md before B.md, nested names use '/', and .git
+// and node_modules are skipped.
 const HASH = '8f4134e55dc013e1a02ab25c02114621370200eb72ea66123582a425fe1a891b';
 function fixture(t) {
   const repo = makeRepo(t);

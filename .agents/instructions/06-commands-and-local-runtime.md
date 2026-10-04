@@ -2,7 +2,7 @@
 
 Read before running repository commands that build, test, format, generate, start, stop, deploy, or otherwise modify project state; managing repository tooling, recovering local services, operating agent-operated browser sessions, or writing temporary or ad-hoc artifacts.
 
-- Discover supported commands from repository instructions, `.readme/` documentation, manifests, lockfiles, task runners, and CI; use the repository-owned package manager and version pinning.
+- Discover supported commands from repository instructions, `.readme/` documentation, manifests, lockfiles, task runners, and CI; use the package manager that `STACK.md` names and the repository's version pinning.
 - Prefer repository scripts (in manifests or `.scripts/`) over direct tool invocations because scripts own flags, environment, and output locations.
 - Never invent a command alias, environment name, retry flag, or release workaround.
 - Derive the local application URL, including the one agent-operated browser sessions open, from project configuration or startup output; do not switch host or port to bypass a conflict.

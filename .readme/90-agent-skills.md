@@ -4,22 +4,22 @@ Las skills de agentes se versionan en este repositorio bajo `.agents/skills/`. C
 
 ## Herramienta
 
-Las gestiona el CLI [`vercel-labs/skills`](https://github.com/vercel-labs/skills), que se ejecuta con `npx` sin instalarse como dependencia del proyecto. Los comandos de este documento fijan su versión, `skills@1.7.0`, publicada con atestación de procedencia desde `vercel-labs/skills`, y la del CLI de Impeccable, `impeccable@4.1.0`, publicada sin atestación, ambas verificadas en el registro de npm al fijarlas; cambiarlas es una actualización que `07-dependencies-and-binaries.md` somete a aprobación.
+Las gestiona el CLI [`vercel-labs/skills`](https://github.com/vercel-labs/skills), que se ejecuta con `npx` sin instalarse como dependencia del proyecto. Los comandos de este documento lo ejecutan, igual que el CLI de Impeccable, con `node .scripts/run-pinned.mjs`, que toma la versión fijada de Template Tooling en [STACK.md](../STACK.md), donde también consta su procedencia; cambiarla es una actualización que `07-dependencies-and-binaries.md` somete a aprobación.
 
 ## Comandos
 
 ```bash
 # Actualizar las skills del proyecto a su última versión
-npx skills@1.7.0 update -p
+node .scripts/run-pinned.mjs skills update -p
 
 # Sin prompts interactivos
-npx skills@1.7.0 update -p -y
+node .scripts/run-pinned.mjs skills update -p -y
 
 # Actualizar una skill concreta
-npx skills@1.7.0 update nuxt
+node .scripts/run-pinned.mjs skills update nuxt
 
 # Añadir una skill nueva
-npx skills@1.7.0 add <owner/repo>
+node .scripts/run-pinned.mjs skills add <owner/repo>
 ```
 
 Opciones de `update`: `-g` solo skills globales, `-p` solo skills del proyecto, `-y` omite el prompt de alcance, y uno o más nombres para acotar a skills concretas.
@@ -79,15 +79,15 @@ Cuando el CLI avisa `Multiple current paths match these skills from <origen>`, o
 
 ```bash
 # Actualizar la skill y regenerar sus agentes y hooks
-npx impeccable@4.1.0 update --project --yes --force
+node .scripts/run-pinned.mjs impeccable update --project --yes --force
 
 # Reinstalar la skill desde su origen y refrescar su hash en el lockfile
-npx skills@1.7.0 add pbakaus/impeccable --skill impeccable --agent codex --copy --yes --full-depth
+node .scripts/run-pinned.mjs skills add pbakaus/impeccable --skill impeccable --agent codex --copy --yes --full-depth
 ```
 
 `--agent codex --copy` instala solo en `.agents/skills/`, que es la ruta real, y así evita la ambigüedad del symlink. El primer paso deja el binario del motor dentro de la skill y el segundo lo retira: el lanzador `scripts/impeccable` lo descarga y verifica en la caché del usuario, `~/.impeccable/bin/<versión>/`, la primera vez que se ejecuta.
 
-Tras el segundo paso, `npx impeccable@4.1.0 check` avisa `Updates available` aunque no exista una versión nueva: la copia del origen difiere de la que genera el CLI de Impeccable, que adapta rutas y comandos a Claude Code. Ese aviso no sirve para saber si hay una actualización.
+Tras el segundo paso, `node .scripts/run-pinned.mjs impeccable check` avisa `Updates available` aunque no exista una versión nueva: la copia del origen difiere de la que genera el CLI de Impeccable, que adapta rutas y comandos a Claude Code. Ese aviso no sirve para saber si hay una actualización.
 
 El instalador escribe además estos archivos fuera de la skill:
 
@@ -100,7 +100,7 @@ El hook de diseño de Claude Code se versiona en `.claude/settings.json` para qu
 
 `32-security-review-workflow.md` exige consultar guía de seguridad antes de implementar, revisar los avisos después de editar y comprobar el diff de la tarea antes de terminar. La skill configurada es [Cloudflare `security-audit`](https://github.com/cloudflare/security-audit-skill), compartida por Claude Code y Codex mediante `.agents/skills/security-audit/` y el symlink `.claude/skills`.
 
-Se adoptó un commit publicado por Cloudflare, con licencia MIT; `skills-lock.json` fija su `ref` y su hash de contenido. No declara `allowed-tools`, hooks ni dependencias externas de runtime: incluye documentación y validadores de Node sin paquetes externos. Los validadores de la auditoría completa no se ejecutan como parte del aviso al editar; sus tests sí forman parte de `run-checks.mjs`. No funcionan en Windows: rechazan cualquier entrada cuando Node no ofrece `O_NOFOLLOW` y `O_NONBLOCK`, así que allí `run-checks.mjs` omite sus tests y la auditoría completa no puede validar sus informes. El CI comprueba el `computedHash` de esta skill con el algoritmo de la versión fijada del CLI `skills`: SHA-256 de cada nombre relativo portable y sus bytes, ordenados con `localeCompare`. La copia adicional de `LICENSE`, procedente de la raíz del upstream y ausente de su carpeta de skill, se excluye de ese hash y se verifica por separado con su checksum adoptado en `.scripts/check-security-skill.mjs`. Este gate cubre `security-audit`, no todas las skills del lockfile. Adoptar una versión posterior sigue la aprobación y revisión de permisos de las reglas de dependencias y tooling.
+Se adoptó un commit publicado por Cloudflare, con licencia MIT; `skills-lock.json` fija su `ref` y su hash de contenido. No declara `allowed-tools`, hooks ni dependencias externas de runtime: incluye documentación y validadores de Node sin paquetes externos. Los validadores de la auditoría completa no se ejecutan como parte del aviso al editar; sus tests sí forman parte de `run-checks.mjs`. No funcionan en Windows: rechazan cualquier entrada cuando Node no ofrece `O_NOFOLLOW` y `O_NONBLOCK`, así que allí `run-checks.mjs` omite sus tests y la auditoría completa no puede validar sus informes. El CI comprueba el `computedHash` de esta skill con el algoritmo de la versión del CLI `skills` que fija [STACK.md](../STACK.md): SHA-256 de cada nombre relativo portable y sus bytes, ordenados con `localeCompare`. La copia adicional de `LICENSE`, procedente de la raíz del upstream y ausente de su carpeta de skill, se excluye de ese hash y se verifica por separado con su checksum adoptado en `.scripts/check-security-skill.mjs`. Este gate cubre `security-audit`, no todas las skills del lockfile. Adoptar una versión posterior sigue la aprobación y revisión de permisos de las reglas de dependencias y tooling.
 
 Durante la construcción se usa su **guidance mode**: leer las secciones necesarias, aplicar sus criterios a las decisiones y hacer una revisión focalizada del diff. No se inicia automáticamente su auditoría de seis fases ni se generan sus informes. El hook propio `Checking security patterns` solo aporta candidatos locales; el agente confirma su contexto con la skill. No ejecuta el código revisado, no llama a un modelo separado, no envía archivos a un servicio adicional y no modifica los archivos detectados.
 
@@ -133,9 +133,9 @@ Los esqueletos de `PRODUCT.md` y `DESIGN.md` siguen el formato que leen y escrib
 
 - `PRODUCT.md` lleva el marcador `impeccable:product-schema` y las secciones de `init` en su orden; `DESIGN.md`, el frontmatter de tokens y las ocho secciones canónicas del formato DESIGN.md. Detrás van las secciones propias de la plantilla, que la skill conserva.
 - Los encabezados, las claves del frontmatter y el marcador van en inglés, y el contenido en español, como fija `15-language-and-naming.md`.
-- El frontmatter de `DESIGN.md` es la fuente normativa de los tokens que su esquema admite (colores, tipografía, radios, espaciado y componentes) y la sección `Stack` de `PRODUCT.md`, la del stack, como fijan `12-ui-theming-and-tokens.md` y `21-document-maintenance.md`. `init` solo escribe `Stack` en un proyecto nuevo; cuando falta, manda el stack instalado, como define `04-sources-and-skills.md`.
+- El frontmatter de `DESIGN.md` es la fuente normativa de los tokens que su esquema admite (colores, tipografía, radios, espaciado y componentes), como fija `12-ui-theming-and-tokens.md`. El stack vive en Selected Stack de [STACK.md](../STACK.md), como fija `33-stack-register.md`, y la sección `Stack` de `PRODUCT.md` solo enlaza a él. `init` solo escribe `Stack` en un proyecto nuevo: lo que proponga se registra en `STACK.md` y deja en `PRODUCT.md` solo el enlace. Si falta esa sección de `STACK.md`, manda el stack instalado, como define `04-sources-and-skills.md`.
 - Los tokens que el esquema no admite, como sombras, movimiento o puntos de corte, los fija el código y los describe su sección de `DESIGN.md`; el complemento `design.json` solo los refleja.
-- Si `init` o `document` proponen contenido que ya tiene sitio en una sección propia de la plantilla, como la terminología, las métricas de éxito, las decisiones abiertas, la voz del contenido o el estándar de accesibilidad, ese contenido va a esa sección y no se duplica; las restricciones técnicas van a `PLAN.md`.
+- Si `init` o `document` proponen contenido que ya tiene sitio en una sección propia de la plantilla, como la terminología, las métricas de éxito, las decisiones abiertas, la voz del contenido o el estándar de accesibilidad, ese contenido va a esa sección y no se duplica; las restricciones de runtime y versión van a `STACK.md` y las demás restricciones técnicas, a `PLAN.md`.
 - Mientras `Platform` conserve su `TODO`, `impeccable context` avisa de que no reconoce el valor y trata el proyecto como `web`. El aviso desaparece al escribir `web`, `ios`, `android` o `adaptive`.
 
 En `.impeccable/`, `config.json` guarda la configuración compartida y se versiona. `design.json` es el complemento de `DESIGN.md` que `document` regenera con él: el CLI no lo excluye, así que se versiona junto a `DESIGN.md` y nunca se edita a mano, como pide `14-code-authoring.md`. `config.local.json` guarda los ajustes de cada persona y `.gitignore` lo ignora, así que no se versiona. También se versionan `critique/ignore.md`, las supresiones que `critique` vuelve a leer en cada ejecución (`reference/critique.md`), y `live/config.json`, la configuración del modo live (`reference/live-setup.md`). El resto son artefactos de trabajo que `.gitignore` ignora: las maquetas de `mocks/`, incluidas las descartadas, que no implican aprobación (`reference/new-work.md`); las capturas y medidas de `review/` y `build/`; los informes de `critique/`, que se entregan en la conversación; y los archivos de ejecución de `live/`.

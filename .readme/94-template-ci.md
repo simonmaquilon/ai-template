@@ -6,7 +6,7 @@ El workflow `.github/workflows/template-checks.yml` comprueba en GitHub Actions 
 
 Un único paso, `node .scripts/run-checks.mjs --base <revisión>`, que también se ejecuta en local desde cualquier carpeta del repositorio, con o sin `--base`, y termina con código 1 si falla algo:
 
-- las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias, entre ellas las de los hooks de staging por texto y por efecto y la limpieza de carpetas con preservación de contenido, metadatos Git y directorios bloqueados, además de los avisos de seguridad, su JSON de contexto para ambos clientes y sus límites de lectura y exposición de datos;
+- las pruebas de `.scripts/tests/`, con el runner de pruebas que incluye Node y sin dependencias, entre ellas las de los hooks de staging por texto y por efecto y la limpieza de carpetas con preservación de contenido, metadatos Git y directorios bloqueados, además de los avisos de seguridad, su JSON de contexto para ambos clientes y sus límites de lectura y exposición de datos, y la ejecución de herramientas en la versión que fija `STACK.md`, sin red y con argumentos que ninguna shell reinterpreta;
 - la integridad de la skill de Cloudflare contra `computedHash` en `skills-lock.json`, con el checksum de su licencia adicional verificado por separado;
 - los tests vendorizados `validate-findings.test.cjs` y `validate-coverage-ledger.test.cjs` de esa skill, con sus fixtures temporales dentro de `.temp/` y sin iniciar una auditoría. En Windows se informan como `SKIP` y no se ejecutan: sus validadores rechazan cualquier entrada cuando Node no ofrece `O_NOFOLLOW` y `O_NONBLOCK`;
 - la comprobación de enlaces de `.scripts/check-doc-links.mjs`, que aquí falla si informa de algo;

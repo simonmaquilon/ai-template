@@ -6,7 +6,7 @@ Claude Code delega tareas en subagentes definidos en `.claude/agents/`, cada uno
 
 | Agente | Uso | Modelo | Esfuerzo |
 | --- | --- | --- | --- |
-| `sonnet-xhigh` | Agente general para tareas que deben ejecutarse en Sonnet en lugar del modelo de la sesión | `claude-sonnet-5-5` | `xhigh` |
+| `sonnet-xhigh` | Agente general para tareas que deben ejecutarse en Sonnet en lugar del modelo de la sesión | el que fija `.claude/agents/sonnet-xhigh.md` | `xhigh` |
 
 Los agentes `impeccable-*.md` los genera el instalador de la skill Impeccable, como explica [Skills de agentes](90-agent-skills.md).
 

@@ -1,7 +1,7 @@
 # Plan
 
 Este archivo traduce las decisiones autoritativas de producto y diseño en una secuencia de entrega ejecutable y verificable.
-`PRODUCT.md` define el comportamiento del producto y `DESIGN.md` define la experiencia observable; este plan no debe contradecirlos. Reemplaza cada `TODO` antes de considerar decidido ese elemento.
+`PRODUCT.md` define el comportamiento del producto, `DESIGN.md` define la experiencia observable y `STACK.md` el stack tecnológico; este plan no debe contradecirlos. Reemplaza cada `TODO` antes de considerar decidido ese elemento.
 
 ## Estado de la entrega
 
@@ -14,9 +14,7 @@ El estado debe describir trabajo verificado en el repositorio, no avance previst
 
 ## Restricciones y decisiones técnicas
 
-- Entorno de ejecución y restricciones de versión: TODO
-- Decisiones técnicas derivadas del stack: TODO — El stack lo selecciona la sección `Stack` de [PRODUCT.md](PRODUCT.md) o, si no existe, el stack instalado; no lo repitas aquí.
-- Restricciones de dependencias y licencias: TODO
+- Decisiones técnicas derivadas del stack: TODO — El stack, el runtime con sus restricciones de versión y la política de dependencias y licencias están en [STACK.md](STACK.md); si su sección `Selected Stack` no existe, manda el stack instalado. No los repitas aquí.
 - Entornos objetivo y límites de despliegue: TODO
 - Decisiones excluidas explícitamente de esta entrega: TODO
 
@@ -48,6 +46,8 @@ Usa los incrementos verificables e independientes más pequeños. Los estados pe
 
 ## Estrategia de validación
 
+Aquí se decide qué se valida y en qué nivel; las herramientas de cada nivel están en Validation Tooling de [STACK.md](STACK.md).
+
 - Análisis estático, formato y comprobaciones de tipos: TODO
 - Pruebas unitarias: TODO
 - Pruebas de integración y contratos: TODO
@@ -63,7 +63,7 @@ La cobertura verificada de cada requisito o recorrido, sus huecos, las verificac
 
 - Configuración y provisión de secretos: TODO
 - Enfoque de publicación o despliegue: TODO
-- Observabilidad y comprobaciones de salud: TODO
+- Observabilidad y comprobaciones de salud: TODO — Las herramientas están en Observability Tooling de [STACK.md](STACK.md).
 - Enfoque de reversión y recuperación: TODO
 - Documentación que debe cambiar con la entrega: TODO
 

@@ -17,20 +17,13 @@ El plugin solo indica qué comando arranca el servidor y qué extensiones atiend
 ### `typescript-language-server`
 
 ```bash
-npm install -g typescript-language-server@6.0.1 typescript@6.0.3
+node .scripts/run-pinned.mjs --install typescript-language-server typescript
 typescript-language-server --version
 ```
 
-El servidor envuelve `tsserver`, que TypeScript 7 ya no incluye. Por eso el `typescript` global se fija en una versión anterior a la 7: el comando del README del plugin, sin rango, instala TypeScript 7 y el servidor no arranca (`Could not find a valid TypeScript installation`). El comando fija las dos versiones verificadas de la tabla de abajo; cambiarlas es una actualización que `07-dependencies-and-binaries.md` somete a aprobación.
+El servidor envuelve `tsserver`, que TypeScript 7 ya no incluye. Por eso el `typescript` global se fija en una versión anterior a la 7: el comando del README del plugin, sin rango, instala TypeScript 7 y el servidor no arranca (`Could not find a valid TypeScript installation`). El comando instala las dos versiones que fija Template Tooling en [STACK.md](../STACK.md), donde consta también su procedencia; cambiarlas es una actualización que `07-dependencies-and-binaries.md` somete a aprobación.
 
 El servidor usa el TypeScript del proyecto cuando `node_modules/typescript` trae `tsserver`, y solo recurre al global cuando el proyecto no lo trae, como en esta plantilla. Un proyecto en TypeScript 7 cae al global sin avisar, así que sus diagnósticos no corresponden a la versión del proyecto.
-
-Versiones y procedencia verificadas al fijarlas:
-
-| Paquete | Versión | Licencia | Origen | Verificación |
-| --- | --- | --- | --- | --- |
-| `typescript-language-server` | 6.0.1 | Apache-2.0 | [typescript-language-server/typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) | publicado desde GitHub Actions con atestación de procedencia; firma del registro y atestación verificadas con `npm audit signatures`; sin dependencias ni scripts de instalación; requiere Node 22.22.2 o superior |
-| `typescript` | 6.0.3 | Apache-2.0 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) | publicado por `typescript-bot`; firma del registro verificada con `npm audit signatures`; sin dependencias ni scripts de instalación |
 
 ## Cobertura por cliente
 
@@ -53,7 +46,7 @@ Codex no tiene soporte nativo de servidores de lenguaje, así que queda fuera, c
 Un servidor de un marketplace oficial:
 
 1. Localiza el plugin del lenguaje en la tabla de plugins de inteligencia de código de la documentación de Claude Code y lee en su README qué binario necesita.
-2. Instala el binario y verifica su procedencia según `07-dependencies-and-binaries.md`.
+2. Verifica la procedencia del binario según `07-dependencies-and-binaries.md`, añade su versión y procedencia a [STACK.md](../STACK.md), en Project Tooling si lo añade el proyecto y en Template Tooling si lo añade la plantilla, e instálalo; si es un paquete de npm, con `node .scripts/run-pinned.mjs --install <paquete>`.
 3. Revisa los hooks y permisos que declara el plugin, como exige `28-agent-tooling-configuration.md`, y añade `"<plugin>@claude-plugins-official": true` a `enabledPlugins` en `.claude/settings.json`.
 4. Añade su fila al registro y su sección a Binarios.
 
@@ -73,7 +66,7 @@ Un servidor propio, sin plugin oficial:
 
    Claude Code carga esa carpeta como `<nombre>@skills-dir` para todos los que abren el proyecto, tras aceptar el diálogo de confianza de la carpeta. En esta plantilla `.claude/skills` es un symlink a `.agents/skills/`, como explica [Skills de agentes](90-agent-skills.md), así que el plugin vive allí. Es la excepción a lo que dice ese documento: no viene de un repositorio público ni figura en `skills-lock.json`. Como `.gitattributes` marca `.agents/skills/` como vendorizado, añade al final de ese archivo `.agents/skills/<nombre>/** -linguist-vendored` para que el límite de líneas revise su código. En Windows, el paso requiere que el symlink exista; en un clon sin symlinks, `.claude/skills` es un archivo y la carpeta no se puede crear.
 2. `claude plugin validate` no lee `.lsp.json`. Si una entrada es inválida, el archivo entero se descarta y **Errors** muestra `Invalid LSP server config for ".lsp.json"`.
-3. Instala el binario, que el plugin no incluye, y verifica su procedencia.
+3. Verifica la procedencia del binario, que el plugin no incluye, añade su versión y procedencia a [STACK.md](../STACK.md), en Project Tooling si lo añade el proyecto y en Template Tooling si lo añade la plantilla, e instálalo; si es un paquete de npm, con `node .scripts/run-pinned.mjs --install <paquete>`.
 4. Añade su fila al registro y su sección a Binarios.
 
 Cada extensión la atiende un solo servidor: si dos plugins habilitados reclaman la misma, **Errors** muestra `LSP server "<nombre>" is not used for <extensión> files` para el que queda fuera.

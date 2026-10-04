@@ -1,5 +1,6 @@
-// Match skills@1.7.0 computeSkillFolderHash: sort portable relative names using
-// localeCompare, then hash each name followed by its raw bytes with SHA-256.
+// Match computeSkillFolderHash of the skills CLI version that STACK.md pins:
+// sort portable relative names using localeCompare, then hash each name
+// followed by its raw bytes with SHA-256.
 // The top-level LICENSE is our verified overlay copied from the upstream root.
 import { createHash } from 'node:crypto';
 import { lstatSync, readdirSync, readFileSync } from 'node:fs';

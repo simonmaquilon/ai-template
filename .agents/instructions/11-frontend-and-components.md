@@ -3,7 +3,7 @@
 Read when touching user-facing interfaces, client routes, layouts, state, or visual components.
 
 - Detect the affected scope's framework, rendering model, language, state, routing, data-loading, and design-system conventions from manifests, configuration, and source before editing.
-- Load only the framework and UI skills applicable to the selected stack under `04-sources-and-skills.md`, or to an approved target stack for new work; never transfer conventions from an unrelated framework.
+- Load only the framework and UI skills applicable to the selected stack under `04-sources-and-skills.md`, or to the approved target versions that `STACK.md` records for new work; never transfer conventions from an unrelated framework.
 - Match established server-client boundaries and framework-owned locations.
 - Keep route and screen entrypoints focused on orchestration; place presentation and business rules in the units defined by the active framework and owning domain.
 - Keep state ownership explicit and data flow predictable; never mutate inputs owned by another component.

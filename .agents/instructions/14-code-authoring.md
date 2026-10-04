@@ -12,7 +12,7 @@ Read before writing or modifying code.
 - Keep single-use logic local; extract shared code when the same intent repeats or an owner instruction requires it.
 - Do not handle failures the code cannot reach; guard only real failure modes.
 - Comment only when the reason is not evident; follow `15-language-and-naming.md` for language and naming, and match the surrounding comment density.
-- Implementation-style precedence: the selected stack under `04-sources-and-skills.md` and technical decisions in `PLAN.md`, repository-owned documented standards, official guidance for the installed or approved target technology version, then surrounding convention; report any deliberate divergence.
+- Implementation-style precedence: the selected stack under `04-sources-and-skills.md` and its version constraints in `STACK.md`, technical decisions in `PLAN.md`, repository-owned documented standards, official guidance for the installed or approved target technology version, then surrounding convention; report any deliberate divergence.
 - Avoid unrelated formatting, reordering, or renaming inside authorized target files.
 - Delete the code a change makes dead instead of leaving it unreachable.
 - Keep each source file, tests included, within the line limit the repository's automated checks enforce, splitting it along responsibility boundaries before it would exceed that limit.

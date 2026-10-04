@@ -2,12 +2,12 @@
 
 > Template: replace the bracketed content and keep this file as an auditable register for the entire life of the application.
 
-This register centralizes versions, components, dependencies, vulnerabilities, exceptions, and remediations. Functional defects of the maintained product are recorded in [BUGS.md](BUGS.md); this register holds only their security aspect. It does not replace manifests, lockfiles, deployed configuration, issue trackers, scanners, or an SBOM; it references them as evidence, and any difference must be reconciled.
+This register centralizes the security state of every component, vulnerabilities, exceptions, and remediations. The components and their versions live in [STACK.md](STACK.md); this register cites their rows there without copying their versions. Functional defects of the maintained product are recorded in [BUGS.md](BUGS.md); this register holds only their security aspect. It does not replace manifests, lockfiles, deployed configuration, issue trackers, scanners, or an SBOM; it references them as evidence, and any difference must be reconciled.
 
 ## Control Rules
 
 - Use stable identifiers and ISO 8601 dates (`YYYY-MM-DD`).
-- Record one row per applicable version, component, vulnerability, or risk; dependencies may be detailed here or in an approved generated inventory linked from here, without duplicating their rows.
+- Record one row per applicable component, vulnerability, or risk; identify each component by its row in [STACK.md](STACK.md) instead of duplicating its version.
 - Retain resolved or retired entries to preserve history.
 - Do not invent versions or statuses: obtain them from verifiable sources and link the evidence.
 - Do not store secrets, personal data, or exploitable details; link a private record when necessary.
@@ -25,21 +25,13 @@ This register centralizes versions, components, dependencies, vulnerabilities, e
 | Next review | [YYYY-MM-DD] |
 | Overall status | [not assessed, compliant, findings open, or risk accepted] |
 
-## Application and Platform Versions
+## Component Security Status
 
-Covers the application, runtimes, databases, platforms, and external services; frameworks, libraries, CLI tools, and binaries, including build, test, and deployment tooling, belong to Libraries and Dependencies. Anything only template-owned agent tooling or automation requires is recorded in the `.readme/` document that configures it, not here.
+Covers every runtime, database, platform, external service, and dependency that Platform Versions and Dependencies of [STACK.md](STACK.md) list, or their approved generated inventory or SBOM; the tooling under its Template Tooling and Project Tooling is outside this register. Mark anything unverified as unknown.
 
-| Category | Component | Declared version | Resolved or deployed version | Source of truth | Support or EOL | Security status | Verified |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| [runtime] | [name] | [range] | [exact version] | [file or command] | [status or date] | [status] | [YYYY-MM-DD] |
-
-## Libraries and Dependencies
-
-Covers every direct and transitive dependency, including frameworks, CLI tools, and binaries, except those only template-owned agent tooling or automation requires, through this table or an approved generated inventory or SBOM linked from here. Retain declared and resolved versions, role, provenance, license, maintenance status, advisories, and verification evidence; mark anything unverified as unknown. When the detail lives outside this register, document its location, scope, update method, last verification, and security status here without duplicating its rows.
-
-| Ecosystem | Package | Role | Relationship | Declared version | Resolved version | Manifest, lockfile, or SBOM | License | Maintenance | Advisories and status | Verified |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [ecosystem] | [package] | [production, development, build, or test] | [direct or transitive] | [range] | [exact version] | [path or identifier] | [SPDX or unverified] | [active, EOL, or unknown] | [no findings, not affected, affected, mitigated, or reference] | [YYYY-MM-DD] |
+| Component | STACK.md section | Security status | Advisories | Verified |
+| --- | --- | --- | --- | --- |
+| [name] | [Platform Versions or Dependencies] | [no findings, not affected, affected, mitigated, or reference] | [advisory IDs or none] | [YYYY-MM-DD] |
 
 ## Vulnerabilities and Advisories
 

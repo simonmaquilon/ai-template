@@ -18,7 +18,7 @@
 
 ### Requisitos
 
-- [Runtime, versión y herramientas necesarias]
+- Runtime, versiones y herramientas: los fija [STACK.md](STACK.md).
 - [Acceso, servicio externo o credenciales requeridos]
 
 ### Configuración
@@ -58,12 +58,13 @@ No incluyas secretos ni valores reales de producción en este repositorio.
 
 ## Documentación
 
-- [Producto](PRODUCT.md): plataforma, stack, usuarios, alcance, actores y reglas de negocio.
+- [Producto](PRODUCT.md): plataforma, usuarios, alcance, actores y reglas de negocio.
 - [Diseño](DESIGN.md): tokens de diseño normativos, experiencia, interfaz y criterios observables.
+- [Stack](STACK.md): stack elegido, runtime, versiones, dependencias y herramientas, incluidas las que fija la plantilla para los agentes.
 - [Plan](PLAN.md): decisiones técnicas, fases, validación y avance verificado.
 - [Pruebas](TESTS.md): cobertura verificada por requisito o recorrido, huecos, verificaciones manuales o por agente y tests en cuarentena.
 - [Bugs](BUGS.md): registro de los bugs del producto y su estado funcional.
-- [Seguridad](SECURITY.md): inventario de versiones y dependencias, vulnerabilidades, riesgos y remediaciones.
+- [Seguridad](SECURITY.md): estado de seguridad de cada componente, vulnerabilidades, riesgos y remediaciones.
 - Añade aquí los enlaces a documentos de operación o arquitectura en `.readme/` cuando existan.
 
 ## Pruebas y calidad

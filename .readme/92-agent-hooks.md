@@ -56,7 +56,7 @@ La plantilla soporta Windows, macOS y Linux con los dos clientes. [CI de la plan
 | Requisito | Para qué | Sistemas |
 | --- | --- | --- |
 | `git` en el `PATH` | Todos los hooks de reglas | Todos |
-| Node en el `PATH`, versión 24 (la que prueba el CI) | Los scripts de `.scripts/` | Todos |
+| Node en el `PATH`, en la versión que prueba el CI y fija `.github/workflows/template-checks.yml` | Los scripts de `.scripts/` | Todos |
 | Symlinks habilitados en Git | `.claude/skills`, por el que Claude Code descubre las skills | Windows |
 | Git Bash | Los hooks de Impeccable en Claude Code | Windows |
 

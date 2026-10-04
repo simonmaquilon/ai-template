@@ -12,7 +12,7 @@ El frontmatter declara los tokens de diseño normativos que su esquema admite y 
 
 - Implicaciones visuales de la audiencia y su contexto: TODO — Quiénes son y dónde trabajan se define en Users y Operating Context de [PRODUCT.md](PRODUCT.md).
 - Rasgos deseados: TODO
-- Imágenes, iconos y movimiento: TODO
+- Imágenes, iconos y movimiento: TODO — La librería de iconos está en UI Libraries de [STACK.md](STACK.md).
 
 ## Colors
 
@@ -37,7 +37,7 @@ El frontmatter declara los tokens de diseño normativos que su esquema admite y 
 
 ## Components
 
-- Componente o sistema de diseño: TODO
+- Componente o sistema de diseño: TODO — La librería de componentes o el sistema de diseño elegido está en UI Libraries de [STACK.md](STACK.md); aquí van sus reglas de uso.
 - Navegación y jerarquía: TODO
 
 ## Do's and Don'ts

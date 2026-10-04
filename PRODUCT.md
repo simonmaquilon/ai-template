@@ -11,7 +11,7 @@ TODO — `web`, `ios`, `android` o `adaptive`.
 
 ## Stack
 
-TODO — En un proyecto nuevo, el stack elegido, o `delegated:` seguido de lo elegido y por qué. Esta sección es la fuente autoritativa del stack y el código la sigue. Si el proyecto ya tenía código cuando se creó este archivo, elimínala: entonces manda el stack instalado.
+Ver [Selected Stack en STACK.md](STACK.md#selected-stack).
 
 ## Users
 
@@ -33,7 +33,7 @@ TODO — En un proyecto nuevo, el stack elegido, o `delegated:` seguido de lo el
 ## Capabilities and Constraints
 
 - Funcionalidad incluida: TODO
-- Restricciones del producto: TODO — Las restricciones técnicas van en [PLAN.md](PLAN.md), la terminología en Domain Terminology y lo no decidido, en Open Decisions.
+- Restricciones del producto: TODO — Las restricciones de runtime y versión van en [STACK.md](STACK.md), las demás restricciones técnicas en [PLAN.md](PLAN.md), la terminología en Domain Terminology y lo no decidido, en Open Decisions.
 
 ## Brand Commitments
 
