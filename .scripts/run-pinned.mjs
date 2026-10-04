@@ -4,8 +4,9 @@
 //   node .scripts/run-pinned.mjs <package> [args...]      npx <package>@<version> [args...]
 //   node .scripts/run-pinned.mjs --install <package>...   npm install -g <package>@<version>...
 // npm's own CLI scripts run under this Node without a shell, so every argument
-// reaches them literally on every system. PINNED_NPM_CLI_DIR, used by the
-// tests, names the directory that holds those scripts.
+// reaches them literally on every system, and with their cache in .temp/npm-cache
+// at the repository root. PINNED_NPM_CLI_DIR, used by the tests, names the
+// directory that holds those scripts.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
@@ -83,7 +84,13 @@ const pins = pinnedVersions();
 const pinned = (name) => (pins.has(name) ? `${name}@${pins.get(name)}`
   : fail(`${name} is not listed in the Template Tooling or Project Tooling table of STACK.md`));
 const args = install ? ['install', '-g', ...rest.map(pinned)] : [pinned(first), ...rest];
+// npm reads a project .npmrc only beside the nearest package.json, which may
+// belong to an enclosing project or not exist, and resolves a relative cache
+// from the working directory; an absolute cache keeps it under .temp. Windows
+// matches variable names in any case, so inherited spellings are dropped.
+const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'npm_config_cache'));
+env.npm_config_cache = join(ROOT, '.temp', 'npm-cache');
 const run = spawnSync(process.execPath, [join(npmScripts(), install ? 'npm-cli.js' : 'npx-cli.js'), ...args],
-  { stdio: 'inherit' });
+  { stdio: 'inherit', env });
 if (run.error) fail(run.error.message);
 process.exit(run.status ?? 1);

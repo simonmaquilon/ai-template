@@ -23,28 +23,40 @@ function fixture(t, text) {
   cpSync(join(ROOT, '.scripts', 'run-pinned.mjs'), join(dir, '.scripts', 'run-pinned.mjs'));
   for (const name of ['npm-cli.js', 'npx-cli.js']) {
     writeFileSync(join(dir, 'npm', name),
-      `console.log(JSON.stringify([${JSON.stringify(name)}, ...process.argv.slice(2)]));\nprocess.exit(Number(process.env.FAKE_STATUS ?? 0));\n`);
+      `console.log(JSON.stringify([${JSON.stringify(name)}, ...process.argv.slice(2), process.env.npm_config_cache]));\nprocess.exit(Number(process.env.FAKE_STATUS ?? 0));\n`);
   }
   if (text !== undefined) writeFileSync(join(dir, 'STACK.md'), text);
-  return (args, env = {}) => run(process.execPath, [join('.scripts', 'run-pinned.mjs'), ...args],
-    { cwd: dir, env: { ...process.env, PINNED_NPM_CLI_DIR: join(dir, 'npm'), ...env } });
+  const pinned = (args, env = {}) => run(process.execPath, [join(dir, '.scripts', 'run-pinned.mjs'), ...args],
+    { cwd: join(dir, 'npm'), env: { ...process.env, PINNED_NPM_CLI_DIR: join(dir, 'npm'), ...env } });
+  pinned.cache = join(dir, '.temp', 'npm-cache');
+  return pinned;
 }
 
 test('run-pinned runs a CLI at its pinned version with its arguments unchanged', (t) => {
   const pinned = fixture(t, stack([['skills', '9.0.1']]).replaceAll('\n', '\r\n'));
   const result = pinned(['skills', 'update', '-p', LITERAL]);
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), ['npx-cli.js', 'skills@9.0.1', 'update', '-p', LITERAL]);
+  assert.deepEqual(JSON.parse(result.stdout), ['npx-cli.js', 'skills@9.0.1', 'update', '-p', LITERAL, pinned.cache]);
   assert.equal(result.stderr, '');
+});
+
+test('run-pinned keeps the npm cache in .temp at the repository root whatever the environment says', (t) => {
+  const pinned = fixture(t, stack([['skills', '9.0.1']]));
+  for (const key of ['npm_config_cache', 'NPM_CONFIG_CACHE']) {
+    const result = pinned(['skills'], { [key]: join(ROOT, 'elsewhere') });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).at(-1), pinned.cache, key);
+  }
 });
 
 test('run-pinned installs packages from both tables globally at their pinned versions', (t) => {
   const text = stack([['typescript', '9.0.2']], [['custom-language-server', '1.2.3']])
     .replace('| origin |', '| a \\| b |');
-  const result = fixture(t, text)(['--install', 'custom-language-server', 'typescript']);
+  const pinned = fixture(t, text);
+  const result = pinned(['--install', 'custom-language-server', 'typescript']);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout),
-    ['npm-cli.js', 'install', '-g', 'custom-language-server@1.2.3', 'typescript@9.0.2']);
+    ['npm-cli.js', 'install', '-g', 'custom-language-server@1.2.3', 'typescript@9.0.2', pinned.cache]);
 });
 
 test('run-pinned reads the pins of the repository STACK.md used by the documented commands', (t) => {
@@ -55,7 +67,7 @@ test('run-pinned reads the pins of the repository STACK.md used by the documente
     assert.match(spec, PIN);
     assert.ok(spec.startsWith(`${name}@`), spec);
   }
-  const [, , , ...specs] = JSON.parse(pinned(['--install', 'typescript-language-server', 'typescript']).stdout);
+  const [, , , ...specs] = JSON.parse(pinned(['--install', 'typescript-language-server', 'typescript']).stdout).slice(0, -1);
   assert.deepEqual(specs.map((spec) => spec.split('@')[0]), ['typescript-language-server', 'typescript']);
   for (const spec of specs) assert.match(spec, PIN);
 });
