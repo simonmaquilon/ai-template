@@ -1,10 +1,10 @@
 ---
-name: prompt-deep
-description: Run the prompt skill on a draft and lay out the improved prompt as a change plan under .temp/plans, with build fragments, patch and check scripts, review evidence, and a checkmark report. Use only when the user explicitly invokes prompt-deep.
+name: prompt-plan
+description: Run the prompt skill on a draft and lay out the improved prompt as a change plan under .temp/plans, with build fragments, patch and check scripts, review evidence, and a checkmark report. Use only when the user explicitly invokes prompt-plan.
 disable-model-invocation: true
 ---
 
-# Prompt deep
+# Prompt plan
 
 Turn a change request into a plan that can be built, verified, and reverted in small steps. This skill extends the `prompt` skill and never relaxes it.
 
