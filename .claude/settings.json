@@ -102,6 +102,15 @@
             "type": "command",
             "command": "node",
             "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/sync-stack.mjs",
+              "--hook"
+            ],
+            "statusMessage": "Syncing STACK.md"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
               "${CLAUDE_PROJECT_DIR}/.scripts/check-file-length.mjs",
               "--hook",
               "--turn-start"
@@ -161,6 +170,20 @@
               "${CLAUDE_PROJECT_DIR}/.scripts/check-security.mjs"
             ],
             "statusMessage": "Checking security patterns"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/sync-stack.mjs",
+              "--hook"
+            ],
+            "statusMessage": "Syncing STACK.md"
           }
         ]
       }

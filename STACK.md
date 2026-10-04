@@ -2,7 +2,7 @@
 
 > Template: replace the bracketed content. Template Tooling belongs to the template and is replaced as a whole when adopting a newer template version; every other section belongs to the project.
 
-This file is the single home of the technology stack: the selected stack, runtime and version constraints, approved target versions, the package manager, platform and dependency versions with their policy, UI libraries, validation and observability tooling, and the pinned tooling that agents run. [PRODUCT.md](PRODUCT.md) keeps the product decisions, [PLAN.md](PLAN.md) the architecture and delivery decisions, and [SECURITY.md](SECURITY.md) the security state of every component listed here. Outside the declared and resolved versions of Platform Versions and Dependencies, a value that a manifest, lockfile, or configuration file already pins is named by that file, never copied.
+This file is the single home of the technology stack: the selected stack, runtime and version constraints, approved target versions, the package manager, platform and dependency versions with their policy, UI libraries, validation and observability tooling, and the pinned tooling that agents run. [PRODUCT.md](PRODUCT.md) keeps the product decisions, [PLAN.md](PLAN.md) the architecture and delivery decisions, and [SECURITY.md](SECURITY.md) the security state of every component listed here. The blocks between `stack:generated` markers are rewritten by `.scripts/sync-stack.mjs` from the files that pin their facts, which the agent hooks run after every edit or command and at the start of every turn; edit only their Notes column, which it keeps for every row that still exists. Outside those blocks and the declared and resolved versions of Platform Versions and Dependencies, a value that a manifest, lockfile, or configuration file already pins is named by that file, never copied.
 
 ## Selected Stack
 
@@ -10,8 +10,14 @@ This file is the single home of the technology stack: the selected stack, runtim
 
 ## Runtime and Version Constraints
 
-- Runtime and supported versions: [name and range, or the file that pins it]
+- Runtime and supported versions: [name and range]
 - Version constraints and their reasons: [constraint and why]
+
+Declared in the repository:
+
+<!-- stack:generated runtime -->
+_None found in package.json engines, .nvmrc, or .node-version._
+<!-- /stack:generated runtime -->
 
 ## Approved Target Versions
 
@@ -23,8 +29,9 @@ Technologies approved but not yet installed, with the version to use until insta
 
 ## Package Manager
 
-- Package manager: [name]
-- Version pinned in: [manifest field or file]
+<!-- stack:generated package-manager -->
+_None found in package.json packageManager or a lockfile._
+<!-- /stack:generated package-manager -->
 
 ## Platform Versions
 
@@ -38,7 +45,13 @@ Covers runtimes, databases, platforms, and external services. The application's 
 
 - Dependency and license policy: [allowed licenses, sources, and constraints]
 
-Covers every direct and transitive dependency, including frameworks, CLI tools, and binaries, except the tooling under Template Tooling and Project Tooling, through this table or an approved generated inventory or SBOM linked from here. When the detail lives outside this file, document its location, scope, and update method here without duplicating its rows. Mark anything unverified as unknown.
+Direct dependencies of package.json, with the version and license installed in node_modules:
+
+<!-- stack:generated dependencies -->
+_None found in package.json._
+<!-- /stack:generated dependencies -->
+
+The table below covers what the generated one cannot read: other ecosystems and, through an approved generated inventory or SBOM linked from here, transitive dependencies; the tooling under Template Tooling and Project Tooling is outside both. When the detail lives outside this file, document its location, scope, and update method here without duplicating its rows. Mark anything unverified as unknown.
 
 | Ecosystem | Package | Role | Relationship | Declared version | Resolved version | Manifest, lockfile, or SBOM | License | Maintenance |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -73,12 +86,7 @@ The tooling that the template's agent configuration runs. The commands in `.read
 | `typescript-language-server` | 6.0.1 | Apache-2.0 | [typescript-language-server/typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) | published from GitHub Actions with a provenance attestation; registry signature and attestation checked with `npm audit signatures`; no dependencies or install scripts; requires Node 22.22.2 or later |
 | `typescript` | 6.0.3 | Apache-2.0 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) | published by `typescript-bot`; registry signature checked with `npm audit signatures`; no dependencies or install scripts |
 
-The rest of the agent tooling is pinned by its own configuration:
-
-- External tool servers: `.mcp.json` and `.codex/config.toml`, described in [Agent tool servers](.readme/95-agent-tool-servers.md).
-- Language-server and other Claude Code plugins: `enabledPlugins` in `.claude/settings.json`, described in [Agent language servers](.readme/93-agent-language-servers.md).
-- Skills: `skills-lock.json`, described in [Agent skills](.readme/90-agent-skills.md).
-- Continuous-integration actions, runners, and Node version: `.github/workflows/template-checks.yml`, described in [Template CI](.readme/94-template-ci.md).
+The rest of the agent tooling is pinned by its own configuration and listed under Agent and Automation Inventory.
 
 ## Project Tooling
 
@@ -86,3 +94,54 @@ Tooling that the project adds to the agent configuration, such as the binary of 
 
 | Package | Version | License | Origin | Verification |
 | --- | --- | --- | --- | --- |
+
+## Agent and Automation Inventory
+
+Generated from the files that pin each part; their configuration is described in [Agent skills](.readme/90-agent-skills.md), [Agent language servers](.readme/93-agent-language-servers.md), [Template CI](.readme/94-template-ci.md), and [Agent tool servers](.readme/95-agent-tool-servers.md).
+
+### Skills
+
+<!-- stack:generated skills -->
+| Skill | Source | Pinned by | Notes |
+| --- | --- | --- | --- |
+| cloudflare | cloudflare/skills | skills-lock.json | |
+| commit | this repository | none | |
+| context7-mcp | upstash/context7 | skills-lock.json | |
+| frontend-design | anthropics/skills | skills-lock.json | |
+| impeccable | pbakaus/impeccable | skills-lock.json | |
+| nuxt | antfu/skills | skills-lock.json | |
+| nuxt-ui | nuxt/ui | skills-lock.json | |
+| playwright-cli | microsoft/playwright-cli | skills-lock.json | |
+| prompt | this repository | none | |
+| prompt-plan | this repository | none | |
+| security-audit | cloudflare/security-audit-skill | skills-lock.json | |
+| vue | antfu/skills | skills-lock.json | |
+| vue-best-practices | vuejs-ai/skills | skills-lock.json | |
+| vueuse-functions | vueuse/skills | skills-lock.json | |
+| workers-best-practices | cloudflare/skills | skills-lock.json | |
+| wrangler | cloudflare/skills | skills-lock.json | |
+<!-- /stack:generated skills -->
+
+### External Tool Servers
+
+<!-- stack:generated mcp-servers -->
+| Server | Claude Code | Codex | Endpoint or command | Notes |
+| --- | --- | --- | --- | --- |
+| context7 | yes | yes | https://mcp.context7.com/mcp | |
+<!-- /stack:generated mcp-servers -->
+
+### Claude Code Plugins
+
+<!-- stack:generated plugins -->
+| Plugin | Marketplace | Enabled | Notes |
+| --- | --- | --- | --- |
+| typescript-lsp | claude-plugins-official | yes | |
+<!-- /stack:generated plugins -->
+
+### Workflows
+
+<!-- stack:generated workflows -->
+| Workflow | Runners | Node | Actions | Notes |
+| --- | --- | --- | --- | --- |
+| template-checks.yml | ubuntu-24.04, windows-2025 | 24 | actions/checkout v7.0.1, actions/setup-node v7.0.0 | |
+<!-- /stack:generated workflows -->
