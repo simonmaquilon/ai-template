@@ -13,9 +13,11 @@ Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta
 - la sección Template Tooling de `STACK.md`;
 - los documentos de `.readme/` con prefijo 90 o superior;
 - la configuración de agentes que declara el repositorio (`CLAUDE.md`, `.claude/`, `.codex/`, `.mcp.json`, `.playwright/`);
-- los scripts de `.scripts/` y el workflow de `.github/workflows/`;
+- los scripts de `.scripts/`;
 - las skills de `.agents/skills/` y `skills-lock.json`;
 - las reglas de la plantilla en `.gitignore`, `.gitattributes` y `.temp/.gitignore`.
+
+Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. Nunca se adoptan, sus cambios no suben `.agents/template-version`, y un proyecto creado como copia de la plantilla los borra; si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla.
 
 Lo demás es del proyecto: el código, el contenido con que rellenó las referencias primarias, incluida la sección Project Tooling de `STACK.md`, sus documentos de `.readme/` por debajo de 90 y sus políticas propias, enrutadas y registradas como desviaciones en `AGENTS.md`.
 
@@ -52,7 +54,6 @@ En el mismo cambio, fija en `.agents/template-version` la versión adoptada y re
 
 ## Después de adoptar
 
-- `node .scripts/run-checks.mjs` termina sin fallos.
+- `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada.
 - Codex vuelve a pedir la aprobación de los hooks que cambiaron, como explica [Hooks de agentes](92-agent-hooks.md).
 - Los binarios de los servidores de lenguaje siguen instalados en la versión que fija [STACK.md](../STACK.md); si cambió, se reinstalan como explica [Servidores de lenguaje de agentes](93-agent-language-servers.md).
-- El workflow heredado queda activo en GitHub hasta que el proyecto lo desactive, como explica [CI de la plantilla](94-template-ci.md).

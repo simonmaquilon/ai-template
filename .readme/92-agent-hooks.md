@@ -54,12 +54,12 @@ La revisión semántica del diff al finalizar se realiza mediante la skill y las
 
 ## Sistemas y requisitos
 
-La plantilla soporta Windows, macOS y Linux con los dos clientes. [CI de la plantilla](94-template-ci.md) prueba los hooks de reglas en Windows y Linux; macOS se valida en local.
+La plantilla soporta Windows, macOS y Linux con los dos clientes. Su propio CI prueba los hooks de reglas en Windows y Linux antes de publicarlos; macOS se valida en local.
 
 | Requisito | Para qué | Sistemas |
 | --- | --- | --- |
 | `git` en el `PATH` | Todos los hooks de reglas | Todos |
-| Node en el `PATH`, en la versión que prueba el CI y fija `.github/workflows/template-checks.yml` | Los scripts de `.scripts/` | Todos |
+| Node en el `PATH`, en una versión con soporte activo, como la que prueba el CI de la plantilla | Los scripts de `.scripts/` | Todos |
 | Symlinks habilitados en Git | `.claude/skills`, por el que Claude Code descubre las skills | Windows |
 | Git Bash | Los hooks de Impeccable en Claude Code | Windows |
 

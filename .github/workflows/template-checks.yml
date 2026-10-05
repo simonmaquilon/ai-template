@@ -12,6 +12,9 @@ permissions:
 jobs:
   checks:
     name: Checks (${{ matrix.os }})
+    # Only the maintained template, marked as a template repository on GitHub,
+    # runs these checks; a copy of this file in any other repository skips them.
+    if: github.event.repository.is_template
     strategy:
       fail-fast: false
       matrix:

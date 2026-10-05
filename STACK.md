@@ -97,7 +97,7 @@ Tooling that the project adds to the agent configuration, such as the binary of 
 
 ## Agent and Automation Inventory
 
-Generated from the files that pin each part; their configuration is described in [Agent skills](.readme/90-agent-skills.md), [Agent language servers](.readme/93-agent-language-servers.md), [Template CI](.readme/94-template-ci.md), and [Agent tool servers](.readme/95-agent-tool-servers.md).
+Generated from the files that pin each part; their configuration is described in [Agent skills](.readme/90-agent-skills.md), [Agent language servers](.readme/93-agent-language-servers.md), and [Agent tool servers](.readme/95-agent-tool-servers.md).
 
 ### Skills
 

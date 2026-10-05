@@ -2,6 +2,8 @@
 
 El workflow `.github/workflows/template-checks.yml` comprueba en GitHub Actions que los scripts y los hooks de la plantilla funcionan en Windows y Linux. macOS se valida en local. Los sistemas soportados y sus requisitos están en [Hooks de agentes](92-agent-hooks.md).
 
+Este CI, `run-checks.mjs` con sus pruebas y este documento solo validan la plantilla: nunca se adoptan en un proyecto derivado y sus cambios no suben `.agents/template-version`, como fija [Adopción de versiones de la plantilla](96-template-adoption.md).
+
 ## Qué ejecuta
 
 Un único paso, `node .scripts/run-checks.mjs --base <revisión>`, que también se ejecuta en local desde cualquier carpeta del repositorio, con o sin `--base`, y termina con código 1 si falla algo:
@@ -17,7 +19,7 @@ Las pruebas de salida verifican el contrato JSON documentado de los hooks; no re
 
 ## Cuándo y dónde
 
-- Se ejecuta en cada push a `main` y en cada pull request contra `main`.
+- Se ejecuta en cada push a `main` y en cada pull request contra `main`, solo si el repositorio está marcado como plantilla en GitHub (Settings > General > Template repository): el job comprueba `github.event.repository.is_template` y no nombra ningún propietario ni repositorio, así que sigue funcionando si la plantilla cambia de sitio. En cualquier otro repositorio que conserve una copia del archivo, GitHub omite el job.
 - La revisión base es la del pull request (`github.event.pull_request.base.sha`) o la que tenía `main` antes del push (`github.event.before`); el checkout trae el historial de todas las ramas y etiquetas (`fetch-depth: 0`) para que exista.
 - Si git no resuelve esa revisión, como el head anterior a un force push, que ya no está en ninguna rama y el checkout no trae, el script lo avisa y compara con el padre de `HEAD`, así que ese run solo revisa el último commit; sin padre, cuenta todos los archivos como nuevos.
 - Matriz: Linux y Windows; las imágenes de runner y la versión de Node las fija el workflow.
@@ -34,4 +36,4 @@ En el repositorio de la plantilla el workflow está desactivado en GitHub, así 
 2. Haz push a `main` o abre un pull request contra `main`: son los únicos eventos que lo lanzan, porque el workflow no admite ejecución manual. `gh run watch` sigue el run.
 3. Desactívalo de nuevo con `gh workflow disable template-checks.yml`.
 
-El ajuste vive en GitHub y no en el repositorio: un proyecto creado desde la plantilla hereda el workflow activo, y correrá en sus pushes y pull requests con sus propios minutos hasta que lo desactive o cambie sus disparadores.
+Activarlo o desactivarlo es un ajuste de GitHub, no del repositorio.
