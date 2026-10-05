@@ -37,6 +37,21 @@ test('sync-stack reads nothing outside the repository or through symbolic links'
   assert.ok(repo.stack().includes('| .node-version | unrecognized |'));
 });
 
+test('sync-stack reads a linked folder only while it stays inside the repository', (t) => {
+  const repo = fixture(t);
+  const outside = fixture(t);
+  outside.write('pkg/package.json', JSON.stringify({ version: '6.6.6', license: 'LEAKED' }));
+  repo.write('node_modules/.pnpm/inner/package.json', JSON.stringify({ version: '2.0.0', license: 'MIT' }));
+  repo.write('package.json', JSON.stringify({ dependencies: { linked: '1.0.0', inner: '^2.0.0' } }));
+  const type = WINDOWS ? 'junction' : 'dir';
+  symlinkSync(join(outside.dir, 'pkg'), join(repo.dir, 'node_modules', 'linked'), type);
+  symlinkSync(join(repo.dir, 'node_modules', '.pnpm', 'inner'), join(repo.dir, 'node_modules', 'inner'), type);
+  repo.sync();
+  assert.doesNotMatch(repo.stack(), /6\.6\.6|LEAKED/);
+  assert.ok(repo.stack().includes('| linked | 1.0.0 | not installed |'));
+  assert.ok(repo.stack().includes('| inner | ^2.0.0 | 2.0.0 | production | MIT |'));
+});
+
 test('sync-stack keeps notes when a table changes its columns and protects its markers', (t) => {
   const repo = fixture(t);
   repo.sync();

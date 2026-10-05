@@ -1,19 +1,26 @@
 // Reads the facts that STACK.md mirrors from the files that pin them, as table
 // rows whose first cell names the row. Values pass through clean() so that no
 // credential, URL query or fragment, hash, commit SHA, or command argument
-// reaches a document, and no read follows a symlink or leaves the repository.
+// reaches a document; no file that is itself a symlink is read, and no read
+// leaves the repository, not even through a linked folder.
 
-import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { isAbsolute, join, relative, sep } from 'node:path';
 
 const LOCKFILES = [['package-lock.json', 'npm'], ['pnpm-lock.yaml', 'pnpm'], ['yarn.lock', 'yarn'], ['bun.lock', 'bun'], ['bun.lockb', 'bun']];
 const ROLES = [['dependencies', 'production'], ['devDependencies', 'development'], ['optionalDependencies', 'optional'], ['peerDependencies', 'peer']];
 const PACKAGE = /^(?:@[a-z0-9][\w.~-]*\/)?[a-z0-9][\w.~-]*$/i;
 const HASH = /^[0-9a-f]{7,64}$/i;
 
+// Whether a path, with every link on the way resolved, stays inside root.
+function inside(root, full) {
+  const local = relative(realpathSync(root), realpathSync(full));
+  return local.split(sep)[0] !== '..' && !isAbsolute(local);
+}
+
 function text(root, path) {
   const full = join(root, path);
-  if (!existsSync(full) || lstatSync(full).isSymbolicLink()) return null;
+  if (!existsSync(full) || lstatSync(full).isSymbolicLink() || !inside(root, full)) return null;
   return readFileSync(full, 'utf8').replace(/^﻿/, '');
 }
 
@@ -86,7 +93,7 @@ export function skills(root) {
   const locked = json(root, 'skills-lock.json')?.skills ?? {};
   const rows = Object.entries(locked).map(([name, entry]) => [name, clean(entry?.source), 'skills-lock.json']);
   const dir = join(root, '.agents', 'skills');
-  for (const entry of existsSync(dir) ? readdirSync(dir, { withFileTypes: true }) : []) {
+  for (const entry of existsSync(dir) && inside(root, dir) ? readdirSync(dir, { withFileTypes: true }) : []) {
     if (entry.isDirectory() && !locked[entry.name] && existsSync(join(dir, entry.name, 'SKILL.md'))) {
       rows.push([entry.name, 'this repository', 'none']);
     }
@@ -123,7 +130,7 @@ export function plugins(root) {
 // Actions show the release their pin comment names, never the pinned commit.
 export function workflows(root) {
   const dir = join(root, '.github', 'workflows');
-  if (!existsSync(dir)) return [];
+  if (!existsSync(dir) || !inside(root, dir)) return [];
   return byName(readdirSync(dir).filter((file) => /\.ya?ml$/.test(file)).map((file) => {
     const yaml = text(root, join('.github', 'workflows', file)) ?? '';
     const runners = new Set();
