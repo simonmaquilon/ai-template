@@ -1,14 +1,24 @@
 import assert from 'node:assert/strict';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { ROOT, WINDOWS, run } from './support.mjs';
+import { ROOT, WINDOWS, makeRepo, run } from './support.mjs';
 
 // An unreadable git template makes git init fail the way a sandbox that denies
 // writes under .git does; Windows and root read the template anyway.
 const unreadable = WINDOWS || process.getuid?.() === 0;
 
 test('run-checks reports the hook tests as blocked, not failed, where git cannot create a repository', { skip: unreadable }, (t) => {
+  // A throwaway repository with what the other steps read, so the result never
+  // depends on the working tree of the repository that holds the tests.
+  const repo = makeRepo(t);
+  for (const path of ['skills-lock.json', '.gitattributes', join('.agents', 'skills', 'security-audit')]) {
+    cpSync(join(ROOT, path), join(repo.dir, path), { recursive: true });
+  }
+  mkdirSync(join(repo.dir, '.scripts', 'tests'));
+  mkdirSync(join(repo.dir, '.temp'));
+  repo.git('add', '--', '.');
+  repo.git('commit', '-q', '-m', 'fixture');
   const templates = mkdtempSync(join(ROOT, '.temp', 'git-template-'));
   const locked = join(templates, 'hooks', 'locked.sample');
   t.after(() => {
@@ -18,8 +28,8 @@ test('run-checks reports the hook tests as blocked, not failed, where git cannot
   mkdirSync(join(templates, 'hooks'));
   writeFileSync(locked, '');
   chmodSync(locked, 0);
-  const result = run(process.execPath, [join(ROOT, '.scripts', 'run-checks.mjs')], {
-    cwd: ROOT,
+  const result = run(process.execPath, [join('.scripts', 'run-checks.mjs')], {
+    cwd: repo.dir,
     env: { ...process.env, GIT_TEMPLATE_DIR: templates },
     maxBuffer: 64 * 1024 * 1024,
   });
