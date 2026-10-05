@@ -4,7 +4,7 @@ Read before staging, committing, changing ignore rules, or composing a pull requ
 
 - Obtain authorization for the version-control write under `03-approval-boundaries.md`; this file governs only how an authorized write is composed.
 - Stage only the files belonging to the authorized change; leave unrelated or pre-existing modifications unstaged as user-owned under `14-code-authoring.md`.
-- Stage by explicit file paths; a directory or wildcard pathspec counts as bulk staging, and never use bulk-staging or commit-all options.
+- Stage additions and commits by explicit file paths; a directory or wildcard pathspec there counts as bulk staging, and never use bulk-staging or commit-all options.
 - Split unrelated changes into separate commits so each commit stands alone and can be reverted independently.
 - Never stage ignored files, build or dependency output, local environment files, or secret-bearing content under `08-storage-and-secrets.md`.
 - When an authorized change introduces a generated, temporary, tool-managed, local-environment, or secret-bearing path that must remain untracked, ensure the ignore rules cover it; do not use selective staging to hide a missing rule.
