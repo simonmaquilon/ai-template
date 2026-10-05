@@ -29,7 +29,7 @@ Fragments use the improved prompt's language. Scripts use the cross-platform scr
 ## Execution
 
 - Execute no fragment, and run no `record`, `apply`, or `revert` script, until the user asks.
-- Take fragments in order: implement each one, between `record NN before` and `record NN after` when the plan has `patch/`, run the checks of this and every completed fragment, and store the evidence in `review/`, applying the gates each fragment carries and the closure audit at the end.
+- Take fragments in order. For each, add its tests first, if it carries any; run those that test the behavior it changes, if any, under the limits `check/` scripts follow, and store that run in `review/` as `NN-tests-before-<UTC timestamp>`, stopping without running `record NN after` to report any that already passes; only then implement it, all between `record NN before` and `record NN after` when the plan has `patch/`. Then run the checks of this and every completed fragment, and store the evidence in `review/`, applying the gates each fragment carries and the closure audit at the end.
 
 ## Report
 
