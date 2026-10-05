@@ -103,8 +103,10 @@ try {
 }
 if (lines.length === 0) process.exit(0);
 const message = lines.join('\n');
-if (hook && input.hook_event_name === 'PostToolUse') {
-  console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: message } }));
+// Claude Code fires PostToolUseFailure after a failed command, with the same
+// JSON contract under its own event name; both reach the model only as JSON.
+if (hook && ['PostToolUse', 'PostToolUseFailure'].includes(input.hook_event_name)) {
+  console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: input.hook_event_name, additionalContext: message } }));
 } else {
   console.log(message);
 }
