@@ -3,8 +3,7 @@
 Read before locating, reading, or changing code, and before enabling, installing, updating, or removing a language server.
 
 - Detect the language servers the active agent client has configured, and the file types each serves, from repository-declared agent tooling configuration and its `.readme/` documentation; never assume one from the language alone.
-- Keep the configured code index as the first code-discovery capability under `10-code-indexing.md`; use a language server configured for the affected language to resolve exact definitions, references, and implementations before falling back to text searches.
-- For exhaustive usage sweeps under `02-change-workflow.md`, add the language server's references to the indexed relationships before supplementing both with scoped literal searches.
+- After the code index that `10-code-indexing.md` puts first, use a language server configured for the affected language to resolve exact definitions, references, and implementations before falling back to text searches.
 - Resolve the error-level diagnostics a change introduces before closing it, unless the server runs a language version other than the project's; handle pre-existing diagnostics under `17-validation-policy.md`.
 - Language-server diagnostics add to the project's configured checks and never replace them.
 - When no language server is configured for the affected language or the active client, or the configured one fails to start, continue with the remaining discovery and validation capabilities; never install or enable one merely to satisfy this workflow.
