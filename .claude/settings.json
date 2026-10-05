@@ -25,7 +25,17 @@
       "Bash(reboot*)",
       "Bash(launchctl *)",
       "Bash(chmod -R *)",
-      "Bash(chown -R *)"
+      "Bash(chown -R *)",
+      "PowerShell(sudo *)",
+      "PowerShell(su *)",
+      "PowerShell(dd *)",
+      "PowerShell(mkfs*)",
+      "PowerShell(diskutil erase*)",
+      "PowerShell(shutdown *)",
+      "PowerShell(reboot*)",
+      "PowerShell(launchctl *)",
+      "PowerShell(chmod -R *)",
+      "PowerShell(chown -R *)"
     ],
     "ask": [
       "Bash(git push *)",
@@ -35,7 +45,15 @@
       "Bash(gh repo *)",
       "Bash(gh workflow run*)",
       "Bash(gh secret *)",
-      "Bash(npm publish*)"
+      "Bash(npm publish*)",
+      "PowerShell(git push *)",
+      "PowerShell(gh pr merge*)",
+      "PowerShell(gh pr close*)",
+      "PowerShell(gh release *)",
+      "PowerShell(gh repo *)",
+      "PowerShell(gh workflow run*)",
+      "PowerShell(gh secret *)",
+      "PowerShell(npm publish*)"
     ]
   },
   "hooks": {
