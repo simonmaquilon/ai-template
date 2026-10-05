@@ -89,15 +89,19 @@ test('sync-stack parses large workflow files in linear time', (t) => {
   assert.ok(Date.now() - started < 5000, `${Date.now() - started} ms`);
 });
 
-for (const [client, file, tools] of [['claude', '.claude/settings.json', ['Edit', 'Write', 'Bash', 'PowerShell']],
-  ['codex', '.codex/hooks.json', ['Edit', 'Write', 'apply_patch', 'Bash']]]) {
-  test(`${client}: the stack hook runs after ${tools.join(', ')} and at turn start`, () => {
+// Claude Code fires PostToolUseFailure instead of PostToolUse after a failed
+// command, which may still have installed something; Codex fires PostToolUse.
+for (const [client, file, tools, failed] of [['claude', '.claude/settings.json', ['Edit', 'Write', 'Bash', 'PowerShell'], ['Bash', 'PowerShell']],
+  ['codex', '.codex/hooks.json', ['Edit', 'Write', 'apply_patch', 'Bash'], null]]) {
+  test(`${client}: the stack hook runs after ${tools.join(', ')}${failed ? `, after a failed ${failed.join(' or ')} call,` : ''} and at turn start`, () => {
     const hooks = JSON.parse(readFileSync(join(ROOT, file), 'utf8')).hooks;
-    const groups = (event) => hooks[event].filter((group) => JSON.stringify(group).includes('sync-stack.mjs'));
+    const groups = (event) => (hooks[event] ?? []).filter((group) => JSON.stringify(group).includes('sync-stack.mjs'));
     const [post] = groups('PostToolUse');
     assert.deepEqual(post.matcher.split('|').sort(), [...tools].sort());
+    assert.deepEqual(groups('PostToolUseFailure').map((group) => group.matcher.split('|').sort()), failed ? [[...failed].sort()] : []);
     assert.equal(groups('UserPromptSubmit').length, 1);
-    for (const hook of [...post.hooks, ...groups('UserPromptSubmit')[0].hooks].filter((h) => JSON.stringify(h).includes('sync-stack'))) {
+    const all = [...post.hooks, ...groups('PostToolUseFailure').flatMap((group) => group.hooks), ...groups('UserPromptSubmit')[0].hooks];
+    for (const hook of all.filter((h) => JSON.stringify(h).includes('sync-stack'))) {
       if (hook.commandWindows) assert.match(hook.commandWindows, /-- --hook$/);
       assert.match(JSON.stringify(hook), /--hook/);
       assert.equal(hook.statusMessage, 'Syncing STACK.md');

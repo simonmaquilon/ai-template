@@ -47,6 +47,9 @@ test('sync-stack reports as an agent hook only when it changed something', (t) =
   repo.write('.nvmrc', '22\n');
   const turn = repo.sync({ hook_event_name: 'UserPromptSubmit' });
   assert.match(turn.stdout, /^STACK\.md synced \(33-stack-register\.md\): runtime\./);
+  repo.write('.nvmrc', '20\n');
+  const failed = repo.sync({ hook_event_name: 'PostToolUseFailure', tool_input: { command: 'npm install' } });
+  assert.match(postToolContext(failed, 'PostToolUseFailure'), /^STACK\.md synced \(33-stack-register\.md\): runtime\./);
   repo.write('skills-lock.json', '{ not json');
   const broken = repo.sync({ hook_event_name: 'PostToolUse' });
   assert.match(postToolContext(broken), /^STACK\.md blocks not synced \(33-stack-register\.md\): skills;/);
