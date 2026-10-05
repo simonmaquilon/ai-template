@@ -37,4 +37,4 @@ Cada llamada envía a Upstash el nombre de la librería y el texto de la consult
 
 1. Verifica quién lo publica, qué datos recibe y qué herramientas expone, según `07-dependencies-and-binaries.md`.
 2. Decláralo en `.mcp.json` y en `.codex/config.toml`, o explica aquí por qué un cliente queda fuera, como pide `28-agent-tooling-configuration.md`.
-3. Añade su fila al registro y su sección, con la fecha de verificación.
+3. Añade su fila al registro y su sección.

@@ -20,4 +20,4 @@ Claude lo elige por su `description`, o se le pide de forma explícita con `@age
 
 ## Codex
 
-Codex no declara este agente: los modelos Sonnet no están disponibles en ese cliente.
+Codex no declara este agente: los modelos Sonnet no están disponibles en ese cliente. Tampoco declara subagentes: la verificación independiente de `31-verification-loop.md` se hace en una sesión nueva no interactiva con `codex exec --ephemeral`, que recibe solo la especificación y el diff y tiene acceso al repositorio; si no se lanza, se informa como hueco de validación.
