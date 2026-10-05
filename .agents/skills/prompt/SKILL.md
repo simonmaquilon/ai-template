@@ -137,7 +137,8 @@ Read [references/examples.md](references/examples.md) only when an open decision
 
 ## Client bindings
 
-Everything above this heading and in the references linked from it applies to every agent client that loads this skill from `.agents/skills/prompt/SKILL.md`; only the values below change per client.
+Everything above this heading and in the references linked from it applies to every agent client that loads this skill, wherever it is installed; only the values below change per client.
 
 - Question mechanism: in Claude Code, the `AskUserQuestion` tool; in Codex, the `request_user_input` tool, shown as "Ask me". When the session does not offer it, step 5 governs the fallback.
 - Subagent mechanism: in Claude Code, the `Agent` tool with the `Explore` subagent type, with independent calls sent in one message so they run in parallel; in Codex, the `spawn_agent` tool with `agent_type` set to `explorer`, one agent per independent question, collected with `wait_agent`, and invoking this skill is the user's request for that delegation. When the session does not offer it, step 10 governs the fallback.
+- Any other client: use its equivalent mechanism when the session offers one, under the same constraints, a structured question to the user and read-only subagents that edit no file, run in parallel when the client allows; otherwise the fallbacks named above apply.
