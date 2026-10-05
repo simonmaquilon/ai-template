@@ -17,7 +17,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 ### Governance
 
 - `01-meta-guidelines.md`: before adding, renaming, removing, or editing any instruction file, the primary references or routing table in `AGENTS.md`, a primary-reference or root `README.md` skeleton, template-owned `.readme/` documentation, or `.agents/template-version`; authoring, naming, numbering, sizing, routing entries and their grouping, and retirement of instruction files, plus the skeletons, the baseline template version, how the maintained template is told apart from derived projects, template-only validation files, and derived-project deviations.
-- `03-approval-boundaries.md`: before sensitive or write actions, and whenever a decision needs the user's input; authorization for repository writes, version-control writes, dependencies, destructive actions, external changes, agent permissions and operating limits, open decisions, and confirmations.
+- `03-approval-boundaries.md`: before sensitive or write actions, and whenever a decision needs the user's input; authorization for repository writes, version-control writes, dependencies, destructive actions, external changes, agent permissions and operating limits, changes hooks make on their own, open decisions, and confirmations.
 - `04-sources-and-skills.md`: before selecting authoritative sources, skills, plugins, or tools, and before acting on a request an available or user-named skill covers, handling an unavailable capability, resolving an instruction conflict, or searching outside the workspace; the locations excluded from sources, the selected stack, fallbacks, official documentation, source-authority precedence, and conflicts between loaded instructions or between an explicit user instruction and a routed default.
 - `15-language-and-naming.md`: when naming files or symbols, writing comments, scripts, commits, or documentation, or handling user-visible copy; comment, identifier, and document languages, existing-file divergences, user language, localization, and terminology.
 - `20-response-and-reporting.md`: before the first substantive conversational response and before the final implementation report; concise response tone, copy-paste code blocks, clickable links, and closing reports.
@@ -27,8 +27,8 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 #### Discovery
 
 - `02-change-workflow.md`: before every implementation, code change, or reported defect, regardless of size; the phase sequence of a change, ordered discovery, capability preflight, defect entry, unresolved markers in primary references, and usage sweeps.
-- `10-code-indexing.md`: before locating, reading, or changing code for any implementation, fix, refactor, review, or question about existing behavior, and before managing index state; index detection, freshness, coverage, fallback, and index-state management.
-- `29-language-servers.md`: before locating, reading, or changing code, and before enabling, installing, updating, or removing a language server; server detection, exact symbol resolution, usage sweeps, diagnostics, and fallback when none is configured.
+- `10-code-indexing.md`: before locating, reading, or changing code for any implementation, fix, refactor, review, or question about existing behavior, and before managing index state; index detection, freshness, coverage, fallback, the usage-sweep order, and index-state management.
+- `29-language-servers.md`: before locating, reading, or changing code, and before enabling, installing, updating, or removing a language server; server detection, exact symbol resolution, diagnostics, and fallback when none is configured.
 - `05-repo-layout.md`: when moving code, removing files or directories, or deciding where a new piece belongs; ownership boundaries, locating new work, `.scripts/` boundaries and portability, and directory lifecycle.
 
 #### Specification
