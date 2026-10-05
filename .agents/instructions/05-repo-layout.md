@@ -15,4 +15,4 @@ Read when moving code, removing files or directories, or deciding where a new pi
 - Create a top-level file or directory when required by the explicit request, approved technology, fixed template structure, or a clearly established repository ownership and layout pattern; ask before introducing a new top-level boundary without that evidence or when it changes architecture.
 - Create a directory only together with the first file it holds, except the fixed template directories that ship with a placeholder.
 - Remove a directory when its last file leaves it, unless the fixed template structure requires it.
-- If ownership is ambiguous, reuse the nearest established pattern and state the choice in the closing report.
+- If ownership is ambiguous and the choice is not material under `03-approval-boundaries.md`, reuse the nearest established pattern and state the choice in the closing report.
