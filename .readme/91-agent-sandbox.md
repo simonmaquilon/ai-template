@@ -34,6 +34,7 @@ Una exención solo saca del sandbox una llamada si cubre todos sus comandos, y a
 `.claude/settings.json` activa el sandbox con estos ajustes:
 
 - `enabled` y `autoAllowBashIfSandboxed`: cada comando corre confinado y se aprueba sin preguntar; solo escribe en el proyecto y en el temporal del sistema.
+- `excludedCommands: ["node .scripts/run-checks.mjs*"]`: los checks de la plantilla corren fuera del sandbox. Sus pruebas crean repositorios git desechables y copias de `.mcp.json` bajo `.temp/`, y el sandbox no deja escribir `.git/config`, `.git/hooks/` ni `.mcp.json` en ninguna carpeta, así que dentro fallan siempre. Solo actúa en la plantilla, la única que tiene `run-checks.mjs`; en un proyecto derivado no coincide con ningún comando. Solo sale la invocación lanzada sola desde la raíz, sin las formas que la mantienen confinada, y las propias pruebas impiden que git salga de `.temp/` si no llega a crear un repositorio.
 - `network.allowedDomains: ["*"]`: salida a cualquier dominio sin confirmación.
 - `network.allowLocalBinding`: en macOS permite levantar servidores en `127.0.0.1`, como hacen los runners de pruebas.
 - Sin `filesystem.denyRead`: por decisión del usuario, el sandbox puede leer las credenciales del equipo (`~/.ssh`, `~/.aws`, los tokens de `gh` o `wrangler`) por si una tarea las necesita.
@@ -53,7 +54,7 @@ No existe exención por comando. Las palancas son de sesión completa, en `.code
 | `approval_policy`           | cómo escala a aprobación del usuario un comando denegado                          |
 | `default_permissions`       | perfil de permisos por omisión; `:danger-full-access` desactiva el confinamiento  |
 
-La plantilla no declara `sandbox_mode` en `.codex/config.toml`, así que Codex usa sus valores por omisión; se dejó fuera deliberadamente al configurar el sandbox de Claude Code.
+La plantilla no declara `sandbox_mode` en `.codex/config.toml`, así que Codex usa sus valores por omisión; se dejó fuera deliberadamente al configurar el sandbox de Claude Code. Por la misma razón, `node .scripts/run-checks.mjs` no tiene en Codex la exención que tiene en Claude Code.
 
 Codex sí evalúa reglas `allow` por comando mediante su exec policy, y una regla `allow` incluye el bypass del sandbox, pero esas reglas se alimentan de `requirements.toml`, que es configuración gestionada por la organización y no se define por proyecto.
 
