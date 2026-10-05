@@ -20,7 +20,7 @@ function fixture(t) {
   repo.write(`${dir}/LICENSE`, readFileSync(join(ROOT, dir, 'LICENSE'), 'utf8'));
   repo.write('skills-lock.json', JSON.stringify({ version: 1, skills: {
     'security-audit': { source: 'cloudflare/security-audit-skill', sourceType: 'github',
-      ref: 'a'.repeat(40), skillPath: 'skills/security-audit/SKILL.md', computedHash: HASH },
+      skillPath: 'skills/security-audit/SKILL.md', computedHash: HASH },
   } }));
   return repo;
 }
