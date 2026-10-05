@@ -10,7 +10,8 @@
 // hook passes on Windows, where its Bash tool may run the command through
 // PowerShell, the command is read both ways and rejected when either reading
 // finds bulk staging. tool_input.command may arrive as text or as an argument
-// list, and input.cwd sets where aliases, script files, and makefiles are read.
+// list, and input.cwd sets where aliases, script files, and makefiles are read
+// and where directory pathspecs resolve.
 
 import { isBulk } from './bulk-staging.mjs';
 import { readHookInput } from './hook-support.mjs';
@@ -27,7 +28,7 @@ try {
 }
 if (bulk) {
   console.error(
-    '27-version-control.md: stage the authorized change by explicit paths; bulk staging can sweep in uncommitted work from another session.',
+    '27-version-control.md: stage the authorized change by explicit file paths; a directory, a wildcard, or bulk staging can sweep in uncommitted work from another session.',
   );
   process.exit(2);
 }

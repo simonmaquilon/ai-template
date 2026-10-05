@@ -134,6 +134,6 @@ if (appeared.length > 0) {
   problems.push(`these paths became staged during it without being named: ${appeared.join(', ')}. If it staged them, unstage them with git restore --staged -- <path>; if another session or the user did, leave them and report it`);
 }
 if (problems.length > 0) {
-  console.error(`27-version-control.md: after this command, ${problems.join('; ')}. Stage the authorized change by explicit paths.`);
+  console.error(`27-version-control.md: after this command, ${problems.join('; ')}. Stage the authorized change by explicit file paths.`);
   process.exit(2);
 }

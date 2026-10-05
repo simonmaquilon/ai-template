@@ -6,7 +6,7 @@
 // its text through hidden-commands.mjs: eval, a shell's -c or file script, a
 // here-document fed to a shell, a sourced or path-run file, make targets, and
 // git aliases; a PowerShell $name = <command> runs its command too.
-// visit({ name, args, fed, xargs }) returns true to stop, and walk
+// visit({ name, args, fed, xargs, cwd }) returns true to stop, and walk
 // returns whether it stopped; nesting deeper than MAX_DEPTH throws. A script
 // may also be an argument list, read as one command.
 
@@ -63,7 +63,7 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
     while (i < expanded.length) {
       if (expanded[i] === 'xargs') {
         const git = expanded.findIndex((word, k) => k > i && GIT.test(word));
-        return git !== -1 && visit({ name: expanded[git], args: expanded.slice(git + 1), fed: true, xargs: true });
+        return git !== -1 && visit({ name: expanded[git], args: expanded.slice(git + 1), fed: true, xargs: true, cwd });
       }
       if (/^\w+=/.test(expanded[i]) || KEYWORDS.has(expanded[i])) i++;
       else if (WRAPPERS.has(expanded[i])) for (i++; expanded[i]?.startsWith('-'); ) i += /^-[ug]$/.test(expanded[i]) ? 2 : 1;
@@ -71,7 +71,7 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
     }
     const [name, ...args] = expanded.slice(i);
     if (name === undefined) return false;
-    if (visit({ name, args, fed, xargs: false })) return true;
+    if (visit({ name, args, fed, xargs: false, cwd })) return true;
     if (name === 'eval') return nested({ script: args.join(' '), powershell });
     let hidden;
     if (GIT.test(name)) {

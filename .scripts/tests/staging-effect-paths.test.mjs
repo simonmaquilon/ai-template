@@ -21,8 +21,11 @@ for (const client of ['claude', 'codex']) {
     for (const path of ['app/pages/products/[id].vue', 'app/components/card.vue']) repo.write(path, `${path}\n`);
     const route = () => repo.git('add', '--', 'app/pages/products/[id].vue');
     assert.equal(call(client, repo, 'route', "git add 'pages/products/[id].vue'", route).status, 0);
-    const glob = () => repo.git('add', '--', 'app/components/card.vue');
-    assert.equal(call(client, repo, 'glob', "git add 'components/*.vue'", glob).status, 0);
+    repo.git('add', '--', 'app/components/card.vue');
+    repo.git('commit', '-q', '-m', 'card', '--', 'app/components/card.vue');
+    const glob = () => repo.git('rm', '-q', '--cached', '--', 'app/components/card.vue');
+    assert.equal(call(client, repo, 'glob', "git rm --cached 'components/*.vue'", glob).status, 0);
+    repo.git('reset', '-q', '--', 'app/components/card.vue');
     const many = Array.from({ length: 800 }, (_, i) => `many/m${Math.floor(i / 40)}/f${i}.ts`);
     for (const path of many) repo.write(path, `${path}\n`);
     repo.write('h.txt', 'h\n');

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { ROOT, WINDOWS, hookFor, makeRepo, run, runClientHook } from './support.mjs';
@@ -21,6 +21,8 @@ const BLOCKED = [
   'git diff --name-only | git add --pathspec-from-file=-', 'git add -p <<< "y"', 'yes |& git add -p', 'yes | (git add -p)',
   'G=git; $G add -A', 'export G=git; ${G} add .', 'cat > n.md <<\\EOF\nhi\nEOF\ngit add -A',
   "bash <<'EOF' 2>&1 | tail -5\ngit add -A\nEOF", "bash <<'EOF'; echo done\ngit add -A\nEOF",
+  'git add src', 'git add src/', "git add '*.vue'", "git add 'src/*.ts'", 'git add docs/?.md', 'git commit -m x -- src',
+  "git add -- src ':!src/gen'",
 ];
 // Blocked where a POSIX shell may run the command; PowerShell alone reads the backquote as an escape.
 const POSIX_BLOCKED = ['git commit -m "Fix `git add -A` handling"'];
@@ -35,7 +37,7 @@ const ALLOWED = [
   'git add src\\app.ts', 'git commit -m "msg" -- src/app.ts', 'git add -- ./docs/a.md',
   `git commit -m "$(cat <<'EOF'\nfix: reject "git commit -a -m wip" in the guard\nEOF\n)"`, 'git add src/a.ts  # not -A',
   "cat <<'MSG-END'\ngit add -A\nMSG-END", 'git stash -u', 'git commit --amend --no-edit', 'git add .github/workflows/x.yml',
-  'git add -n .', 'git add --dry-run -A', 'git add --pathspec-from-file=paths.txt', "git add -- src ':!src/gen'",
+  'git add -n .', 'git add --dry-run -A', 'git add --pathspec-from-file=paths.txt', "git add 'pages/[id].vue'",
   'git add -p', 'git add -i', 'git add -e', 'git add --patch', 'git add --interactive', 'git add --edit',
   `git commit -m "$(cat <<'EOF'\nfix (guard): reject "x" and \`y\`\nEOF\n)"`, 'git commit -m "Use `code` here"', 'git add src/a.ts > log.txt', 'G=x; echo $G', 'cat > n.md <<\\EOF\nhi\nEOF\ngit add n.md', "bash <<'EOF' | tail -5\ngit add src/a.ts\nEOF",
 ];
@@ -49,6 +51,7 @@ const POWERSHELL = [
 for (const client of ['claude', 'codex']) {
   test(`${client}: the staging guard rejects bulk staging and allows explicit paths`, (t) => {
     const repo = makeRepo(t);
+    repo.write('src/a.ts', 'a\n');
     const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
     for (const command of [...BLOCKED, ...POSIX_BLOCKED]) {
       const result = runClientHook(client, hook, repo, { input: { tool_input: { command } } });
@@ -58,6 +61,11 @@ for (const client of ['claude', 'codex']) {
     for (const command of ALLOWED) {
       const result = runClientHook(client, hook, repo, { input: { tool_input: { command } } });
       assert.equal(result.status, 0, `${command}: ${result.stderr}`);
+    }
+    // A symlink to a directory is one file to git, as .claude/skills is.
+    if (!WINDOWS) {
+      symlinkSync('src', join(repo.dir, 'linked'));
+      assert.equal(runClientHook(client, hook, repo, { input: { tool_input: { command: 'git add linked' } } }).status, 0);
     }
   });
 
