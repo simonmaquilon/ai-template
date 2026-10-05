@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Runs the template's own checks, locally or in continuous integration, on any
 // supported operating system: the hook tests under .scripts/tests with the
-// runner built into Node, adopted Cloudflare skill integrity and validator tests,
+// runner built into Node, the adopted security-audit skill integrity and validator tests,
 // the latter skipped where the validators cannot run, the documentation link check and the instruction-file
 // check, which fail on any report, and the source-file limit, which receives the
 // arguments given here, such as --base <revision>. Exits with status 1 when any
@@ -33,8 +33,8 @@ const gitBlocked = init.status === 0 ? null
     'under the Claude Code sandbox, run the command alone from the repository root (.readme/91-agent-sandbox.md)';
 const steps = [
   ['hook tests', ['--test', ...tests], (run) => run.status === 0, undefined, null, gitBlocked],
-  ['Cloudflare skill integrity', [join('.scripts', 'check-security-skill.mjs')], (run) => run.status === 0],
-  ['Cloudflare skill tests', ['--test', join(vendor, 'validate-findings.test.cjs'), join(vendor, 'validate-coverage-ledger.test.cjs')],
+  ['security-audit skill integrity', [join('.scripts', 'check-security-skill.mjs')], (run) => run.status === 0],
+  ['security-audit skill tests', ['--test', join(vendor, 'validate-findings.test.cjs'), join(vendor, 'validate-coverage-ledger.test.cjs')],
     (run) => run.status === 0, { ...process.env, TMPDIR: vendorTemp, TEMP: vendorTemp, TMP: vendorTemp },
     safeOpen ? null : 'its validators need O_NOFOLLOW and O_NONBLOCK, which this platform lacks'],
   ['documentation links', [join('.scripts', 'check-doc-links.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
