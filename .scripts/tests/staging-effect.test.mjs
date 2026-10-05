@@ -10,7 +10,11 @@ for (const client of ['claude', 'codex']) {
     const repo = baseRepo(t);
     for (const path of ['a.txt', 'b.txt', 'c.txt', 'src/x.ts', 'src/deep/y.ts', 'z.txt']) repo.write(path, `${path}\n`);
     assert.equal(call(client, repo, 'named', 'git add a.txt', () => repo.git('add', '--', 'a.txt')).status, 0);
-    assert.equal(call(client, repo, 'glob', "git add 'src/*.ts'", () => repo.git('add', '--', 'src')).status, 0);
+    repo.git('add', '--', 'src/x.ts', 'src/deep/y.ts');
+    repo.git('commit', '-q', '-m', 'src', '--', 'src/x.ts', 'src/deep/y.ts');
+    const untrack = () => repo.git('rm', '-q', '--cached', '--', 'src/x.ts', 'src/deep/y.ts');
+    assert.equal(call(client, repo, 'glob', "git rm --cached 'src/*.ts'", untrack).status, 0);
+    repo.git('reset', '-q', '--', 'src');
     assert.equal(call(client, repo, 'shell', "bash -c 'git add z.txt'", () => repo.git('add', '--', 'z.txt')).status, 0);
     const hidden = call(client, repo, 'hidden', 'python tools/stage.py', () => repo.git('add', '--', 'b.txt'));
     assert.equal(hidden.status, 2);
