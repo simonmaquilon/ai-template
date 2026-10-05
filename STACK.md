@@ -86,7 +86,7 @@ The tooling that the template's agent configuration runs. The commands in `.read
 | `typescript-language-server` | 6.0.1 | Apache-2.0 | [typescript-language-server/typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) | published from GitHub Actions with a provenance attestation; registry signature and attestation checked with `npm audit signatures`; no dependencies or install scripts; requires Node 22.22.2 or later |
 | `typescript` | 6.0.3 | Apache-2.0 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) | published by `typescript-bot`; registry signature checked with `npm audit signatures`; no dependencies or install scripts |
 
-The rest of the agent tooling is pinned by its own configuration and listed under Agent and Automation Inventory.
+The rest of the agent tooling is pinned by its own configuration and listed under Agent and Automation Inventory, except the engine the Impeccable hooks run: `.agents/skills/impeccable/scripts/VERSION` pins it, and its launcher downloads it from the `pbakaus/impeccable` GitHub releases, as [Agent skills](.readme/90-agent-skills.md) describes.
 
 ## Project Tooling
 
