@@ -9,6 +9,10 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const WINDOWS = process.platform === 'win32';
+
+// Every process the tests start inherits this: git started under .temp/ stops
+// looking for a repository there instead of reaching this one.
+process.env.GIT_CEILING_DIRECTORIES = join(ROOT, '.temp');
 const CONFIGS = { claude: '.claude/settings.json', codex: '.codex/hooks.json' };
 
 export function run(command, args, options = {}) {
@@ -38,7 +42,8 @@ export function makeRepo(t) {
     },
     script: (name, args = [], input) => run(process.execPath, [join('.scripts', name), ...args], { cwd: dir, input }),
   };
-  repo.git('init', '-q');
+  const init = repo.git('init', '-q');
+  if (init.status !== 0) throw new Error(`git init failed in ${dir}: ${init.stderr.trim()}`);
   repo.write('.gitignore', '.temp/\n');
   return repo;
 }
