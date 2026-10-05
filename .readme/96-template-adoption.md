@@ -50,7 +50,7 @@ Revisa archivo por archivo el diff entre las dos versiones, solo en las rutas de
 - Si la versión nueva retira una instrucción, bórrala junto con su entrada de enrutado, sin reutilizar su prefijo (`01-meta-guidelines.md`).
 - Si una instrucción nueva de la plantilla usa el prefijo de una instrucción propia del proyecto, `.scripts/check-instructions.mjs` lo avisa: la de la plantilla conserva su prefijo, y la del proyecto pasa a uno libre, con su entrada de enrutado y todas sus citas actualizadas.
 
-En el mismo cambio, fija en `.agents/template-version` la versión adoptada y registra en `AGENTS.md` cada desviación deliberada que conserves, con el enlace a la política del proyecto que la sustituye.
+En el mismo cambio, fija en `.agents/template-version` la versión adoptada y registra en la sección Deviations de `AGENTS.md` cada desviación deliberada que conserves, con el enlace a la política del proyecto que la sustituye.
 
 ## Después de adoptar
 
