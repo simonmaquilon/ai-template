@@ -20,4 +20,4 @@ Claude lo elige por su `description`, o se le pide de forma explícita con `@age
 
 ## Codex
 
-Codex no declara este agente: los modelos Sonnet no están disponibles en ese cliente. Tampoco declara subagentes: la verificación independiente de `31-verification-loop.md` se hace en una sesión nueva no interactiva con `codex exec --ephemeral -s read-only`, que recibe solo la especificación y el diff y lee el repositorio sin poder editarlo; si no se lanza, se informa como hueco de validación.
+Codex no declara este agente: los modelos Sonnet no están disponibles en ese cliente. Tampoco declara subagentes: la verificación independiente de `31-verification-loop.md` se hace en una sesión nueva no interactiva con `codex exec --ephemeral --sandbox workspace-write`, que recibe solo la especificación y el diff y tiene acceso al repositorio y a sus checks. No edita porque lo exige `31-verification-loop.md`, no porque el sandbox se lo impida, y las pruebas de hooks pueden salir como `BLOCKED` si ese sandbox protege `.git/`, como explica [Sandbox de agentes](91-agent-sandbox.md); si no se lanza, se informa como hueco de validación.
