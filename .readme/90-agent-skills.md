@@ -24,7 +24,7 @@ node .scripts/run-pinned.mjs skills add <owner/repo>
 
 Opciones de `update`: `-g` solo skills globales, `-p` solo skills del proyecto, `-y` omite el prompt de alcance, y uno o más nombres para acotar a skills concretas.
 
-Tras `add` o `update`, y antes de invocar la skill o dar el cambio por bueno, revisa `git diff HEAD -- ".agents/skills/*/SKILL.md"` en sus cabeceras `allowed-tools` y `hooks`, y lo que el instalador haya escrito en `.claude/settings.json` o `.codex/hooks.json`. Lo que exceda los permisos del repositorio es una decisión abierta bajo `03-approval-boundaries.md`, y lo aceptado se registra en la sección de permisos de este archivo.
+Tras `add` o `update`, y antes de invocar la skill o dar el cambio por bueno, revisa `git diff HEAD -- ".agents/skills/*/SKILL.md"` en sus cabeceras `allowed-tools` y `hooks`, y lo que el instalador haya escrito en `.claude/settings.json` o `.codex/hooks.json`. Lo que exceda los permisos del repositorio es una decisión abierta bajo `03-approval-boundaries.md`, y lo aceptado se registra en la sección de permisos de este archivo. Si `update` alcanza a `security-audit`, restaura además la licencia que la plantilla le añade, que el CLI borra al reinstalar la carpeta: `git restore --source=HEAD -- .agents/skills/security-audit/LICENSE`.
 
 ## Cómo funciona la actualización
 
