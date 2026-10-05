@@ -44,7 +44,7 @@ El límite lo fija `.scripts/check-file-length.mjs`, y el aviso del hook incluye
 
 Los dos eventos de Impeccable corresponden a pases distintos del mismo detector: tras editar aplica las reglas inmediatas y al cerrar aplica el conjunto completo sobre los archivos UI tocados, sin repetir hallazgos ya comunicados. No sustituyen las revisiones de [Flujo de diseño y revisión de UI](90-agent-skills.md#flujo-de-diseño-y-revisión-de-ui).
 
-El de Impeccable no hace cumplir ni cita una regla enrutada: lo instala y regenera la skill con un comando distinto por cliente (rutas `.claude/skills` y `.agents/skills`; `commandWindows` solo en Codex), como describe [Skills de agentes](90-agent-skills.md).
+El de Impeccable no hace cumplir ni cita una regla enrutada: lo instala y regenera la skill con un comando distinto por cliente (rutas `.claude/skills` y `.agents/skills`; `commandWindows` solo en Codex), como describe [Skills de agentes](90-agent-skills.md). En Codex, `command` y `commandWindows` buscan el lanzador desde la carpeta de la sesión y no desde la raíz: en una sesión abierta en una subcarpeta el hook no se ejecuta y no avisa, así que Codex se abre desde la raíz del repositorio. No se corrige a mano porque el instalador regenera ese hook.
 
 El hook de seguridad no bloquea: termina con código 0 y escribe un único JSON con `hookSpecificOutput.hookEventName` igual a `PostToolUse` y `hookSpecificOutput.additionalContext` con el aviso. Claude Code incorpora ese contexto como recordatorio para su siguiente petición al modelo; Codex lo añade como contexto de desarrollador. El texto plano de stdout no entrega estos avisos al modelo en ese evento, según los contratos de [Claude Code](https://code.claude.com/docs/en/hooks#posttooluse-decision-control) y [Codex](https://learn.chatgpt.com/docs/hooks#posttooluse). El mismo formato JSON se usa para los huecos de revisión: rutas sin resolver, incluida la raíz del repositorio, lecturas fallidas e inventario no disponible. El aviso contiene archivo, línea, categoría y orientación, sin copiar código ni valores detectados. Revisa los archivos que nombra la edición o el patch, resuelve su ubicación real y omite rutas externas, ignoradas, generadas, vendorizadas, archivos `.env`, directorios conocidos de credenciales, `.codex/auth.json` y archivos binarios. Las rutas se escapan para no convertir nombres de archivo en mensajes de control. Lee como máximo 1 MiB por archivo y muestra hasta 20 candidatos por archivo; informa cuando no puede revisar un archivo por tamaño o lectura. Sus reglas viven en `.scripts/security-patterns.mjs`; son heurísticas con posibles falsos positivos y negativos, no un parser ni una auditoría. Pueden señalar código preexistente en el archivo editado: el agente comprueba el diff y sus controles antes de corregirlo.
 
@@ -54,12 +54,12 @@ La revisión semántica del diff al finalizar se realiza mediante la skill y las
 
 ## Sistemas y requisitos
 
-La plantilla soporta Windows, macOS y Linux con los dos clientes. Su propio CI prueba los hooks de reglas en Windows y Linux antes de publicarlos; macOS se valida en local.
+La plantilla soporta Windows, macOS y Linux con los dos clientes.
 
 | Requisito | Para qué | Sistemas |
 | --- | --- | --- |
 | `git` en el `PATH` | Todos los hooks de reglas | Todos |
-| Node en el `PATH`, en una versión con soporte activo, como la que prueba el CI de la plantilla | Los scripts de `.scripts/` | Todos |
+| Node en el `PATH`, en una versión con soporte activo | Los scripts de `.scripts/` | Todos |
 | Symlinks habilitados en Git | `.claude/skills`, por el que Claude Code descubre las skills | Windows |
 | Git Bash | Los hooks de Impeccable en Claude Code | Windows |
 

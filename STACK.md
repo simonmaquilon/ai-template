@@ -81,8 +81,8 @@ The tooling that the template's agent configuration runs. The commands in `.read
 
 | Package | Version | License | Origin | Verification |
 | --- | --- | --- | --- | --- |
-| `skills` | 1.7.0 | unverified | [vercel-labs/skills](https://github.com/vercel-labs/skills) | published with a provenance attestation from `vercel-labs/skills`; checked in the npm registry when pinned |
-| `impeccable` | 4.1.0 | unverified | unverified | published without a provenance attestation; checked in the npm registry when pinned |
+| `skills` | 1.7.0 | MIT | [vercel-labs/skills](https://github.com/vercel-labs/skills) | published with a provenance attestation from `vercel-labs/skills`; checked in the npm registry when pinned |
+| `impeccable` | 4.1.0 | Apache-2.0 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | published without a provenance attestation, so its license and origin are the ones its own package.json declares; checked in the npm registry when pinned |
 | `typescript-language-server` | 6.0.1 | Apache-2.0 | [typescript-language-server/typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) | published from GitHub Actions with a provenance attestation; registry signature and attestation checked with `npm audit signatures`; no dependencies or install scripts; requires Node 22.22.2 or later |
 | `typescript` | 6.0.3 | Apache-2.0 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) | published by `typescript-bot`; registry signature checked with `npm audit signatures`; no dependencies or install scripts |
 

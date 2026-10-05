@@ -38,6 +38,7 @@ Una exención solo saca del sandbox una llamada si cubre todos sus comandos, y a
 - `network.allowedDomains: ["*"]`: salida a cualquier dominio sin confirmación.
 - `network.allowLocalBinding`: en macOS permite levantar servidores en `127.0.0.1`, como hacen los runners de pruebas.
 - Sin `filesystem.denyRead`: por decisión del usuario, el sandbox puede leer las credenciales del equipo (`~/.ssh`, `~/.aws`, los tokens de `gh` o `wrangler`) por si una tarea las necesita.
+- Sin `filesystem.denyWrite`: por decisión del usuario, los comandos confinados pueden escribir en `.scripts/` y `.codex/`, aunque los hooks de ambos clientes y la exención de `run-checks.mjs` ejecutan esos archivos fuera del sandbox; así, un comando confinado puede hacer que su código corra sin confinar en el siguiente hook.
 - `permissions.deny` bloquea comandos de sistema que ninguna tarea necesita (`sudo`, `dd`, `mkfs`, `shutdown`…). Comparan prefijos de texto, así que no sustituyen al confinamiento.
 - `permissions.ask` pide confirmación solo para las acciones remotas que pueden destruir algo o no se deshacen: `git push`, fusionar o cerrar un PR (cerrarlo puede borrar su rama), y los `gh` de releases, repositorios, ejecución de workflows y secretos, además de `npm publish`. Crear un PR no la pide, porque no destruye nada. Tampoco la piden las acciones locales: borrar archivos dentro del proyecto (`rm -r`), reescribir el historial (`git rebase`), borrar ramas ni descartar cambios sin commit (`git reset --hard`, `git clean`, `git checkout --`, `git restore`, `git stash drop`). Estas últimas pueden perder trabajo de otra sesión que git no recupera, así que las reglas de aprobación de las instrucciones siguen exigiendo autorización para ellas. Cada regla `deny` y `ask` tiene su gemela `PowerShell(...)`, porque en Windows Claude Code también ejecuta comandos con su herramienta PowerShell y una regla `Bash(...)` no la cubre.
 
@@ -56,7 +57,9 @@ No existe exención por comando. Las palancas son de sesión completa, en `.code
 
 La plantilla no declara `sandbox_mode` en `.codex/config.toml`, así que Codex usa sus valores por omisión; se dejó fuera deliberadamente al configurar el sandbox de Claude Code. Por la misma razón, `node .scripts/run-checks.mjs` no tiene en Codex la exención que tiene en Claude Code.
 
-Codex sí evalúa reglas `allow` por comando mediante su exec policy, y una regla `allow` incluye el bypass del sandbox, pero esas reglas se alimentan de `requirements.toml`, que es configuración gestionada por la organización y no se define por proyecto.
+Codex sí evalúa reglas `allow` por comando mediante su exec policy, y una regla `allow` incluye el bypass del sandbox, pero esas reglas se alimentan de `requirements.toml`, que es configuración gestionada por la organización y no se define por proyecto. Por eso `.codex/config.toml` no declara equivalentes de `permissions.deny` ni `permissions.ask`: en Codex esas confirmaciones dependen del `approval_policy` y del sandbox de cada persona.
+
+El sandbox de Codex protege `.codex/` y `.git/`, pero deja escribir `.claude/settings.json`, `.mcp.json` y `.scripts/` (comprobado con `codex sandbox -P :workspace`). Un comando que Codex ejecute sin preguntar puede cambiar los hooks y los permisos de Claude Code, que los ejecuta sin aprobación previa; al volver a Claude Code después de usar Codex, revisa `git diff .claude/settings.json`. A la inversa, el sandbox de Claude Code deja escribir `.codex/`, pero Codex vuelve a pedir la aprobación de un hook que cambió, como explica [Hooks de agentes](92-agent-hooks.md).
 
 ## Caso conocido: navegadores bajo macOS
 
