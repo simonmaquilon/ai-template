@@ -39,21 +39,27 @@
     ],
     "ask": [
       "Bash(git push *)",
+      "Bash(git * push *)",
       "Bash(gh pr merge*)",
       "Bash(gh pr close*)",
       "Bash(gh release *)",
       "Bash(gh repo *)",
       "Bash(gh workflow run*)",
       "Bash(gh secret *)",
+      "Bash(gh api *)",
       "Bash(npm publish*)",
+      "Bash(npm * publish*)",
       "PowerShell(git push *)",
+      "PowerShell(git * push *)",
       "PowerShell(gh pr merge*)",
       "PowerShell(gh pr close*)",
       "PowerShell(gh release *)",
       "PowerShell(gh repo *)",
       "PowerShell(gh workflow run*)",
       "PowerShell(gh secret *)",
-      "PowerShell(npm publish*)"
+      "PowerShell(gh api *)",
+      "PowerShell(npm publish*)",
+      "PowerShell(npm * publish*)"
     ]
   },
   "hooks": {
