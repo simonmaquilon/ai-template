@@ -1,6 +1,6 @@
 # Skills de agentes
 
-Las skills de agentes se versionan en este repositorio bajo `.agents/skills/`. Casi todas se instalan desde repositorios públicos, y `skills-lock.json`, en la raíz, fija cada una a su origen y a un hash de integridad; `commit`, `prompt` y `prompt-plan` son propias de la plantilla, no figuran en el lockfile y se editan directamente en `.agents/skills/`.
+Las skills de agentes se versionan en este repositorio bajo `.agents/skills/`. Casi todas se instalan desde repositorios públicos, y `skills-lock.json`, en la raíz, fija cada una a su origen y a un hash de integridad; `commit`, `prompt`, `prompt-plan` y `start` son propias de la plantilla, no figuran en el lockfile y se editan directamente en `.agents/skills/`.
 
 ## Herramienta
 
@@ -20,7 +20,12 @@ node .scripts/run-pinned.mjs skills update nuxt
 
 # Añadir una skill nueva
 node .scripts/run-pinned.mjs skills add <owner/repo>
+
+# Retirar una skill del proyecto
+node .scripts/run-pinned.mjs skills remove <nombre> -y
 ```
+
+`remove` borra la carpeta de la skill y su entrada de `skills-lock.json`, y deja intacto el symlink `.claude/skills`.
 
 Opciones de `update`: `-g` solo skills globales, `-p` solo skills del proyecto, `-y` omite el prompt de alcance, y uno o más nombres para acotar a skills concretas.
 
@@ -70,6 +75,14 @@ Sus snapshots y trazas van a `.temp/playwright-cli/`: lo fija `outputDir` en `.p
 `/prompt-plan <borrador>` aplica la skill `prompt` y, con el prompt ya revisado, escribe un plan `<AAAA-MM-DD>-<slug>/`: en `build/`, un índice que solo tabula los fragmentos y los fragmentos autónomos, sin otra copia del prompt; scripts para registrar, aplicar y revertir cada fragmento en `patch/`, scripts de verificación repetibles en `check/` y la evidencia con el informe en `review/`. Antes lee las instrucciones de agentes y la política documentada del proyecto destino, que prevalecen sobre sus valores por defecto, así que se adapta a cualquier proyecto: el plan va donde esas reglas sitúan los planes de cambio, si no en una carpeta `plans/` donde sitúan los artefactos temporales, y en `.temp/plans/` si no fijan ninguno de los dos, y solo si el control de versiones ignora esa ubicación; si no, pregunta dónde ponerlo. Esas reglas nunca relajan sus confirmaciones: no ejecuta, no borra planes, no cambia las reglas de ignorado ni hace commit, push o deploy sin que se le pida. Solo crea plan para prompts de implementación y no ejecuta fragmentos ni scripts hasta que se le pide. Solo se invoca a mano: en Claude Code porque su cabecera declara `disable-model-invocation`, y en Codex porque `agents/openai.yaml` declara `allow_implicit_invocation: false`.
 
 En esta plantilla, `06-commands-and-local-runtime.md` sitúa los planes en `.temp/plans/`, que está ignorado, y los exceptúa de la limpieza de `.temp/`, así que se conservan al cerrar la tarea hasta que el usuario los borra. Sus scripts son módulos de Node (`.mjs`), así que funcionan igual en Windows, macOS y Linux sin requisitos adicionales; en otro proyecto, la skill usa el runtime de scripts multiplataforma que ese proyecto ya exija, o módulos de Node si no exige ninguno.
+
+## Preparar un proyecto con `start`
+
+`/start` en Claude Code, o `$start` en Codex, prepara un proyecto recién creado desde la plantilla antes de escribir código, mediante una conversación en el idioma del usuario y sin herramienta de preguntas: cada pregunta va en el chat con su contexto. En orden, borra los archivos que solo validan la plantilla y añade el remoto `plantilla`, con una aprobación; completa `PRODUCT.md`, `DESIGN.md`, `STACK.md`, `PLAN.md`, el estado del registro de `SECURITY.md` y `README.md`; adapta skills, servidores de herramientas y servidores de lenguaje al stack elegido, con otra aprobación; y termina con los checks de documentación y un informe. Escribe cada sección en cuanto queda decidida, nunca inventa, y lo que el usuario no sabe todavía queda como `TODO` con su entrada en el registro de decisiones abiertas. No escribe código, no instala el stack y no hace commits.
+
+Se puede relanzar en cualquier momento: deduce el avance de los propios archivos, por los marcadores que quedan, las entradas de los registros de decisiones abiertas, las skills anotadas en `STACK.md`, los archivos de la plantilla presentes y el remoto, y sigue donde se quedó. En la plantilla mantenida no cambia nada: explica cómo crear un proyecto, como indica [Adopción de versiones de la plantilla](96-template-adoption.md). Se conserva en los proyectos derivados, y también sirve tras adoptar una versión que añade secciones a los esqueletos. Solo se invoca a mano, como `prompt-plan`.
+
+Las skills `commit`, `prompt`, `prompt-plan`, `start`, `security-audit`, `impeccable`, `playwright-cli` y `context7-mcp` son la base de la plantilla y retirarlas es una desviación. Las demás dependen del stack: un proyecto puede retirarlas con `skills remove` sin que cuente como desviación, o conservarlas anotando la decisión en la columna Notes de su fila en `STACK.md`.
 
 ## Problema conocido: skills omitidas
 

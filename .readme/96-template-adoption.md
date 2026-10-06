@@ -4,6 +4,17 @@ Un proyecto derivado guarda en `.agents/template-version` la versión de la plan
 
 La plantilla mantenida es el repositorio cuyo remoto `origin` apunta a `https://github.com/simonmaquilon/ai-template.git`, como fija `01-meta-guidelines.md`; cualquier otro repositorio es un derivado. Por eso un derivado usa su propio `origin` y añade la plantilla como remoto `plantilla`, como muestra «Localizar las dos versiones».
 
+## Crear un proyecto
+
+Crea el repositorio desde la plantilla y clónalo:
+
+```bash
+gh repo create <nombre> --template simonmaquilon/ai-template --private --clone
+cd <nombre>
+```
+
+Abre el agente dentro de la carpeta nueva e invoca `/start` en Claude Code o `$start` en Codex, como explica [Skills de agentes](90-agent-skills.md): prepara el proyecto y completa sus referencias primarias antes de escribir código.
+
 ## Qué pertenece a la plantilla
 
 Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta-guidelines.md`:
@@ -17,7 +28,7 @@ Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta
 - las skills de `.agents/skills/` y `skills-lock.json`;
 - las reglas de la plantilla en `.gitignore`, `.gitattributes` y `.temp/.gitignore`.
 
-Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. Nunca se adoptan, sus cambios no suben `.agents/template-version`, y un proyecto creado como copia de la plantilla los borra; si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla.
+Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. Nunca se adoptan, sus cambios no suben `.agents/template-version`, y un proyecto creado como copia de la plantilla los borra, cosa que hace la skill `start` al prepararlo; si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla.
 
 Lo demás es del proyecto: el código, el contenido con que rellenó las referencias primarias, incluida la sección Project Tooling de `STACK.md`, sus documentos de `.readme/` por debajo de 90 y sus políticas propias, enrutadas y registradas como desviaciones en `AGENTS.md`.
 
@@ -46,7 +57,7 @@ Revisa archivo por archivo el diff entre las dos versiones, solo en las rutas de
 - Si lo modificó, por una desviación registrada en `AGENTS.md` o porque la propia plantilla pide adaptarlo, como la tabla de permisos de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md) o sus reglas de `.gitignore`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
 - En las referencias primarias ya rellenadas, nunca tomes el esqueleto nuevo. Traslada solo los cambios de estructura: secciones o columnas nuevas, renombradas o retiradas, marcadores y textos de guía. Mueve el contenido existente a su nuevo sitio, también cuando pasa de una referencia primaria a otra, y deja con `TODO` lo que falte por decidir.
 - En `STACK.md`, toma entera la sección Template Tooling de la versión nueva y trata el resto, incluida Project Tooling, como una referencia primaria rellenada. Los bloques entre marcas `stack:generated` no se fusionan a mano: conserva sus marcas y sus notas, y el hook de `STACK.md` los regenera en el siguiente turno de un agente, o `node .scripts/sync-stack.mjs` si lo ejecutas tú.
-- De las skills, trae solo las carpetas de `.agents/skills/` que cambió la plantilla y sus entradas de `skills-lock.json`, copiadas tal como están en la versión nueva, sin recalcular ni editar hashes (`06-commands-and-local-runtime.md`); conserva las skills que añadió el proyecto y revisa los permisos y hooks que se conceden las que cambian, como pide [Skills de agentes](90-agent-skills.md).
+- De las skills, trae solo las carpetas de `.agents/skills/` que cambió la plantilla y sus entradas de `skills-lock.json`, copiadas tal como están en la versión nueva, sin recalcular ni editar hashes (`06-commands-and-local-runtime.md`); conserva las skills que añadió el proyecto, no restaures las que retiró y revisa los permisos y hooks que se conceden las que cambian, como pide [Skills de agentes](90-agent-skills.md).
 - Si la versión nueva retira una instrucción, bórrala junto con su entrada de enrutado, sin reutilizar su prefijo (`01-meta-guidelines.md`).
 - Si una instrucción nueva de la plantilla usa el prefijo de una instrucción propia del proyecto, `.scripts/check-instructions.mjs` lo avisa: la de la plantilla conserva su prefijo, y la del proyecto pasa a uno libre, con su entrada de enrutado y todas sus citas actualizadas.
 

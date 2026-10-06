@@ -115,6 +115,7 @@ Generated from the files that pin each part; their configuration is described in
 | prompt | this repository | none | |
 | prompt-plan | this repository | none | |
 | security-audit | cloudflare/security-audit-skill | skills-lock.json | |
+| start | this repository | none | |
 | vue | antfu/skills | skills-lock.json | |
 | vue-best-practices | vuejs-ai/skills | skills-lock.json | |
 | vueuse-functions | vueuse/skills | skills-lock.json | |
