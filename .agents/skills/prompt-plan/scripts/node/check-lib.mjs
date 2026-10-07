@@ -1,6 +1,8 @@
 // Shared helpers for the plan's NN-check scripts; copied to check/lib.mjs.
-// Runs commands from the project root, stores each run in review/NN-check-<UTC stamp>.log, and exits
-// non-zero on any failure. It writes only to review/ and, when a check isolates a tool, the plan's .cache/.
+// Runs commands from the project root, stores each run in review/NN-check-<UTC stamp>.log, or in
+// review/NN-baseline-<UTC stamp>.log when the check runs with --baseline on the tree before the plan's
+// fragments, and exits non-zero on any failure. It writes only to review/ and, when a check isolates a tool,
+// the plan's .cache/.
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
@@ -12,6 +14,7 @@ export const reviewDir = join(planDir, 'review');
 export const cacheDir = join(planDir, '.cache');
 export const root = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: checkDir, encoding: 'utf8' }).stdout.trim() || process.cwd();
 export const utcStamp = () => new Date().toISOString().replace(/[:.]/g, '-');
+export const runKind = process.argv.includes('--baseline') ? 'baseline' : 'check';
 const MAX_BUFFER = 1024 ** 3;
 const isWindows = process.platform === 'win32';
 
@@ -25,6 +28,13 @@ export function toolEnv({ isolateHome = false } = {}) {
     mkdirSync(env.HOME, { recursive: true });
   }
   return env;
+}
+
+// Path in review/ for a check's own evidence, such as a screenshot: NN-<name>-<UTC stamp>.<ext>, or
+// NN-baseline-<name>-<UTC stamp>.<ext> on a --baseline run.
+export function evidenceFile(fragment, name, ext) {
+  mkdirSync(reviewDir, { recursive: true });
+  return join(reviewDir, `${fragment}-${runKind === 'baseline' ? 'baseline-' : ''}${name}-${utcStamp()}.${ext}`);
 }
 
 // A project command that must exit with status 0. reportPending: true runs it but reports PENDING, for a
@@ -86,7 +96,7 @@ export async function withServer(cmd, args, url, fn, options = {}) {
 }
 
 export function runChecks(fragment, checks, extraLines = []) {
-  const lines = [`Fragment ${fragment} · ${new Date().toISOString()} · ${root}`, ...extraLines];
+  const lines = [`Fragment ${fragment} · ${runKind} run · ${new Date().toISOString()} · ${root}`, ...extraLines];
   let failed = 0;
   for (const check of checks) {
     const { status, output } = evaluate(check);
@@ -95,7 +105,7 @@ export function runChecks(fragment, checks, extraLines = []) {
     console.log(`${status.padEnd(7)} ${check.id}: ${check.label}`);
   }
   mkdirSync(reviewDir, { recursive: true });
-  const file = join(reviewDir, `${fragment}-check-${utcStamp()}.log`);
+  const file = join(reviewDir, `${fragment}-${runKind}-${utcStamp()}.log`);
   writeFileSync(file, `${lines.join('\n')}\n`);
   console.log(`Fragment ${fragment}: ${failed} failing. Evidence: ${relative(root, file)}`);
   process.exitCode = failed ? 1 : 0;

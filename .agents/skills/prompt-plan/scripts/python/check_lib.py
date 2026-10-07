@@ -1,6 +1,8 @@
 """Shared helpers for the plan's NN-check scripts; copied to check/lib.py.
-Runs commands from the project root, stores each run in review/NN-check-<UTC stamp>.log, and exits
-non-zero on any failure. It writes only to review/ and, when a check isolates a tool, the plan's .cache/.
+Runs commands from the project root, stores each run in review/NN-check-<UTC stamp>.log, or in
+review/NN-baseline-<UTC stamp>.log when the check runs with --baseline on the tree before the plan's
+fragments, and exits non-zero on any failure. It writes only to review/ and, when a check isolates a tool,
+the plan's .cache/.
 Run NN-check scripts with `python3 -B`, as check/all.py does, so no bytecode is written."""
 
 import os
@@ -14,6 +16,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.dont_write_bytecode = True
+# A Windows pipe defaults to a legacy code page; print a character it lacks as an escape instead of failing.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, 'reconfigure'):
+        _stream.reconfigure(errors='backslashreplace')
 
 CHECK_DIR = Path(__file__).resolve().parent
 PLAN_DIR = CHECK_DIR.parent
@@ -22,10 +28,19 @@ CACHE_DIR = PLAN_DIR / '.cache'
 _top = subprocess.run(['git', 'rev-parse', '--show-toplevel'], cwd=CHECK_DIR, capture_output=True, text=True)
 ROOT = Path(_top.stdout.strip()) if _top.returncode == 0 else Path.cwd()
 IS_WINDOWS = os.name == 'nt'
+RUN_KIND = 'baseline' if '--baseline' in sys.argv[1:] else 'check'
 
 
 def utc_stamp():
     return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%S-%fZ')
+
+
+def evidence_file(fragment, name, ext):
+    """Path in review/ for a check's own evidence, such as a screenshot: NN-<name>-<UTC stamp>.<ext>, or
+    NN-baseline-<name>-<UTC stamp>.<ext> on a --baseline run."""
+    REVIEW_DIR.mkdir(exist_ok=True)
+    prefix = 'baseline-' if RUN_KIND == 'baseline' else ''
+    return REVIEW_DIR / f'{fragment}-{prefix}{name}-{utc_stamp()}.{ext}'
 
 
 def tool_env(isolate_home=False):
@@ -123,7 +138,7 @@ def server(args, url, isolate_home=False):
 
 
 def run_checks(fragment, checks, extra_lines=()):
-    lines = [f'Fragment {fragment} · {datetime.now(timezone.utc).isoformat()} · {ROOT}', *extra_lines]
+    lines = [f'Fragment {fragment} · {RUN_KIND} run · {datetime.now(timezone.utc).isoformat()} · {ROOT}', *extra_lines]
     failed = 0
     for check in checks:
         status, output = _evaluate(check)
@@ -131,7 +146,7 @@ def run_checks(fragment, checks, extra_lines=()):
         lines += ['', f"## {status} {check['id']}: {check['label']}", str(output).rstrip()]
         print(f"{status:<7} {check['id']}: {check['label']}")
     REVIEW_DIR.mkdir(exist_ok=True)
-    log = REVIEW_DIR / f'{fragment}-check-{utc_stamp()}.log'
-    log.write_text('\n'.join(lines) + '\n')
+    log = REVIEW_DIR / f'{fragment}-{RUN_KIND}-{utc_stamp()}.log'
+    log.write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(f'Fragment {fragment}: {failed} failing. Evidence: {log.relative_to(ROOT)}')
     sys.exit(1 if failed else 0)

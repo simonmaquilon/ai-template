@@ -6,7 +6,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const checkDir = dirname(fileURLToPath(import.meta.url));
-const upTo = process.argv[2] ? String(process.argv[2]).padStart(2, '0') : '99';
+const arg = process.argv[2];
+// Anything but a fragment number, such as --baseline, would compare as text and silently run no check.
+if (process.argv.length > 3 || (arg !== undefined && !/^\d{1,2}$/.test(arg))) {
+  console.error('Usage: node all.mjs [NN]. Run a single NN-check script directly for a --baseline run.');
+  process.exit(2);
+}
+const upTo = arg ? arg.padStart(2, '0') : '99';
 let failed = false;
 for (const script of readdirSync(checkDir).filter((name) => /^\d{2}-check\.mjs$/.test(name) && name.slice(0, 2) <= upTo).sort()) {
   if (spawnSync(process.execPath, [join(checkDir, script)], { stdio: 'inherit' }).status !== 0) failed = true;

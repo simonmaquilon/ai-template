@@ -9,6 +9,10 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
+# A Windows pipe defaults to a legacy code page; print a character it lacks, as in a file name, as an escape.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, 'reconfigure'):
+        _stream.reconfigure(errors='backslashreplace')
 
 PATCH_DIR = Path(__file__).resolve().parent
 PLAN_DIR = PATCH_DIR.parent
