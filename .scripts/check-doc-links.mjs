@@ -12,14 +12,16 @@
 // design; without git they cannot be told apart, so no path is reported.
 // Vendored and generated documentation is excluded because its structure
 // belongs upstream. It runs from the repository root whatever directory it
-// starts in, and reports paths with forward slashes on every system.
+// starts in, prints nothing when it starts in another repository, such as an
+// independent project nested in this one, and reports paths with forward
+// slashes on every system.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
-import { enterRepositoryRoot, toPosix } from './hook-support.mjs';
+import { enterRepositoryRoot, inOtherRepository, toPosix } from './hook-support.mjs';
 
-enterRepositoryRoot();
+if (!enterRepositoryRoot() && inOtherRepository(process.cwd())) process.exit(0);
 
 const LINK = /\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+)/g;
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;

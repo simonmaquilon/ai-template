@@ -10,8 +10,8 @@
 // history shows retired; a rename that keeps its prefix retires nothing. A
 // routing entry that names a missing file is left to check-doc-links.mjs. Runs
 // from any directory of the repository and prints plain text, which the agent
-// clients add to the model's context; prints nothing when every file complies
-// or outside git.
+// clients add to the model's context; prints nothing when every file complies,
+// outside git, or in another repository.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';

@@ -3,7 +3,8 @@
 // the agent tooling that relies on them and so the cross-system rule of
 // 28-agent-tooling-configuration.md. It happens on Windows when git cannot
 // create symlinks. Runs from any directory of the repository and prints plain
-// text for the agent clients; prints nothing when every link resolves.
+// text for the agent clients; prints nothing when every link resolves or in
+// another repository.
 
 import { existsSync, lstatSync } from 'node:fs';
 import { enterRepositoryRoot, git } from './hook-support.mjs';

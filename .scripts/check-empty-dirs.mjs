@@ -2,7 +2,8 @@
 // Removes directories that are empty and not ignored, against the directory
 // lifecycle of 05-repo-layout.md. Runs from any directory of the repository and
 // prints plain text, which the agent clients add to the model's context; prints
-// nothing when there is none or outside git. Directories git ignores, symlinks,
+// nothing when there is none, outside git, or in another repository, such as an
+// independent project nested in this one. Directories git ignores, symlinks,
 // and .git directories at any depth are not walked. A non-recursive removal preserves any
 // file added during the scan, including placeholders such as .gitkeep.
 

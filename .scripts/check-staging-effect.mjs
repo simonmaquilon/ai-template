@@ -12,7 +12,8 @@
 // that started within RUNNING or one that finished after this one started,
 // count as named. Calls that run git commands staging by their nature, such as
 // stash, merge, or apply, operations in progress, and HEAD moves other than
-// commits are not judged.
+// commits are not judged, nor are calls that start in another repository, such
+// as an independent project nested in this one.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';

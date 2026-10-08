@@ -12,7 +12,8 @@
 // HEAD has none. A file may hold at most LIMIT lines, and one already over the
 // limit at that revision may change but must not grow. Violations go to stderr
 // with exit status 2, which both clients feed back to the model; a stop that
-// any Stop hook already continued, or a directory outside git, passes silently.
+// any Stop hook already continued, or a directory outside git or in another
+// repository, passes silently.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';

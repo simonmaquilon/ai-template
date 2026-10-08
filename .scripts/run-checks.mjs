@@ -11,10 +11,11 @@
 
 import { spawnSync } from 'node:child_process';
 import { constants, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { enterRepositoryRoot } from './hook-support.mjs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-enterRepositoryRoot();
+// The checks belong to the repository holding this script, whatever directory it starts in.
+process.chdir(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const tests = readdirSync(join('.scripts', 'tests'))
   .filter((name) => name.endsWith('.test.mjs'))
   .map((name) => join('.scripts', 'tests', name));
