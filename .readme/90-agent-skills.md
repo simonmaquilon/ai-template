@@ -16,7 +16,7 @@ node .scripts/run-pinned.mjs skills update -p
 node .scripts/run-pinned.mjs skills update -p -y
 
 # Actualizar una skill concreta
-node .scripts/run-pinned.mjs skills update nuxt
+node .scripts/run-pinned.mjs skills update <nombre>
 
 # Añadir una skill nueva
 node .scripts/run-pinned.mjs skills add <owner/repo>
