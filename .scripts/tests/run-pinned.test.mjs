@@ -20,7 +20,7 @@ function fixture(t, text) {
   t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 5 }));
   mkdirSync(join(dir, '.scripts'));
   mkdirSync(join(dir, 'npm'));
-  cpSync(join(ROOT, '.scripts', 'run-pinned.mjs'), join(dir, '.scripts', 'run-pinned.mjs'));
+  for (const script of ['run-pinned.mjs', 'npm-cli.mjs']) cpSync(join(ROOT, '.scripts', script), join(dir, '.scripts', script));
   for (const name of ['npm-cli.js', 'npx-cli.js']) {
     writeFileSync(join(dir, 'npm', name),
       `console.log(JSON.stringify([${JSON.stringify(name)}, ...process.argv.slice(2), process.env.npm_config_cache]));\nprocess.exit(Number(process.env.FAKE_STATUS ?? 0));\n`);

@@ -8,7 +8,7 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "excludedCommands": ["node .scripts/run-checks.mjs*"],
+    "excludedCommands": ["node .scripts/run-checks.mjs*", "node .scripts/browser.mjs*"],
     "network": {
       "allowedDomains": ["*"],
       "allowLocalBinding": true

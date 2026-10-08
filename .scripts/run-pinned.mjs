@@ -5,13 +5,13 @@
 //   node .scripts/run-pinned.mjs --install <package>...   npm install -g <package>@<version>...
 // npm's own CLI scripts run under this Node without a shell, so every argument
 // reaches them literally on every system, and with their cache in .temp/npm-cache
-// at the repository root. PINNED_NPM_CLI_DIR, used by the tests, names the
-// directory that holds those scripts.
+// at the repository root; npm-cli.mjs locates them.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { delimiter, dirname, join, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { npmScripts } from './npm-cli.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SECTIONS = ['Template Tooling', 'Project Tooling'];
@@ -57,24 +57,6 @@ function pinnedVersions() {
   return pins;
 }
 
-// npm ships its CLI scripts beside Node on Windows and in ../lib/node_modules
-// elsewhere; a separate npm on the PATH is found through its own bin.
-function npmScripts() {
-  if (process.env.PINNED_NPM_CLI_DIR) return process.env.PINNED_NPM_CLI_DIR;
-  const node = dirname(process.execPath);
-  const candidates = [join(node, 'node_modules', 'npm', 'bin'), join(node, '..', 'lib', 'node_modules', 'npm', 'bin')];
-  for (const dir of (process.env.PATH ?? '').split(delimiter).filter(Boolean)) {
-    candidates.push(join(dir, 'node_modules', 'npm', 'bin'));
-    try {
-      candidates.push(dirname(realpathSync(join(dir, 'npm'))));
-    } catch {
-      // No npm in this directory.
-    }
-  }
-  return candidates.find((dir) => existsSync(join(dir, 'npm-cli.js')) && existsSync(join(dir, 'npx-cli.js')))
-    ?? fail('npm CLI scripts not found for this Node');
-}
-
 const [first, ...rest] = process.argv.slice(2);
 const install = first === '--install';
 if (first === undefined || (install && rest.length === 0)) {
@@ -90,7 +72,8 @@ const args = install ? ['install', '-g', ...rest.map(pinned)] : [pinned(first), 
 // matches variable names in any case, so inherited spellings are dropped.
 const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'npm_config_cache'));
 env.npm_config_cache = join(ROOT, '.temp', 'npm-cache');
-const run = spawnSync(process.execPath, [join(npmScripts(), install ? 'npm-cli.js' : 'npx-cli.js'), ...args],
+const scripts = npmScripts() ?? fail('npm CLI scripts not found for this Node');
+const run = spawnSync(process.execPath, [join(scripts, install ? 'npm-cli.js' : 'npx-cli.js'), ...args],
   { stdio: 'inherit', env });
 if (run.error) fail(run.error.message);
 process.exit(run.status ?? 1);
