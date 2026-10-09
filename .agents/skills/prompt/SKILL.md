@@ -90,7 +90,7 @@ When a draft targets a project, read [references/project-inspection-and-validati
     - every artifact the prompt names as one to change was confirmed to bear on the authorized change;
     - every run the prompt defers names who runs it;
     - no criterion fails on a correct implementation, such as one that keeps a baseline sequence the change extends, a search that reaches generated, ignored, dependency, or untracked tool output, or a search for one form of a word that a correct text writes in another, such as editing where it says edited;
-    - no criterion depends on state others can change or contradicts another part of the prompt, such as a choice the prompt leaves to the executor or the concurrency rule when the prompt carries it.
+    - no criterion depends on state others can change or contradicts another part of the prompt, such as a choice the prompt leaves to the executor or the concurrency rule when the prompt carries it, nor contradicts the principles and acceptance conditions the project's reference material sets for the affected surface, or the intent its code comments state, as step 10 read them, unless the prompt explicitly replaces them, and a criterion that exempts part of the preserved behavior names the principles and conditions it was checked against.
 
     This list is verified by reading the rewritten prompt and what this session did to prepare it; it never adds a section, label, or heading of its own, and an element the check before the review or a correction adds takes the form step 7 sets. A condition the prompt already satisfies implicitly needs no visible text to prove it.
 
