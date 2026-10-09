@@ -12,7 +12,9 @@ const checkDir = dirname(fileURLToPath(import.meta.url));
 export const planDir = dirname(checkDir);
 export const reviewDir = join(planDir, 'review');
 export const cacheDir = join(planDir, '.cache');
-export const root = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: checkDir, encoding: 'utf8' }).stdout.trim() || process.cwd();
+const toplevel = (cwd) => spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd, encoding: 'utf8' }).stdout?.trim() ?? '';
+// The plan's repository; for a plan outside any repository, the current directory's, or that directory itself.
+export const root = toplevel(checkDir) || toplevel(process.cwd()) || process.cwd();
 export const utcStamp = () => new Date().toISOString().replace(/[:.]/g, '-');
 const STAMP = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$/;
 if (process.argv.includes('--baseline') && process.argv.includes('--dry-run')) {

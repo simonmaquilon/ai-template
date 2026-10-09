@@ -6,8 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 export const patchDir = dirname(fileURLToPath(import.meta.url));
 export const planDir = dirname(patchDir);
-export const root = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: patchDir, encoding: 'utf8' }).stdout.trim();
+const toplevel = (cwd) => spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd, encoding: 'utf8' }).stdout?.trim() ?? '';
+// The repository that holds the plan; for a plan outside any repository, such as one in the operating system's
+// temporary folder, the repository of the directory the script runs from.
+export const root = toplevel(patchDir) || toplevel(process.cwd());
+if (!root) throw new Error('Neither the plan nor the current directory is in a git repository: run the script from the project.');
 export const planPath = relative(root, planDir).split('\\').join('/');
+const planInside = !isAbsolute(planPath) && planPath !== '..' && !planPath.startsWith('../');
 const MAX_BUFFER = 1024 ** 3;
 
 // Runs git from the project root; returns stdout as text, or as a Buffer with { binary: true }.
@@ -36,8 +41,8 @@ export function selectFragments(arg, { allowAll = true } = {}) {
 
 // Captures the working tree as a git tree without touching the repository index: a temporary index,
 // seeded from the real one so tracked files that match ignore patterns stay included, then updated
-// from the working tree. The plan directory stays out: git already leaves it out when it is ignored,
-// and naming an ignored path in an exclude pathspec would make git add fail.
+// from the working tree. The plan directory stays out: git already leaves it out when it is ignored or
+// outside the repository, and naming such a path in an exclude pathspec would make git add fail.
 export function snapshotTree() {
   const indexFile = join(patchDir, '.snapshot-index');
   const realIndex = git(['rev-parse', '--git-path', 'index']).trim();
@@ -51,8 +56,8 @@ export function snapshotTree() {
       const { atime, mtime } = statSync(realIndexPath);
       utimesSync(indexFile, atime, mtime);
     }
-    const ignored = spawnSync('git', ['check-ignore', '-q', planPath], { cwd: root }).status === 0;
-    git(['add', '-A', '--', '.', ...(ignored ? [] : [`:(exclude)${planPath}`])], { env });
+    const exclude = planInside && spawnSync('git', ['check-ignore', '-q', planPath], { cwd: root }).status !== 0;
+    git(['add', '-A', '--', '.', ...(exclude ? [`:(exclude)${planPath}`] : [])], { env });
     return git(['write-tree'], { env }).trim();
   } finally {
     rmSync(indexFile, { force: true });
