@@ -2,9 +2,11 @@
 // Runs commands from the project root, stores each run in review/NN-<kind>-<UTC stamp>.log, and exits non-zero on
 // any failure. The kind is check for an NN-check script, measure for an NN-measure script, baseline with
 // --baseline on the tree before the plan's fragments, and dry-run with --dry-run on the current tree before a new plan
-// is delivered or a fragment added later runs. It writes only to review/ and, when a check isolates a tool, the plan's .cache/.
+// is delivered or a fragment added later runs. It writes only to review/ and to the plan's .cache/, when a check isolates a
+// tool or an all run shares a command's result.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,6 +36,9 @@ const isWindows = process.platform === 'win32';
 // HOME and the npm cache into the plan's .cache/ for tools the sandbox blocks in the real home directory.
 export function toolEnv({ isolateHome = false } = {}) {
   const env = { ...process.env, NO_COLOR: '1' };
+  // The variables all.mjs sets for its own checks never reach the commands those checks run.
+  delete env.PROMPT_PLAN_RUN;
+  delete env.PROMPT_PLAN_SKIP_SLOW;
   if (isolateHome) {
     env.HOME = join(cacheDir, 'home');
     env.npm_config_cache = join(cacheDir, 'npm');
@@ -83,11 +88,39 @@ export const commandAllowing = (id, label, cmd, args, allowed, parseFailures, op
 // A condition computed by the check script itself.
 export const condition = (id, label, ok, detail = '') => ({ id, label, ok, detail });
 
+// all.mjs sets PROMPT_PLAN_SKIP_SLOW for the checks of fragments before the one it runs for, unless given --slow: a
+// script skips the slow work, such as a browser measurement, when skipSlow is true, and marks its lines with slow().
+export const skipSlow = runKind === 'check' && process.env.PROMPT_PLAN_SKIP_SLOW === '1';
+export const slow = (check) => ({ ...check, slow: true });
+
+// A command several checks of one all run need, such as a build: once it succeeds, the later checks of the run reuse
+// its result, which all.mjs removes when the run ends; a failed run of it, or a run outside all, is not reused.
+// The same id with another command, arguments, or options runs again. Returns { status, output }; a reused output
+// starts with a line that says so, which the log shows when a line's detail carries that output.
+export function runOnce(id, cmd, args, options = {}) {
+  if (!/^[\w-]+$/.test(id)) throw new Error(`A runOnce id holds only letters, digits, "-" and "_": ${id}`);
+  const run = process.env.PROMPT_PLAN_RUN;
+  const key = createHash('sha256').update(JSON.stringify([cmd, args, options])).digest('hex').slice(0, 12);
+  const file = run && join(cacheDir, 'once', `${run}-${id}-${key}.json`);
+  if (file && existsSync(file)) {
+    const shared = JSON.parse(readFileSync(file, 'utf8'));
+    return { ...shared, output: `(result shared within this all run)\n${shared.output}` };
+  }
+  const result = spawnSync(cmd, args, { cwd: root, encoding: 'utf8', env: toolEnv(options), shell: isWindows, maxBuffer: MAX_BUFFER });
+  const outcome = { status: result.error ? null : result.status, output: `$ ${cmd} ${args.join(' ')}\n${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}` };
+  if (file && outcome.status === 0) {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify(outcome));
+  }
+  return outcome;
+}
+
 // A criterion that waits on a decision with no recommended option, a pending datum, or a person's judgment: reported, never run.
 export const pending = (id, label) => ({ id, label, pending: true });
 
 function evaluate(check) {
   if (check.pending) return { status: 'PENDING', output: 'Not run; see the fragment.' };
+  if (check.slow && skipSlow) return { status: 'SKIPPED', output: 'A slow line of an earlier fragment: all.mjs repeats it with --slow.' };
   if ('ok' in check) return { status: check.ok ? 'PASS' : 'FAIL', output: check.detail };
   const result = spawnSync(check.cmd, check.args, { cwd: root, encoding: 'utf8', env: toolEnv(check.options), shell: isWindows, maxBuffer: MAX_BUFFER });
   if (result.error) return { status: 'FAIL', output: `$ ${check.cmd} ${check.args.join(' ')}\ncould not run: ${result.error.message}` };
@@ -176,15 +209,17 @@ export async function withServer(cmd, args, url, fn, options = {}) {
 export function runChecks(fragment, checks, extraLines = []) {
   const lines = [`Fragment ${fragment} · ${runKind} run · ${new Date().toISOString()} · ${root}`, ...extraLines];
   let failed = 0;
+  let skipped = 0;
   for (const check of checks) {
     const { status, output } = evaluate(check);
     if (status === 'FAIL') failed += 1;
+    if (status === 'SKIPPED') skipped += 1;
     lines.push('', `## ${status} ${check.id}: ${check.label}`, String(output).trimEnd());
     console.log(`${status.padEnd(7)} ${check.id}: ${check.label}`);
   }
   mkdirSync(reviewDir, { recursive: true });
   const file = join(reviewDir, `${fragment}-${runKind}-${utcStamp()}.log`);
   writeFileSync(file, `${lines.join('\n')}\n`);
-  console.log(`Fragment ${fragment}: ${failed} failing. Evidence: ${relative(root, file)}`);
+  console.log(`Fragment ${fragment}: ${failed} failing${skipped ? `, ${skipped} skipped` : ''}. Evidence: ${relative(root, file)}`);
   process.exitCode = failed ? 1 : 0;
 }
