@@ -1,6 +1,6 @@
 # Adopción de versiones de la plantilla
 
-Un proyecto derivado guarda en `.agents/template-version` la versión de la plantilla que adoptó, y `01-meta-guidelines.md` pide actualizarla solo al adoptar una versión posterior. Este documento explica cómo hacerlo sin perder el trabajo del proyecto.
+Un proyecto derivado guarda en `.agents/template-version` la versión de la plantilla que adoptó, y `01-meta-guidelines.md` pide actualizarla solo al adoptar una versión posterior. Este documento explica cómo crear un proyecto desde la plantilla, cómo adoptarla en un proyecto que ya existe y cómo adoptar después una versión posterior, sin perder el trabajo del proyecto.
 
 La plantilla mantenida es el repositorio cuyo remoto `origin` apunta a `https://github.com/simonmaquilon/ai-template.git`, como fija `01-meta-guidelines.md`; cualquier otro repositorio es un derivado. Por eso un derivado usa su propio `origin` y añade la plantilla como remoto `plantilla`, como muestra «Localizar las dos versiones».
 
@@ -15,6 +15,43 @@ cd <nombre>
 
 Abre el agente dentro de la carpeta nueva e invoca `/start` en Claude Code o `$start` en Codex, como explica [Skills de agentes](90-agent-skills.md): prepara el proyecto y completa sus referencias primarias antes de escribir código.
 
+## Adoptar la plantilla en un proyecto existente
+
+Un proyecto que ya existe, con o sin código, adopta la plantilla extrayendo sus archivos sobre los suyos; uno que ya guarda `.agents/template-version` la adoptó antes y sigue «Traer los cambios». Hazlo desde la raíz del proyecto y con el árbol de trabajo limpio, para que `git status` muestre cada archivo que la extracción sustituye y se pueda recuperar. En Windows, usa Git Bash con el modo de desarrollador activado, para que se puedan crear enlaces simbólicos.
+
+1. Añade el remoto `plantilla` y busca el commit de la versión que vas a adoptar, como muestra «Localizar las dos versiones».
+2. Reúne las skills del proyecto en `.agents/skills/`, donde la plantilla las guarda y las enlaza desde `.claude/skills`:
+   - si `.agents/skills` es un enlace, copia su contenido y borra solo el enlace (`rm .agents/skills`, sin barra final), y crea en su lugar una carpeta con esa copia;
+   - si `.claude/skills` es una carpeta o un enlace a otra ruta, lleva sus skills a `.agents/skills/`, borra los enlaces de cada skill que ya apuntan allí y quita `.claude/skills`;
+   - si una skill del proyecto se llama como una de la plantilla y es la misma skill de origen sin cambios locales, borra la del proyecto y quédate con la de la plantilla; si no, renómbrala, carpeta y nombre, para que la extracción no mezcle sus archivos: queda como skill propia del proyecto, sin entrada en `skills-lock.json`.
+3. Guarda fuera del proyecto una copia de los archivos que ocupan una ruta de la plantilla y que Git no puede recuperar porque están ignorados o sin seguimiento, como `.npmrc` o `.mcp.json`. Este comando los lista:
+
+   ```bash
+   git ls-tree -r -z --name-only <commit> | while IFS= read -r -d '' f; do
+     { [ -e "$f" ] || [ -L "$f" ]; } && printf '%s\n' "$f"
+   done | grep -vxF -f <(git ls-files)
+   ```
+
+4. Extrae la plantilla sin su `.gitignore` y sin los archivos que solo la validan, que describe «Qué pertenece a la plantilla». En Windows, ejecuta antes `export MSYS=winsymlinks:nativestrict`, para que `tar` cree enlaces en lugar de copias:
+
+   ```bash
+   git archive <commit> -- . ':(exclude).gitignore' \
+     ':(exclude).github/workflows/template-checks.yml' ':(exclude).scripts/run-checks.mjs' \
+     ':(exclude).scripts/tests' ':(exclude).scripts/check-security-skill.mjs' \
+     ':(exclude).scripts/security-skill-hash.mjs' ':(exclude).readme/94-template-ci.md' | tar -xf -
+   ```
+
+   Comprueba después que `.claude/skills` es un enlace con `test -L .claude/skills`; si no lo es, bórralo, recupéralo con `git -c core.symlinks=true checkout <commit> -- .claude/skills` seguido de `git reset -q -- .claude/skills` y repite la comprobación.
+5. Añade al `.gitignore` del proyecto, o créalo, las reglas de `git show <commit>:.gitignore` que le falten; se excluye de la extracción para unirlo, no porque solo valide la plantilla. Después, `git ls-tree -r --name-only <commit> | git check-ignore -v --stdin` lista las rutas de la plantilla que el proyecto ignora y la regla que lo hace, también en `.git/info/exclude` o en las exclusiones globales de Git: quita o acota esas reglas, salvo en las rutas que la propia plantilla ignora y versiona, como `.temp/.gitignore`, que se añaden con `git add -f`.
+6. Con `git status` y `git diff`, une lo que la extracción sustituyó. Ningún secreto pasa a un archivo versionado (`08-storage-and-secrets.md`): los tokens y claves de las copias del paso 3 van a la configuración del usuario, como su `.npmrc` personal, o a variables de entorno que el archivo nombra.
+   - En los esqueletos de las referencias primarias y de `README.md`, conserva el de la plantilla y lleva el contenido del proyecto a sus secciones.
+   - En `AGENTS.md` y `CLAUDE.md`, conserva los de la plantilla y lleva las reglas propias del proyecto a instrucciones enrutadas desde `AGENTS.md`, registrando como desviación la que se aparte de una regla de la plantilla, como explica `01-meta-guidelines.md`.
+   - En `skills-lock.json`, conserva las entradas de la plantilla y copia tal cual las que el proyecto ya tenía con un nombre que la plantilla no usa, sin recalcular ni editar hashes (`06-commands-and-local-runtime.md`).
+   - `.gitattributes` fija finales de línea LF: los archivos del proyecto con CRLF pueden aparecer como modificados; después del commit de la adopción, normalízalos con `git add --renormalize .` en su propio commit.
+   - En los demás archivos, incluidas las copias del paso 3, une las reglas de ambos.
+7. Deja `.agents/template-version` como lo trae la extracción: es la versión adoptada.
+8. Comprueba que `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada: corrige o informa de lo que ya fallaba antes de adoptar, y pasa los documentos del proyecto en `.readme/` con prefijo 90 o superior a uno libre por debajo de 90 (`16-documentation.md`). Luego invoca `/start` o `$start`, que completa las referencias primarias y adapta las herramientas al stack instalado o al que se elija.
+
 ## Qué pertenece a la plantilla
 
 Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta-guidelines.md`:
@@ -23,12 +60,12 @@ Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta
 - los esqueletos de `PRODUCT.md`, `DESIGN.md`, `STACK.md`, `PLAN.md`, `TESTS.md`, `BUGS.md`, `SECURITY.md` y `README.md`;
 - la sección Template Tooling de `STACK.md`;
 - los documentos de `.readme/` con prefijo 90 o superior;
-- la configuración de agentes que declara el repositorio (`CLAUDE.md`, `.claude/`, `.codex/`, `.mcp.json`, `.playwright/`);
+- la configuración de agentes que declara el repositorio (`CLAUDE.md`, `.claude/`, `.codex/`, `.mcp.json`, `.npmrc`, `.playwright/`);
 - los scripts de `.scripts/`;
 - las skills de `.agents/skills/` y `skills-lock.json`;
 - las reglas de la plantilla en `.gitignore`, `.gitattributes` y `.temp/.gitignore`.
 
-Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. Nunca se adoptan, sus cambios no suben `.agents/template-version`, y un proyecto creado como copia de la plantilla los borra, cosa que hace la skill `start` al prepararlo; si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla.
+Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. Nunca se adoptan y sus cambios no suben `.agents/template-version`. Un proyecto creado como copia de la plantilla los borra, cosa que hace la skill `start` al prepararlo (si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla), y un proyecto existente no los extrae al adoptarla.
 
 Lo demás es del proyecto: el código, el contenido con que rellenó las referencias primarias, incluida la sección Project Tooling de `STACK.md`, sus documentos de `.readme/` por debajo de 90 y sus políticas propias, enrutadas y registradas como desviaciones en `AGENTS.md`.
 
@@ -54,7 +91,7 @@ git diff <commit-actual> <commit-nuevo> -- <ruta>
 Revisa archivo por archivo el diff entre las dos versiones, solo en las rutas de la plantilla:
 
 - Si el proyecto no modificó el archivo, ni en commits ni en cambios sin commitear (`git diff <commit-actual> -- <ruta>` no muestra nada), toma la versión nueva con `git restore --source=<commit-nuevo> -- <ruta>`, que también borra el archivo si la versión nueva lo retiró.
-- Si lo modificó, por una desviación registrada en `AGENTS.md` o porque la propia plantilla pide adaptarlo, como la tabla de permisos de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md) o sus reglas de `.gitignore`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
+- Si lo modificó, por una desviación registrada en `AGENTS.md` o porque la propia plantilla pide adaptarlo, como la tabla de permisos de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md) o sus reglas de `.gitignore` y `.gitattributes` y su `.npmrc`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
 - En las referencias primarias ya rellenadas, nunca tomes el esqueleto nuevo. Traslada solo los cambios de estructura: secciones o columnas nuevas, renombradas o retiradas, marcadores y textos de guía. Mueve el contenido existente a su nuevo sitio, también cuando pasa de una referencia primaria a otra, y deja con `TODO` lo que falte por decidir.
 - En `STACK.md`, toma entera la sección Template Tooling de la versión nueva y trata el resto, incluida Project Tooling, como una referencia primaria rellenada. Los bloques entre marcas `stack:generated` no se fusionan a mano: conserva sus marcas y sus notas, y el hook de `STACK.md` los regenera en el siguiente turno de un agente, o `node .scripts/sync-stack.mjs` si lo ejecutas tú.
 - De las skills, trae solo las carpetas de `.agents/skills/` que cambió la plantilla y sus entradas de `skills-lock.json`, copiadas tal como están en la versión nueva, sin recalcular ni editar hashes (`06-commands-and-local-runtime.md`); conserva las skills que añadió el proyecto, no restaures las que retiró y revisa los permisos y hooks que se conceden las que cambian, como pide [Skills de agentes](90-agent-skills.md).

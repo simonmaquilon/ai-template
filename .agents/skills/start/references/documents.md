@@ -2,6 +2,10 @@
 
 Topics group the skeleton's sections for the conversation; each section's own guide line still says what it holds. "Later" sections keep their markers until delivered work fills them.
 
+## Existing code
+
+When the Progress state finds existing code, the repository and the user settle now what this file otherwise leaves for later or assumes absent. PLAN's Fase actual and Estado general, and README's Estado, come from the user; PLAN marks a phase `complete` only with its acceptance evidence from the repository. STACK's Platform Versions and Dependencies are filled now from the manifests and the generated blocks. README's Inicio rápido and Comandos take only commands the project defines that were verified in this session without installs (`03`, `17`); the rest stay later. DESIGN with an existing interface records the open decision to document it through the UI design workflow instead of waiting for a first screen.
+
 ## PRODUCT.md
 
 English headings, Spanish content, schema marker untouched.
@@ -30,20 +34,20 @@ English headings and frontmatter keys, Spanish content.
 English. Load `33` first.
 
 - Ask now: Selected Stack (with the package manager and hosting target if decided), Runtime and Version Constraints, Approved Target Versions (record who approved and when), Dependency and license policy, UI Libraries, Validation Tooling, Observability Tooling.
-- Later: Platform Versions and Dependencies, filled after installing. Project Tooling changes only through the tooling step.
+- Later: Platform Versions and Dependencies, filled after installing, or now with existing code. Project Tooling changes only through the tooling step.
 
 ## PLAN.md
 
 Spanish, decision level only: no identifiers, route paths, or versions, and nothing STACK already holds. Until directories exist, `Ruta o sistema propietario` names the owning area or system.
 
-- Ask now: Objetivo; Fase actual and Estado general as they stand (`planificación, sin código`); Restricciones y decisiones técnicas; Arquitectura y propiedad; Datos, contratos e integraciones; Fases de implementación, all `pending`; Estrategia de validación; Entrega y operación; Riesgos y decisiones abiertas.
+- Ask now: Objetivo; Fase actual and Estado general as they stand (`planificación, sin código` without existing code); Restricciones y decisiones técnicas; Arquitectura y propiedad; Datos, contratos e integraciones; Fases de implementación, all `pending` except what Existing code allows; Estrategia de validación; Entrega y operación; Riesgos y decisiones abiertas.
 - The line `Verificación interactiva en navegador por agente` must end as adopted (a web surface and the user agrees), `No aplica: sin superficie web`, or `TODO` with a register entry, because `17` depends on it.
 - Later: Última verificación and Registro de avance, which record verified work only.
 
 ## SECURITY.md and README.md
 
 - SECURITY (English): in Register Status, Application, Owner, Private channel (a contact that is not secret), Next review (an ISO date from an agreed cadence), and Overall status `not assessed`. Everything else is later.
-- README (Spanish): title, one-line pitch, Estado (`planificación`) with Responsable, and Propósito. A `LICENSE` only when the user picks the terms and the holder (`16`). Later: Versión, Inicio rápido, Comandos (verified only), Arquitectura, Estructura del repositorio, Pruebas y calidad, Despliegue y operación, Contribución.
+- README (Spanish): title, one-line pitch, Estado (`planificación` without existing code) with Responsable, and Propósito. A `LICENSE` only when the user picks the terms and the holder (`16`). Later: Versión, Inicio rápido, Comandos (verified only), Arquitectura, Estructura del repositorio, Pruebas y calidad, Despliegue y operación, Contribución.
 
 ## Not touched
 
