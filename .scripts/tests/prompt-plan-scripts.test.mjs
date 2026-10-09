@@ -1,10 +1,11 @@
-// The check library that the prompt-plan skill copies into every plan, exercised from a plan folder inside a
-// throwaway repository, as a plan's NN-check scripts use it.
+// The check scripts that the prompt-plan skill copies into every plan, lib and all, exercised from a plan folder
+// inside a throwaway repository, as the plan's own scripts use them.
 
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { pathToFileURL } from 'node:url';
 import { ROOT, WINDOWS, makeRepo } from './support.mjs';
@@ -61,6 +62,44 @@ test('prompt-plan check library: withServer runs the check once, returns its res
     if (!stopped) await new Promise((resolve) => setTimeout(resolve, 100));
   }
   assert.ok(stopped, `${url} still answers after withServer returned`);
+});
+
+test('prompt-plan check library: measure, baseline, and dry runs name their logs and evidence apart, latestEvidence reads only measurements, and all runs only NN-check scripts', async (t) => {
+  const { repo, lib } = await planLib(t);
+  const check = join(repo.dir, '.temp', 'plans', 'p', 'check');
+  cpSync(join(dirname(LIB), 'check-all.mjs'), join(check, 'all.mjs'));
+  // Baseline and dry-run evidence of area, and the measurements of area-wide, sort after the measurements of area:
+  // reading any of them as one would return the wrong file.
+  writeFileSync(join(check, '02-measure.mjs'), "import { writeFileSync } from 'node:fs';\n"
+    + "import { condition, evidenceFile, runChecks } from './lib.mjs';\n"
+    + "for (const name of ['area', 'area-wide']) writeFileSync(evidenceFile('02', name, 'json'), '{}');\n"
+    + "runChecks('02', [condition('M1', 'measured', true)]);\n");
+  writeFileSync(join(check, '01-check.mjs'), "import { condition, runChecks } from './lib.mjs';\n"
+    + "runChecks('01', [condition('C1', 'checked', true)]);\n");
+  writeFileSync(join(check, 'helpers.mjs'), "import { writeFileSync } from 'node:fs';\n"
+    + "writeFileSync(new URL('helpers-ran', import.meta.url), '');\n");
+  const node = (script, ...flags) => spawnSync(process.execPath, [join(check, script), ...flags], { cwd: repo.dir, encoding: 'utf8' });
+  for (const flags of [[], ['--dry-run'], ['--baseline'], []]) assert.equal(node('02-measure.mjs', ...flags).status, 0, `run with ${flags}`);
+  assert.equal(node('02-measure.mjs', '--baseline', '--dry-run').status, 2);
+  assert.equal(node('all.mjs').status, 0);
+  assert.equal(node('all.mjs', '--dry-run').status, 2);
+  assert.equal(existsSync(join(check, 'helpers-ran')), false, 'all ran helpers.mjs');
+  const files = readdirSync(lib.reviewDir);
+  const named = (pattern) => files.filter((file) => pattern.test(file)).sort();
+  assert.equal(named(/^01-check-[\dT-]+Z\.log$/).length, 1);
+  assert.equal(named(/^02-measure-[\dT-]+Z\.log$/).length, 2, 'all ran the measure script');
+  assert.equal(named(/^02-dry-run-[\dT-]+Z\.log$/).length, 1);
+  assert.equal(named(/^02-baseline-[\dT-]+Z\.log$/).length, 1);
+  assert.deepEqual(named(/^02-check-/), []);
+  assert.equal(named(/^02-dry-run-area-[\dT-]+Z\.json$/).length, 1);
+  assert.equal(named(/^02-baseline-area-[\dT-]+Z\.json$/).length, 1);
+  const measured = named(/^02-area-[\dT-]+Z\.json$/);
+  assert.equal(measured.length, 2);
+  assert.equal(lib.latestEvidence('02', 'area', 'json'), join(lib.reviewDir, measured.at(-1)));
+  assert.equal(lib.latestEvidence('02', 'missing', 'json'), null);
+  assert.throws(() => lib.evidenceFile('02', 'baseline-area', 'json'), /never are or start with/);
+  assert.throws(() => lib.latestEvidence('02', 'dry-run-area', 'json'), /never are or start with/);
+  assert.throws(() => lib.latestEvidence('02', 'baseline', 'log'), /never are or start with/);
 });
 
 test('prompt-plan check library: evidence paths come relative to the project root', async (t) => {

@@ -1,11 +1,11 @@
-// Shared helpers for the plan's NN-check scripts; copied to check/lib.mjs.
-// Runs commands from the project root, stores each run in review/NN-check-<UTC stamp>.log, or in
-// review/NN-baseline-<UTC stamp>.log when the check runs with --baseline on the tree before the plan's
-// fragments, and exits non-zero on any failure. It writes only to review/ and, when a check isolates a tool,
-// the plan's .cache/.
+// Shared helpers for the plan's NN-check and NN-measure scripts; copied to check/lib.mjs.
+// Runs commands from the project root, stores each run in review/NN-<kind>-<UTC stamp>.log, and exits non-zero on
+// any failure. The kind is check for an NN-check script, measure for an NN-measure script, baseline with
+// --baseline on the tree before the plan's fragments, and dry-run with --dry-run on the current tree before a new plan
+// is delivered or a fragment added later runs. It writes only to review/ and, when a check isolates a tool, the plan's .cache/.
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const checkDir = dirname(fileURLToPath(import.meta.url));
@@ -14,7 +14,17 @@ export const reviewDir = join(planDir, 'review');
 export const cacheDir = join(planDir, '.cache');
 export const root = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: checkDir, encoding: 'utf8' }).stdout.trim() || process.cwd();
 export const utcStamp = () => new Date().toISOString().replace(/[:.]/g, '-');
-export const runKind = process.argv.includes('--baseline') ? 'baseline' : 'check';
+const STAMP = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$/;
+if (process.argv.includes('--baseline') && process.argv.includes('--dry-run')) {
+  console.error('Use --baseline or --dry-run, not both.');
+  process.exit(2);
+}
+const measuring = /^\d{2}-measure\.mjs$/.test(basename(process.argv[1] ?? ''));
+export const runKind = process.argv.includes('--baseline') ? 'baseline'
+  : process.argv.includes('--dry-run') ? 'dry-run'
+    : measuring ? 'measure' : 'check';
+// Evidence from a baseline or dry run carries the kind in its name, so later checks never read it as a measurement.
+const evidencePrefix = runKind === 'baseline' || runKind === 'dry-run' ? `${runKind}-` : '';
 const MAX_BUFFER = 1024 ** 3;
 const isWindows = process.platform === 'win32';
 
@@ -30,11 +40,30 @@ export function toolEnv({ isolateHome = false } = {}) {
   return env;
 }
 
+// A name that is or starts like a baseline or dry run's log or evidence would be read as that run's, or that run's
+// as it.
+function checkName(name) {
+  if (/^(baseline|dry-run)(-|$)/.test(name)) throw new Error(`Evidence names never are or start with baseline or dry-run: ${name}`);
+}
+
 // Path in review/ for a check's own evidence, such as a screenshot: NN-<name>-<UTC stamp>.<ext>, or
-// NN-baseline-<name>-<UTC stamp>.<ext> on a --baseline run.
+// NN-baseline-<name>-… and NN-dry-run-<name>-… on a --baseline or --dry-run run.
 export function evidenceFile(fragment, name, ext) {
+  checkName(name);
   mkdirSync(reviewDir, { recursive: true });
-  return join(reviewDir, `${fragment}-${runKind === 'baseline' ? 'baseline-' : ''}${name}-${utcStamp()}.${ext}`);
+  return join(reviewDir, `${fragment}-${evidencePrefix}${name}-${utcStamp()}.${ext}`);
+}
+
+// The newest evidence a check or measure run of fragment saved as name.ext, leaving out baseline and dry runs, or
+// null when there is none: how a later check reads the measurement an NN-measure script saved.
+export function latestEvidence(fragment, name, ext) {
+  checkName(name);
+  const prefix = `${fragment}-${name}-`;
+  const suffix = `.${ext}`;
+  const files = existsSync(reviewDir) ? readdirSync(reviewDir) : [];
+  const found = files.filter((file) => file.startsWith(prefix) && file.endsWith(suffix)
+    && STAMP.test(file.slice(prefix.length, -suffix.length))).sort();
+  return found.length ? join(reviewDir, found.at(-1)) : null;
 }
 
 // A path relative to the project root, where lib runs commands, for a tool that refuses absolute paths, such as a
