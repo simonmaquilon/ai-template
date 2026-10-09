@@ -37,6 +37,10 @@ export function evidenceFile(fragment, name, ext) {
   return join(reviewDir, `${fragment}-${runKind === 'baseline' ? 'baseline-' : ''}${name}-${utcStamp()}.${ext}`);
 }
 
+// A path relative to the project root, where lib runs commands, for a tool that refuses absolute paths, such as a
+// browser launcher's --filename.
+export const relativeToRoot = (path) => relative(root, path);
+
 // A project command that must exit with status 0. reportPending: true runs it but reports PENDING, for a
 // check that covers the recommended option of a decision still open.
 export const command = (id, label, cmd, args, options = {}) => ({ id, label, cmd, args, options });
@@ -70,28 +74,71 @@ function evaluate(check) {
   return { status: passed ? 'PASS' : 'FAIL', output: detail };
 }
 
-function stop(server) {
-  if (server.exitCode !== null) return;
-  if (isWindows) spawnSync('taskkill', ['/T', '/F', '/PID', String(server.pid)]);
-  else {
-    try { process.kill(-server.pid, 'SIGTERM'); } catch { /* already stopped */ }
+const exited = (child) => child.exitCode !== null || child.signalCode !== null;
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Whether any process of a POSIX process group is still alive, the leader's children included.
+function groupAlive(pid) {
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch {
+    return false;
   }
 }
 
-// Starts a server command, waits until url answers, runs fn(url), and always stops the server and its
-// children. Use a fixed port with the server's strict-port option, checked free beforehand: if the server
-// exits before answering, the port was taken and the check fails instead of using someone else's server.
+// Stops the server and every process it started: on Windows through taskkill, waiting up to 2 s for it to exit;
+// elsewhere SIGTERM to its process group, then SIGKILL to whatever of the group is still alive 5 s later.
+async function stop(server) {
+  if (!server.pid) return;
+  if (isWindows) {
+    if (exited(server)) return;
+    const gone = new Promise((resolve) => server.once('exit', resolve));
+    spawnSync('taskkill', ['/T', '/F', '/PID', String(server.pid)]);
+    // The fallback timer is unreferenced so it never holds the script open once the server is gone.
+    await Promise.race([gone, new Promise((resolve) => setTimeout(resolve, 2000).unref())]);
+    return;
+  }
+  if (!groupAlive(server.pid)) return;
+  try { process.kill(-server.pid, 'SIGTERM'); } catch { return; /* already stopped */ }
+  for (let waited = 0; waited < 5000 && groupAlive(server.pid); waited += 100) await pause(100);
+  if (groupAlive(server.pid)) {
+    try { process.kill(-server.pid, 'SIGKILL'); } catch { /* already stopped */ }
+    for (let waited = 0; waited < 1000 && groupAlive(server.pid); waited += 100) await pause(100);
+  }
+}
+
+// Starts a server command, waits up to 30 s until url answers, runs fn(url) once, and always stops the server and
+// the processes it started. Only the wait retries: an error fn throws propagates as it is. Use a fixed port with
+// the server's strict-port option, checked free beforehand: if the server exits before answering, the port was
+// taken and the check fails instead of using someone else's server.
 export async function withServer(cmd, args, url, fn, options = {}) {
   const server = spawn(cmd, args, { cwd: root, env: toolEnv(options), stdio: 'ignore', detached: !isWindows, shell: isWindows });
+  let startError;
+  server.once('error', (error) => { startError = error; });
   try {
-    for (let i = 0; i < 75; i += 1) {
-      if (server.exitCode !== null) throw new Error(`${cmd} ${args.join(' ')} exited with ${server.exitCode} before answering at ${url}.`);
-      try { if ((await fetch(url)).ok) return await fn(url); } catch { /* not up yet */ }
-      await new Promise((resolve) => setTimeout(resolve, 200));
+    const deadline = Date.now() + 30000;
+    let last = 'no answer';
+    while (true) {
+      if (startError) throw new Error(`${cmd} ${args.join(' ')} could not start: ${startError.message}`);
+      if (exited(server)) throw new Error(`${cmd} ${args.join(' ')} exited with ${server.exitCode ?? server.signalCode} before answering at ${url}.`);
+      const remaining = deadline - Date.now();
+      if (remaining < 100) throw new Error(`${cmd} ${args.join(' ')} did not answer at ${url} (last: ${last}).`);
+      try {
+        // A redirect is an answer too: follow none, so the probe reaches no other address.
+        const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(Math.min(5000, remaining)) });
+        await response.body?.cancel();
+        if (response.status < 400) break;
+        last = `status ${response.status}`;
+      } catch (error) {
+        last = error.name === 'TimeoutError' ? 'timed out' : error.cause?.code ?? error.message;
+      }
+      await pause(200);
     }
-    throw new Error(`${cmd} ${args.join(' ')} did not answer at ${url}.`);
+    if (startError) throw new Error(`${cmd} ${args.join(' ')} could not start: ${startError.message}`);
+    return await fn(url);
   } finally {
-    stop(server);
+    await stop(server);
   }
 }
 
