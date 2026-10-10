@@ -44,6 +44,9 @@ export function makeRepo(t) {
   };
   const init = repo.git('init', '-q');
   if (init.status !== 0) throw new Error(`git init failed in ${dir}: ${init.stderr.trim()}`);
+  // Saved in the repository too, so scripts that run their own git, such as prompt-plan's, keep LF line endings even
+  // when the system configuration sets core.autocrlf=true, as Git for Windows does by default.
+  repo.git('config', 'core.autocrlf', 'false');
   repo.write('.gitignore', '.temp/\n');
   return repo;
 }
