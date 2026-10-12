@@ -1,6 +1,6 @@
 ---
-name: sonnet-xhigh
-description: General-purpose agent that runs on Sonnet 5.5 at xhigh effort. Use when a task should run on Sonnet instead of the session model.
+name: sonnet
+description: Standard-tier general-purpose agent on Sonnet 5.5 at xhigh effort, for well-specified implementation, tests, and focused reviews whose acceptance criteria are already fixed.
 model: claude-sonnet-5-5
 effort: xhigh
 ---

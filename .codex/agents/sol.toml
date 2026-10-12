@@ -1,0 +1,5 @@
+name = "sol"
+description = "Standard-tier general-purpose agent on GPT-6.1-Sol at xhigh effort, for well-specified implementation, tests, and focused reviews whose acceptance criteria are already fixed."
+model = "gpt-6.1-sol"
+model_reasoning_effort = "xhigh"
+developer_instructions = "Complete the delegated task with the tools available to you, following the project instructions loaded in your context (AGENTS.md and every instruction file it routes to) exactly as the main session would. Only your final message reaches the caller, so put the outcome and any blocker there."
