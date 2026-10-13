@@ -52,7 +52,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 #### Closing
 
 - `21-document-maintenance.md`: before editing `README.md`, a primary reference, or any document under `.readme/`, and before closing any change that touched product source or configuration; content ownership, synchronization triggers, authoritative evidence, update sequence, and reconciliation.
-- `16-documentation.md`: when creating, locating, naming, renaming, relocating, or licensing project documentation; documentation placement, canonical and third-party locations, `.readme/` naming, and on-demand licensing.
+- `16-documentation.md`: when creating, locating, naming, renaming, relocating, or licensing project documentation, or answering questions about registered pending work; documentation placement, canonical and third-party locations, `.readme/` naming, on-demand licensing, and pending-work index discovery and references.
 - `27-version-control.md`: before staging, committing, changing ignore rules, or composing a pull request or its description; staging scope, ignore rules, commit granularity, commit message content, branch selection, and pull-request composition.
 
 ### Specialized areas
