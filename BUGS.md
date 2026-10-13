@@ -1,16 +1,20 @@
 # Registro de bugs
 
-Este archivo registra todos los bugs del producto mantenido, incluidos los que no tienen impacto de seguridad, y su estado funcional.
-Reemplaza la fila `TODO` al registrar el primer bug. No añadas a este esqueleto, pensado para un producto derivado, hallazgos de mantenimiento de la plantilla.
+Este archivo conserva los registros históricos verificados de bugs y referencias a los bugs activos, cuyo detalle y estado viven en [BACKLOG.md](BACKLOG.md).
+Reemplaza la fila `TODO` al incorporar el primer registro histórico verificado. No añadas a este esqueleto, pensado para un producto derivado, hallazgos de mantenimiento de la plantilla.
 
 ## Reglas de registro
 
 - Asigna a cada bug un identificador estable con el formato `BUG-0001` y registra una fila por bug.
 - Usa fechas ISO 8601 (`YYYY-MM-DD`).
-- Actualiza el estado cuando cambie y conserva la fila cuando el bug se resuelva o se cierre.
+- Actualiza el detalle y estado del bug activo en [BACKLOG.md](BACKLOG.md); conserva los registros históricos verificados y sus identificadores.
 - No guardes secretos, datos personales ni detalles que permitan explotar el fallo; enlaza un registro privado cuando haga falta.
-- Un bug con impacto de seguridad `possible` o `confirmed` abre además una entrada `VULN-…` en [SECURITY.md](SECURITY.md) que cita su `BUG-…`, y su celda de impacto de seguridad añade el identificador de esa entrada.
-- Registra aquí solo el estado funcional; la explotabilidad, la remediación y el riesgo aceptado de un bug con impacto de seguridad se registran solo en [SECURITY.md](SECURITY.md).
+- Un bug activo con impacto de seguridad `possible` o `confirmed` conserva sus identificadores `BUG-…` y `VULN-…` en una entrada central; [SECURITY.md](SECURITY.md) y este documento la referencian.
+- El detalle funcional y de seguridad pendiente permanece en la entrada central; la evidencia histórica y los hechos verificados de seguridad permanecen en [SECURITY.md](SECURITY.md).
+
+## Bugs activos
+
+[BACKLOG.md](BACKLOG.md) contiene el detalle de los bugs activos. Añade aquí solo sus identificadores y enlaces.
 
 ## Bugs
 

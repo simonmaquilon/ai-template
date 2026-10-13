@@ -38,11 +38,11 @@ El estado debe describir trabajo verificado en el repositorio, no avance previst
 
 ## Fases de implementación
 
-Usa los incrementos verificables e independientes más pequeños. Los estados permitidos son `pending`, `in_progress`, `blocked` y `complete`; marca una fase como completa únicamente cuando exista su evidencia de aceptación.
+Las fases pendientes se detallan en [BACKLOG.md](BACKLOG.md). Registra aquí fases entregadas con evidencia de aceptación y referencias a las fases pendientes.
 
 | Fase | Resultado | Alcance propietario | Dependencias | Evidencia de aceptación | Estado |
 | --- | --- | --- | --- | --- | --- |
-| 1 — TODO | TODO | TODO | TODO | TODO | pending |
+| TODO | TODO | TODO | TODO | TODO | TODO |
 
 ## Estrategia de validación
 
@@ -57,7 +57,7 @@ Aquí se decide qué se valida y en qué nivel; las herramientas de cada nivel e
 - Comprobaciones de accesibilidad, compatibilidad y rendimiento: TODO
 - Comprobaciones de compilación, migración, despliegue y reversión: TODO
 
-La cobertura verificada de cada requisito o recorrido, sus huecos, las verificaciones manuales o por agente y los tests en cuarentena se registran en [TESTS.md](TESTS.md).
+La cobertura observada y las verificaciones completadas se registran en [TESTS.md](TESTS.md); el detalle de trabajo de pruebas pendiente está en [BACKLOG.md](BACKLOG.md).
 
 ## Entrega y operación
 
@@ -69,9 +69,7 @@ La cobertura verificada de cada requisito o recorrido, sus huecos, las verificac
 
 ## Riesgos y decisiones abiertas
 
-| Riesgo o decisión | Impacto | Mitigación o responsable | Condición de resolución |
-| --- | --- | --- | --- |
-| TODO | TODO | TODO | TODO |
+Los riesgos que requieren trabajo y las decisiones técnicas o de entrega pendientes se detallan en [BACKLOG.md](BACKLOG.md). Aquí se conservan únicamente sus referencias.
 
 ## Registro de avance
 

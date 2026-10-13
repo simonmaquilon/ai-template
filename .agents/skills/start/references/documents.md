@@ -4,7 +4,7 @@ Topics group the skeleton's sections for the conversation; each section's own gu
 
 ## Existing code
 
-When the Progress state finds existing code, the repository and the user settle now what this file otherwise leaves for later or assumes absent. PLAN's Fase actual and Estado general, and README's Estado, come from the user; PLAN marks a phase `complete` only with its acceptance evidence from the repository. STACK's Platform Versions and Dependencies are filled now from the manifests and the generated blocks. README's Inicio rápido and Comandos take only commands the project defines that were verified in this session without installs (`03`, `17`); the rest stay later. DESIGN with an existing interface records the open decision to document it through the UI design workflow instead of waiting for a first screen.
+When the Progress state finds existing code, the repository and the user settle now what this file otherwise leaves for later or assumes absent. PLAN's Fase actual and Estado general, and README's Estado, come from the user; PLAN marks a phase `complete` only with its acceptance evidence from the repository. STACK's Platform Versions and Dependencies are filled now from the manifests and the generated blocks. README's Inicio rápido and Comandos take only commands the project defines that were verified in this session without installs (`03`, `17`); the rest stay later. For an existing interface, record the open decision to document it through the UI design workflow in BACKLOG.md and reference it from DESIGN, rather than waiting for a first screen.
 
 ## PRODUCT.md
 
@@ -17,7 +17,7 @@ English headings, Spanish content, schema marker untouched.
 5. Brand, evidence, accessibility: Brand Commitments (content voice goes to DESIGN), Evidence on Hand (real assets with their paths, and absences that must not be invented), Accessibility & Inclusion needs (the standard goes to DESIGN).
 6. Principles and success: propose three to five Product Principles from the answers and get them confirmed; Success and Risks with metrics only if the user gives them.
 
-`## Stack` stays the link to STACK. Close with Open Decisions.
+`## Stack` stays the link to STACK. Close Open Decisions with references to the central entries in BACKLOG.md (`35`).
 
 ## DESIGN.md
 
@@ -38,9 +38,9 @@ English. Load `33` first.
 
 ## PLAN.md
 
-Spanish, decision level only: no identifiers, route paths, or versions, and nothing STACK already holds. Until directories exist, `Ruta o sistema propietario` names the owning area or system.
+Spanish, decision level only: no reproduced implementation identifiers, route paths, or versions, and nothing STACK already holds; pending-item identifiers and links are allowed. Until directories exist, `Ruta o sistema propietario` names the owning area or system.
 
-- Ask now: Objetivo; Fase actual and Estado general as they stand (`planificación, sin código` without existing code); Restricciones y decisiones técnicas; Arquitectura y propiedad; Datos, contratos e integraciones; Fases de implementación, all `pending` except what Existing code allows; Estrategia de validación; Entrega y operación; Riesgos y decisiones abiertas.
+- Ask now: Objetivo; Fase actual and Estado general as they stand (`planificación, sin código` without existing code); Restricciones y decisiones técnicas; Arquitectura y propiedad; Datos, contratos e integraciones; Fases de implementación, recording unfinished phases in BACKLOG.md and only their references in PLAN, except verified phases that Existing code allows; Estrategia de validación; Entrega y operación; Riesgos y decisiones abiertas as references to BACKLOG.md (`35`).
 - The line `Verificación interactiva en navegador por agente` must end as adopted (a web surface and the user agrees), `No aplica: sin superficie web`, or `TODO` with a register entry, because `17` depends on it.
 - Later: Última verificación and Registro de avance, which record verified work only.
 
@@ -51,12 +51,16 @@ Spanish, decision level only: no identifiers, route paths, or versions, and noth
 
 ## Not touched
 
-TESTS.md and BUGS.md are registers filled by later work. AGENTS.md changes only to record a deviation.
+TESTS.md and BUGS.md keep verified facts, historical records and references filled by later work. AGENTS.md changes only to record a deviation.
+
+## BACKLOG.md
+
+Spanish. Record the detail of the pending work and open decisions collected in the conversation under `35`, with stable identifiers and the actual state; leave undecided facts explicit. PRODUCT, DESIGN, PLAN and other documents reference these entries rather than repeating pending detail.
 
 ## Reconciliation checklist
 
 - PRODUCT `## Stack` is still only the link, and no STACK value is repeated in PRODUCT, PLAN, or SECURITY (`33`).
 - The project name is identical in README, DESIGN, and SECURITY; terminology matches PRODUCT Domain Terminology across DESIGN, PLAN, and README.
 - Surface Acceptance matches Main Journeys; phases cover the capabilities and respect Scope Exclusions; the browser verification line agrees with Platform.
-- Each open decision lives in exactly one register.
+- Each pending item or open decision is detailed once in BACKLOG.md, and the other documents only reference it (`35`).
 - Languages follow `15`; headings other than the title placeholders, guide text, schema marker, and frontmatter keys are intact.

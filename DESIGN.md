@@ -67,4 +67,4 @@ Registra cada requisito visual relevante como una condición observable.
 
 ## Open Decisions
 
-- TODO — Registra la decisión pendiente, su responsable y la condición que la resuelve.
+Las decisiones de diseño pendientes se detallan en [BACKLOG.md](BACKLOG.md). Aquí se conservan únicamente sus referencias.

@@ -7,7 +7,7 @@ Read when naming files or symbols, writing comments, scripts, commits or documen
 - Write new or revised comments and operational messages in English in existing files; preserve unrelated content and report remaining divergence instead of expanding scope into a full translation.
 - Preserve existing names when renaming is outside the authorized scope, and report remaining language divergence.
 - Preserve language keywords, external API names, imported symbols, and required filenames; language conventions do not override external requirements or user-visible localization.
-- Author `.readme/` documentation, root `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `TESTS.md`, and `BUGS.md` in Spanish.
+- Author `.readme/` documentation, root `README.md`, `PRODUCT.md`, `DESIGN.md`, `PLAN.md`, `TESTS.md`, `BUGS.md`, and `BACKLOG.md` in Spanish.
 - Keep every heading of `PRODUCT.md` and `DESIGN.md`, the keys of the `DESIGN.md` token frontmatter, and their schema markers in English as their skeletons define them; write the rest of their content in Spanish.
 - Author `SECURITY.md`, `STACK.md`, `AGENTS.md`, and every file under `.agents/instructions/` in English.
 - Match the user's detected language for all conversation and responses.

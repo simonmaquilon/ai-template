@@ -33,7 +33,7 @@ Ver [Selected Stack en STACK.md](STACK.md#selected-stack).
 ## Capabilities and Constraints
 
 - Funcionalidad incluida: TODO
-- Restricciones del producto: TODO — Las restricciones de runtime y versión van en [STACK.md](STACK.md), las demás restricciones técnicas en [PLAN.md](PLAN.md), la terminología en Domain Terminology y lo no decidido, en Open Decisions.
+- Restricciones del producto: TODO — Las restricciones de runtime y versión van en [STACK.md](STACK.md), las demás restricciones técnicas en [PLAN.md](PLAN.md), la terminología en Domain Terminology y lo no decidido, en [BACKLOG.md](BACKLOG.md).
 
 ## Brand Commitments
 
@@ -88,4 +88,4 @@ Ver [Selected Stack en STACK.md](STACK.md#selected-stack).
 
 ## Open Decisions
 
-- TODO — Registra la decisión pendiente, su responsable y la condición que la resuelve.
+Las decisiones de producto pendientes se detallan en [BACKLOG.md](BACKLOG.md). Aquí se conservan únicamente sus referencias.

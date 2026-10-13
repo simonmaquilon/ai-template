@@ -23,12 +23,8 @@ Enlaza cada requisito o recorrido con su definición en [PRODUCT.md](PRODUCT.md)
 
 ## Huecos y verificaciones manuales o por agente
 
-| Sin prueba automática | Motivo | Verificación manual o por agente |
-| --- | --- | --- |
-| TODO | TODO | TODO |
+El detalle de pruebas y verificaciones pendientes vive en [BACKLOG.md](BACKLOG.md). Las verificaciones completadas y su evidencia se registran en este documento.
 
 ## Tests inestables o en cuarentena
 
-| Test o suite | Causa | Responsable | Condición de salida |
-| --- | --- | --- | --- |
-| TODO | TODO | TODO | TODO |
+El detalle de trabajo pendiente sobre estabilidad o cuarentena vive en [BACKLOG.md](BACKLOG.md). Aquí se conservan sus referencias.
