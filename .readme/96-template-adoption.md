@@ -102,6 +102,6 @@ En el mismo cambio, fija en `.agents/template-version` la versión adoptada y re
 
 ## Después de adoptar
 
-- `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada.
+- `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada. El segundo no cuenta como retirados los archivos de instrucciones ni los documentos de `.readme/` que el proyecto borró hasta el commit que añadió por primera vez `.agents/template-version`, ese incluido: eran del conjunto que la plantilla sustituyó, así que sus prefijos quedan libres.
 - Codex vuelve a pedir la aprobación de los hooks que cambiaron, como explica [Hooks de agentes](92-agent-hooks.md).
 - Los binarios de los servidores de lenguaje siguen instalados en la versión que fija [STACK.md](../STACK.md); si cambió, se reinstalan como explica [Servidores de lenguaje de agentes](93-agent-language-servers.md).

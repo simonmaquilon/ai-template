@@ -7,11 +7,13 @@
 // scope line or a line that starts a rule with "- "; and no two instruction
 // files, or two documents directly under .readme/, share a numeric prefix,
 // compared by value so 07- and 7- clash, nor reuse the prefix of one the git
-// history shows retired; a rename that keeps its prefix retires nothing. A
-// routing entry that names a missing file is left to check-doc-links.mjs. Runs
-// from any directory of the repository and prints plain text, which the agent
-// clients add to the model's context; prints nothing when every file complies,
-// outside git, or in another repository.
+// history shows retired; a rename that keeps its prefix retires nothing, and
+// neither does a project's history up to the commit that first added
+// .agents/template-version, whose files belonged to the set the baseline
+// replaced on adoption. A routing entry that names a missing file is left to
+// check-doc-links.mjs. Runs from any directory of the repository and prints
+// plain text, which the agent clients add to the model's context; prints
+// nothing when every file complies, outside git, or in another repository.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -19,6 +21,7 @@ import { enterRepositoryRoot, git } from './hook-support.mjs';
 
 const LIMIT = 25;
 const INSTRUCTIONS = join('.agents', 'instructions');
+const TEMPLATE_VERSION = '.agents/template-version';
 const ROUTING_ENTRY = /^- `(\d+-[\w-]+\.md)`:/gm;
 
 if (!enterRepositoryRoot()) process.exit(0);
@@ -37,12 +40,24 @@ function sharedPrefixes(names) {
   return [...byPrefix.values()].filter((group) => group.length > 1).map((group) => group.join(' and '));
 }
 
+// The history that governs prefixes: the commits after the one that first
+// added .agents/template-version, which adopted the baseline and may replace
+// the project's earlier files; all of it when the file was never added; none
+// while an adoption is still uncommitted.
+function governedHistory() {
+  const added = git(['log', '--diff-filter=A', '--format=%H', '--', TEMPLATE_VERSION])?.trim();
+  if (added) return [`${added.split('\n').at(-1)}..HEAD`];
+  return existsSync(TEMPLATE_VERSION) ? null : [];
+}
+
 // Current names in dir that take the prefix of a file the history retired:
 // deleted, or renamed to another prefix, under a different name. A deletion
 // and an addition with the same prefix in one commit are a rename, as when a
 // rename rewrites the file too much for git to pair them.
 function reusedPrefixes(dir, names) {
-  const log = git(['log', '--format=%x1e', '--name-status', '-M', '--diff-filter=ADR', '--', dir]) ?? '';
+  const range = governedHistory();
+  if (range === null) return [];
+  const log = git(['log', ...range, '--format=%x1e', '--name-status', '-M', '--diff-filter=ADR', '--', dir]) ?? '';
   const retired = [];
   for (const commit of log.split('\x1e')) {
     const entries = commit.split('\n').map((line) => line.split('\t')).filter(([, path]) => path && dirname(path) === dir);
