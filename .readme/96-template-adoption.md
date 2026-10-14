@@ -57,7 +57,7 @@ Un proyecto que ya existe, con o sin código, adopta la plantilla extrayendo sus
 Son de la plantilla los archivos cuyos cambios suben su versión según `01-meta-guidelines.md`:
 
 - las instrucciones de `.agents/instructions/` y las referencias primarias y la tabla de enrutado de `AGENTS.md`;
-- los esqueletos de `PRODUCT.md`, `DESIGN.md`, `STACK.md`, `PLAN.md`, `TESTS.md`, `BUGS.md`, `SECURITY.md`, `BACKLOG.md` y `README.md`;
+- los esqueletos de `PRODUCT.md`, `DESIGN.md`, `STACK.md`, `PLAN.md`, `TESTS.md`, `BUGS.md`, `SECURITY.md` y `README.md`, además del archivo inicial vacío `BACKLOG.md`, cuyo ciclo de vida gobierna [la instrucción de pendientes](../.agents/instructions/35-pending-work.md);
 - la sección Template Tooling de `STACK.md`;
 - los documentos de `.readme/` con prefijo 90 o superior;
 - la configuración de agentes que declara el repositorio (`CLAUDE.md`, `.claude/`, `.codex/`, `.mcp.json`, `.npmrc`, `.playwright/`);

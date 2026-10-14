@@ -62,7 +62,7 @@ No incluyas secretos ni valores reales de producción en este repositorio.
 - [Diseño](DESIGN.md): tokens de diseño normativos, experiencia, interfaz y criterios observables.
 - [Stack](STACK.md): stack elegido, runtime, versiones, dependencias y herramientas, incluidas las que fija la plantilla para los agentes.
 - [Plan](PLAN.md): decisiones técnicas, fases, validación y avance verificado.
-- [Pendientes](BACKLOG.md): detalle, decisiones, estado y condiciones de cierre de todos los pendientes registrados.
+- [Pendientes](BACKLOG.md): registro temporal del trabajo por completar; su ciclo de vida se rige por [la instrucción de pendientes](.agents/instructions/35-pending-work.md).
 - [Pruebas](TESTS.md): cobertura observada, verificaciones completadas y referencias a trabajo pendiente.
 - [Bugs](BUGS.md): registros históricos verificados y referencias a bugs activos.
 - [Seguridad](SECURITY.md): hechos observados, evidencia verificada, excepciones aceptadas, historial y referencias a trabajo pendiente.

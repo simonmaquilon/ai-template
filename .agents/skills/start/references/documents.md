@@ -55,7 +55,7 @@ TESTS.md and BUGS.md keep verified facts, historical records and references fill
 
 ## BACKLOG.md
 
-Spanish. Record the detail of the pending work and open decisions collected in the conversation under `35`, with stable identifiers and the actual state; leave undecided facts explicit. PRODUCT, DESIGN, PLAN and other documents reference these entries rather than repeating pending detail.
+Spanish. Follow the entry requirements and lifecycle in `35`; populate this file only from real pending work and open decisions collected in the conversation, rather than treating it as an interview document to fill by default. PRODUCT, DESIGN, PLAN and other documents reference these entries rather than repeating pending detail.
 
 ## Reconciliation checklist
 

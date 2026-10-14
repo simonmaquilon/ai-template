@@ -54,7 +54,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 - `21-document-maintenance.md`: before editing `README.md`, a primary reference, or any document under `.readme/`, and before closing any change that touched product source or configuration; content ownership, synchronization triggers, authoritative evidence, update sequence, and reconciliation.
 - `16-documentation.md`: when creating, locating, naming, renaming, relocating, or licensing project documentation; documentation placement, canonical and third-party locations, `.readme/` naming, and on-demand licensing.
-- `35-pending-work.md`: before answering questions about registered pending work, or recording, updating, moving, or closing a pending item; the central register, item identity, state, detail, evidence, reference-only links elsewhere, migration, and closure.
+- `35-pending-work.md`: before answering questions about registered pending work, or recording, updating, moving, or closing a pending item; the ephemeral register, item identity, state, pending implementation decisions, external developer boards, evidence, reference-only links elsewhere, migration, and removal after verified completion.
 - `27-version-control.md`: before staging, committing, changing ignore rules, or composing a pull request or its description; staging scope, ignore rules, commit granularity, commit message content, branch selection, and pull-request composition.
 
 ### Specialized areas
