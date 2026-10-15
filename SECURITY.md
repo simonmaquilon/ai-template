@@ -2,12 +2,12 @@
 
 > Template: replace the bracketed content and keep this file as an auditable register for the entire life of the application.
 
-This register holds observed component security facts, verified evidence, accepted exceptions, resolved findings and remediation history. Pending security and maintenance work is detailed only in [BACKLOG.md](BACKLOG.md). The components and their versions live in [STACK.md](STACK.md); this register cites their rows there without copying their versions. Active functional and security work shares a central entry with its domain identifiers; [BUGS.md](BUGS.md) and this register keep references and verified historical records. It does not replace manifests, lockfiles, deployed configuration, issue trackers, scanners, or an SBOM; it references them as evidence, and any difference must be reconciled.
+This register centralizes the security state of every component, open and resolved vulnerabilities and advisories, exceptions, and remediations. The components and their versions live in [STACK.md](STACK.md); this register cites their rows there without copying their versions. Functional defects of the maintained product are recorded in [BUGS.md](BUGS.md); this register holds only their security aspect. Security risks and maintenance work that still need a decision or work are detailed in [BACKLOG.md](BACKLOG.md). It does not replace manifests, lockfiles, deployed configuration, issue trackers, scanners, or an SBOM; it references them as evidence, and any difference must be reconciled.
 
 ## Control Rules
 
 - Use stable identifiers and ISO 8601 dates (`YYYY-MM-DD`).
-- Record observed component facts and verified historical findings here; identify each component by its row in STACK.md rather than duplicating current versions.
+- Record one row per applicable component, vulnerability, or advisory; identify each component by its row in [STACK.md](STACK.md) instead of duplicating its version.
 - Retain resolved or retired entries to preserve history.
 - Do not invent versions or statuses: obtain them from verifiable sources and link the evidence.
 - Do not store secrets, personal data, or exploitable details; link a private record when necessary.
@@ -35,15 +35,15 @@ Covers every runtime, database, platform, external service, and dependency that 
 
 ## Vulnerabilities and Advisories
 
-This table holds verified resolved findings and their evidence; reference pending findings under Pending Security Work.
+A bug in the maintained product with possible or confirmed security impact has an entry here that cites its `BUG-…` from [BUGS.md](BUGS.md).
 
-| ID or CVE | Related bug | Detected | Component | Affected versions | Severity | Exploitability | Status | Remediation | Evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [VULN-0001 or CVE] | [BUG-0001 or none] | [YYYY-MM-DD] | [component] | [versions] | [CVSS or criterion] | [unknown, unlikely, possible, or confirmed] | [not affected, mitigated, resolved, or risk accepted] | [action or fixed version] | [advisory, scan, test, or private ticket] |
+| ID or CVE | Related bug | Detected | Component | Affected versions | Severity | Exploitability | Status | Remediation | Target date | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [VULN-0001 or CVE] | [BUG-0001 or none] | [YYYY-MM-DD] | [component] | [versions] | [CVSS or criterion] | [unknown, unlikely, possible, or confirmed] | [open, not affected, mitigated, resolved, or risk accepted] | [action or fixed version] | [YYYY-MM-DD or none] | [advisory, scan, test, or private ticket] |
 
 ## Pending Security Work
 
-[BACKLOG.md](BACKLOG.md) contains pending security and maintenance decisions and remediation. Keep only identifiers and links here.
+[BACKLOG.md](BACKLOG.md) contains the security risks and maintenance work that still need a decision or work. Keep only identifiers and links here.
 
 ## Accepted Risks and Exceptions
 

@@ -6,9 +6,7 @@
 
 ## Estado
 
-- Estado: [planificación | desarrollo | producción | mantenimiento]
-- Responsable: [equipo o persona]
-- Versión: [versión o fecha]
+El estado de la entrega está en [PLAN.md](PLAN.md#estado-de-la-entrega); la versión de la aplicación y su responsable, en [SECURITY.md](SECURITY.md#register-status).
 
 ## Propósito
 
@@ -64,8 +62,8 @@ No incluyas secretos ni valores reales de producción en este repositorio.
 - [Plan](PLAN.md): decisiones técnicas, fases, validación y avance verificado.
 - [Pendientes](BACKLOG.md): detalle del trabajo pendiente registrado.
 - [Pruebas](TESTS.md): cobertura observada, verificaciones completadas y referencias a trabajo pendiente.
-- [Bugs](BUGS.md): registros históricos verificados y referencias a bugs activos.
-- [Seguridad](SECURITY.md): hechos observados, evidencia verificada, excepciones aceptadas, historial y referencias a trabajo pendiente.
+- [Bugs](BUGS.md): registro de los bugs activos y cerrados del producto y su estado funcional.
+- [Seguridad](SECURITY.md): estado de seguridad de cada componente, vulnerabilidades y avisos, excepciones, remediaciones y referencias a riesgos pendientes.
 - Añade aquí los enlaces a documentos de operación o arquitectura en `.readme/` cuando existan.
 
 ## Pruebas y calidad

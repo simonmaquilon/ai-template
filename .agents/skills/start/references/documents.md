@@ -4,7 +4,7 @@ Topics group the skeleton's sections for the conversation; each section's own gu
 
 ## Existing code
 
-When the Progress state finds existing code, the repository and the user settle now what this file otherwise leaves for later or assumes absent. PLAN's Fase actual and Estado general, and README's Estado, come from the user; PLAN records a delivered phase only with its acceptance evidence from the repository. STACK's Platform Versions and Dependencies are filled now from the manifests and the generated blocks. README's Inicio rápido and Comandos take only commands the project defines that were verified in this session without installs (`03`, `17`); the rest stay later. For an existing interface, record the open decision to document it through the UI design workflow in BACKLOG.md and reference it from DESIGN, rather than waiting for a first screen.
+When the Progress state finds existing code, the repository and the user settle now what this file otherwise leaves for later or assumes absent. PLAN's Fase actual and Estado general come from the user; PLAN records a delivered phase only with its acceptance evidence from the repository. STACK's Platform Versions and Dependencies are filled now from the manifests and the generated blocks. README's Inicio rápido and Comandos take only commands the project defines that were verified in this session without installs (`03`, `17`); the rest stay later. For an existing interface, record the open decision to document it through the UI design workflow in BACKLOG.md and reference it from DESIGN, rather than waiting for a first screen.
 
 ## PRODUCT.md
 
@@ -26,7 +26,7 @@ English headings and frontmatter keys, Spanish content.
 - First ask whether there is a user-facing surface. Without one, say so and why in Overview, write that the visual sections do not apply and why, and keep Content Voice and Accessibility if the project shows text to anyone.
 - Title and frontmatter: the project name in `# Design System:` and `name`, and `description`, now; tokens (`colors`, `typography`, `rounded`, `spacing`, `components` with at most eight sub-properties each) only for brand values the user marks as binding, following the schema at the top of impeccable's `reference/document.md`. Never create the `.impeccable/design.json` sidecar.
 - Ask now: Overview, Content Voice (terms from PRODUCT Domain Terminology), Accessibility (standard and conformance level, keyboard, focus, contrast, zoom), States.
-- Surface Acceptance: propose rows from PRODUCT Main Journeys, or defer them to each surface's specification.
+- Surface Acceptance: propose rows from PRODUCT Main Journeys, or leave it later until a surface's specification records its rows.
 - Later: Colors, Typography, Layout, Elevation & Depth, Shapes, Components, and Do's and Don'ts, unless the user already has binding brand rules.
 
 ## STACK.md
@@ -40,18 +40,18 @@ English. Load `33` first.
 
 Spanish, decision level only: no reproduced implementation identifiers, route paths, or versions, and nothing STACK already holds; pending-item identifiers and links are allowed. Until directories exist, `Ruta o sistema propietario` names the owning area or system.
 
-- Ask now: Objetivo; Fase actual and Estado general as they stand (`planificación, sin código` without existing code); Restricciones y decisiones técnicas; Arquitectura y propiedad; Datos, contratos e integraciones; Fases de implementación, recording unfinished phases in BACKLOG.md and only their references in PLAN, except verified phases that Existing code allows; Estrategia de validación; Entrega y operación; Riesgos y decisiones abiertas as references to BACKLOG.md (`35`).
+- Ask now: Objetivo; Fase actual and Estado general as they stand (`planificación, sin código` without existing code); Restricciones y decisiones técnicas; Arquitectura y propiedad; Datos, contratos e integraciones; Fases de implementación, recording unfinished phases in BACKLOG.md and only their references in PLAN, except verified phases that Existing code allows; Estrategia de validación; Entrega y operación; Riesgos y decisiones abiertas with accepted risks recorded there and pending ones as references to BACKLOG.md (`35`).
 - The line `Verificación interactiva en navegador por agente` must end as adopted (a web surface and the user agrees), `No aplica: sin superficie web`, or `TODO` with a BACKLOG.md entry (`35`), because `17` depends on it.
 - Later: Última verificación and Registro de avance, which record verified work only.
 
 ## SECURITY.md and README.md
 
 - SECURITY (English): in Register Status, Application, Owner, Private channel (a contact that is not secret), Next review (an ISO date from an agreed cadence), and Overall status `not assessed`. Everything else is later.
-- README (Spanish): title, one-line pitch, Estado (`planificación` without existing code) with Responsable, and Propósito. A `LICENSE` only when the user picks the terms and the holder (`16`). Later: Versión, Inicio rápido, Comandos (verified only), Arquitectura, Estructura del repositorio, Pruebas y calidad, Despliegue y operación, Contribución.
+- README (Spanish): title, one-line pitch, and Propósito; Estado only links PLAN and SECURITY. A `LICENSE` only when the user picks the terms and the holder (`16`). Later: Inicio rápido, Comandos (verified only), Arquitectura, Estructura del repositorio, Pruebas y calidad, Despliegue y operación, Contribución.
 
 ## Not touched
 
-TESTS.md and BUGS.md keep verified facts, historical records and references filled by later work. AGENTS.md changes only to record a deviation.
+TESTS.md and BUGS.md are registers filled by later work. AGENTS.md changes only to record a deviation.
 
 ## BACKLOG.md
 

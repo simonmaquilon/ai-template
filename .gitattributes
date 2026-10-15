@@ -6,3 +6,8 @@
 
 # Vendored agent skills, exempt from the source-file limit (see .readme/92-agent-hooks.md)
 .agents/skills/** linguist-vendored
+# Template-authored skills are maintained source subject to the limit
+.agents/skills/commit/** -linguist-vendored
+.agents/skills/prompt/** -linguist-vendored
+.agents/skills/prompt-plan/** -linguist-vendored
+.agents/skills/start/** -linguist-vendored

@@ -1,6 +1,6 @@
 # Security Review Workflow
 
-Read before implementing or reviewing source code, runtime configuration, agent tooling configuration, dependencies, or automated workflows; continuous security guidance and task-diff review.
+Read before implementing or reviewing source code, runtime configuration, agent tooling configuration, dependencies, or automated workflows.
 
 - Identify the affected inputs, assets, trust boundaries, and enforcement points under `22-security-and-trust-boundaries.md` during discovery.
 - Select the configured security guidance or review capability under `04-sources-and-skills.md` and consult only the guidance relevant to the change before editing.

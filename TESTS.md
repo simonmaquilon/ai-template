@@ -1,7 +1,7 @@
 # Registro de cobertura de pruebas
 
 Este archivo registra la cobertura verificada de cada requisito o recorrido del producto y describe solo el estado actual, sin historial.
-No enumera tests individuales: las suites y el runner son la fuente autoritativa. La estrategia de validación está en [PLAN.md](PLAN.md), el trabajo pendiente en [BACKLOG.md](BACKLOG.md) y los bugs resueltos en [BUGS.md](BUGS.md). Reemplaza cada `TODO` antes de considerar verificado ese elemento.
+No enumera tests individuales: las suites y el runner son la fuente autoritativa. La estrategia de validación está en [PLAN.md](PLAN.md), el trabajo pendiente en [BACKLOG.md](BACKLOG.md) y los bugs en [BUGS.md](BUGS.md). Reemplaza cada `TODO` antes de considerar verificado ese elemento.
 
 ## Estado
 

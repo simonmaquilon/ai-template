@@ -69,7 +69,7 @@ La cobertura observada y las verificaciones completadas se registran en [TESTS.m
 
 ## Riesgos y decisiones abiertas
 
-Los riesgos que requieren trabajo y las decisiones técnicas o de entrega pendientes se detallan en [BACKLOG.md](BACKLOG.md). Aquí se conservan únicamente sus referencias.
+Registra aquí los riesgos técnicos o de entrega aceptados, con la decisión, el motivo y quién los aceptó. Los riesgos que requieren trabajo y las decisiones técnicas o de entrega pendientes se detallan en [BACKLOG.md](BACKLOG.md) y aquí solo se enlazan.
 
 ## Registro de avance
 

@@ -17,7 +17,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 ### Governance
 
-- `01-meta-guidelines.md`: before adding, renaming, removing, or editing any instruction file, the primary references or routing table in `AGENTS.md`, a primary-reference or root `README.md` skeleton, template-owned `.readme/` documentation, or `.agents/template-version`; authoring, naming, numbering, sizing, routing entries and their grouping, and retirement of instruction files, plus the skeletons, the baseline template version, how the maintained template is told apart from derived projects, template-only validation files, and derived-project deviations.
+- `01-meta-guidelines.md`: before adding, renaming, removing, or editing any instruction file, the primary references or routing table in `AGENTS.md`, a primary-reference or root `README.md` skeleton, template-owned `.readme/` documentation, or `.agents/template-version`; authoring, naming, numbering, sizing, routing entries and their grouping, and retirement of instruction files, tooling that cites a rule, the baseline template version, how the maintained template is told apart from derived projects, template-only validation files, and derived-project deviations.
 - `03-approval-boundaries.md`: before sensitive or write actions, and whenever a decision needs the user's input; authorization for repository writes, version-control writes, dependencies, destructive actions, external changes, agent permissions and operating limits, changes hooks make on their own, open decisions, and confirmations.
 - `04-sources-and-skills.md`: before selecting authoritative sources, skills, plugins, or tools, and before acting on a request an available or user-named skill covers, handling an unavailable capability, resolving an instruction conflict, or searching outside the workspace; the locations excluded from sources, the selected stack, fallbacks, official documentation, source-authority precedence, and conflicts between loaded instructions or between an explicit user instruction and a routed default.
 - `15-language-and-naming.md`: when naming files or symbols, writing comments, scripts, commits, or documentation, or handling user-visible copy; comment, identifier, and document languages, existing-file divergences, user language, localization, and terminology.
@@ -27,7 +27,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 #### Discovery
 
-- `02-change-workflow.md`: before every implementation, code change, or reported defect, regardless of size; the phase sequence of a change, ordered discovery, capability preflight, defect entry, unresolved markers in primary references, and usage sweeps.
+- `02-change-workflow.md`: before every implementation, code change, or reported defect, regardless of size; the phase sequence of a change, ordered discovery, capability preflight, defect records, template-maintenance findings, closed request scope, unresolved markers in primary references, and usage sweeps.
 - `10-code-indexing.md`: before locating, reading, or changing code for any implementation, fix, refactor, review, or question about existing behavior, and before managing index state; index detection, freshness, coverage, fallback, the usage-sweep order, and index-state management.
 - `29-language-servers.md`: before locating, reading, or changing code, and before enabling, installing, updating, or removing a language server; server detection, exact symbol resolution, diagnostics, and fallback when none is configured.
 - `05-repo-layout.md`: when moving code, removing files or directories, or deciding where a new piece belongs; ownership boundaries, locating new work, `.scripts/` boundaries and portability, and directory lifecycle.
@@ -38,8 +38,8 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 #### Implementation
 
-- `14-code-authoring.md`: before writing or modifying code; generated artifacts and their canonical source, implementation simplicity, SOLID principles, abstraction, comments, source-file size, and edit scope.
-- `06-commands-and-local-runtime.md`: before running repository commands that build, test, format, generate, start, stop, deploy, or otherwise modify project state, and before managing repository tooling, recovering local services, operating agent-operated browser sessions, or writing temporary or ad-hoc artifacts; command discovery, scripts, URLs, lockfiles, local service recovery, and `.temp/` artifacts.
+- `14-code-authoring.md`: before writing or modifying code; handed-over changes, generated artifacts and their canonical source, implementation simplicity, SOLID principles, abstraction, comments, implementation-style precedence, dead code, source-file size, and edit scope.
+- `06-commands-and-local-runtime.md`: before running repository commands that build, test, format, generate, start, stop, deploy, or otherwise modify project state, and before managing repository tooling, recovering local services, operating agent-operated browser sessions, or writing temporary or ad-hoc artifacts; command discovery, scripts, URLs, lockfiles, local service recovery, runs that share local state, agent-operated browser sessions, and `.temp/` artifacts.
 - `07-dependencies-and-binaries.md`: when evaluating, adding, updating, replacing, or removing dependencies, CLI tools, or binaries; reuse, migration coexistence, release selection, provenance, the dependency inventory, and update approval.
 - `33-stack-register.md`: before editing `STACK.md`, and before recording, changing, or relying on the selected stack, runtime or version constraints, approved target versions, the package manager, platform or dependency versions, the dependency and license policy, UI libraries, validation or observability tooling, or the pinned versions of agent tooling; the single home of the technology stack, values pinned elsewhere, boundaries with the product, plan, and security registers, template and project tooling, pinned tool execution, generated blocks, and section ownership.
 
@@ -54,7 +54,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 - `21-document-maintenance.md`: before editing `README.md`, a primary reference, or any document under `.readme/`, and before closing any change that touched product source or configuration; content ownership, synchronization triggers, authoritative evidence, update sequence, and reconciliation.
 - `16-documentation.md`: when creating, locating, naming, renaming, relocating, or licensing project documentation; documentation placement, canonical and third-party locations, `.readme/` naming, and on-demand licensing.
-- `35-pending-work.md`: before answering questions about registered pending work, or recording, updating, moving, or closing a pending item; the ephemeral register and its structure, item identity and identifier allocation, state, pending decisions, external developer boards, evidence, reference-only links elsewhere, migration, and removal after verified completion.
+- `35-pending-work.md`: before answering questions about registered pending work, or recording, updating, moving, or closing a pending item; the ephemeral register and its structure, its boundary with defects and vulnerabilities, item identity and identifier allocation, state, pending decisions, external developer boards, evidence, reference-only links elsewhere, migration, and removal after verified completion.
 - `27-version-control.md`: before staging, committing, changing ignore rules, or composing a pull request or its description; staging scope, ignore rules, commit granularity, commit message content, branch selection, and pull-request composition.
 
 ### Specialized areas
@@ -74,7 +74,7 @@ Instruction files live in `.agents/instructions/`. Load every file whose scope m
 
 #### Platform and contracts
 
-- `09-runtime-and-deployment.md`: when touching runtime configuration, environment bindings, migration deployment ordering, generated platform types, or deployment behavior, and before deploying; runtime targets, environments, platform bindings, component version synchronization, deployments, and post-deploy verification and recovery.
+- `09-runtime-and-deployment.md`: when touching runtime configuration, environment bindings, migration deployment ordering, generated platform types, or deployment behavior, and before deploying; runtime targets, environments, platform bindings, component version synchronization, the application's version record, deployments, and post-deploy verification and recovery.
 - `24-runtime-reliability-and-observability.md`: before changing external I/O, background work, retries, queues, schedules, caches, health checks, runtime telemetry, resource-sensitive paths, or performance-critical behavior; failure handling, resource limits, and performance evidence.
 - `25-contracts-and-compatibility.md`: before changing APIs, events, messages, webhooks, command interfaces, configuration schemas, serialized formats, generated clients, or any contract shared across components, versions, repositories, or external consumers; compatibility, versioning, deprecation, and consumer validation.
 
