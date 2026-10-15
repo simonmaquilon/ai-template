@@ -7,7 +7,7 @@ This register holds observed component security facts, verified evidence, accept
 ## Control Rules
 
 - Use stable identifiers and ISO 8601 dates (`YYYY-MM-DD`).
-- Record observed component facts and verified historical findings here, with references to pending work in BACKLOG.md; identify each component by its row in STACK.md rather than duplicating current versions.
+- Record observed component facts and verified historical findings here; identify each component by its row in STACK.md rather than duplicating current versions.
 - Retain resolved or retired entries to preserve history.
 - Do not invent versions or statuses: obtain them from verifiable sources and link the evidence.
 - Do not store secrets, personal data, or exploitable details; link a private record when necessary.
@@ -35,11 +35,11 @@ Covers every runtime, database, platform, external service, and dependency that 
 
 ## Vulnerabilities and Advisories
 
-Pending findings retain their functional and security identifiers in [BACKLOG.md](BACKLOG.md); keep only their references here. This table holds verified resolved findings and their evidence.
+This table holds verified resolved findings and their evidence; reference pending findings under Pending Security Work.
 
-| ID or CVE | Related bug | Detected | Component | Affected versions | Severity | Exploitability | Status | Remediation | Target date | Evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [VULN-0001 or CVE] | [BUG-0001 or none] | [YYYY-MM-DD] | [component] | [versions] | [CVSS or criterion] | [unknown, unlikely, possible, or confirmed] | [not affected, mitigated, resolved, or risk accepted] | [action or fixed version] | [YYYY-MM-DD] | [advisory, scan, test, or private ticket] |
+| ID or CVE | Related bug | Detected | Component | Affected versions | Severity | Exploitability | Status | Remediation | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [VULN-0001 or CVE] | [BUG-0001 or none] | [YYYY-MM-DD] | [component] | [versions] | [CVSS or criterion] | [unknown, unlikely, possible, or confirmed] | [not affected, mitigated, resolved, or risk accepted] | [action or fixed version] | [advisory, scan, test, or private ticket] |
 
 ## Pending Security Work
 

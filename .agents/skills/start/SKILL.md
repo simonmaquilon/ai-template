@@ -56,14 +56,14 @@ Recompute it on every run from the repository itself; keep no state file.
 3. PRODUCT, by the topics in documents.md.
 4. DESIGN: first ask whether the project has a user-facing surface. Write tokens only for brand values the user marks as binding; otherwise record one open decision leaving the visual direction to the UI design workflow when the first screen is built, or, with an existing interface, documenting that interface through it. Never ask about aesthetic styles or CSS values.
 5. STACK: apply the existing-code check. When the user delegates the choice, propose a stack with reason, impact, and alternatives, and record `delegated: …` once accepted. Approved Target Versions get exact stable versions verified in the session. Outside the declared and resolved versions of Platform Versions and Dependencies (`33`), never copy a value that a manifest pins.
-6. PLAN, at decision level: no identifiers, paths, or versions (`21`). Phases start `pending`, except those documents.md lets existing code mark `complete`, and the agent-operated browser verification line is resolved as documents.md says.
+6. PLAN, at decision level: no reproduced implementation identifiers, paths, or versions (`21`), while pending-item identifiers and links are allowed. The phase table takes only the delivered phases that documents.md lets existing code record; unfinished phases go to BACKLOG.md (`35`). The agent-operated browser verification line is resolved as documents.md says.
 7. SECURITY Register Status, then README.
 8. Tooling, by references/tooling.md, with one approval message.
 9. Reconcile: run the checklist in documents.md, then `node .scripts/check-doc-links.mjs` and `node .scripts/check-instructions.mjs`, which must print nothing; confirm STACK's generated blocks reflect the deletions and removals, and rerun the checks after any fix.
 
 ## Report
 
-In the user's language, one line per item, each starting with ✅, ⏸, ⚠️, or ❌: cleanup, remote, each document, deferred decisions with the register that holds them, skills, tool servers, language-server binary, the Codex hook-trust notice, and the checks. Close with the next step, which is part of the output `/start` was asked for: a first commit of these changes, made only if the user asks (`27`, or `/commit`); without existing code, installing the approved stack and scaffolding come after and are outside this skill, while with existing code the stack is already installed and the work continues on it.
+In the user's language, one line per item, each starting with ✅, ⏸, ⚠️, or ❌: cleanup, remote, each document, deferred decisions with their BACKLOG.md identifiers, skills, tool servers, language-server binary, the Codex hook-trust notice, and the checks. Close with the next step, which is part of the output `/start` was asked for: a first commit of these changes, made only if the user asks (`27`, or `/commit`); without existing code, installing the approved stack and scaffolding come after and are outside this skill, while with existing code the stack is already installed and the work continues on it.
 
 ## Client bindings
 

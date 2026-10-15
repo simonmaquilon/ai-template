@@ -4,7 +4,7 @@ Topics group the skeleton's sections for the conversation; each section's own gu
 
 ## Existing code
 
-When the Progress state finds existing code, the repository and the user settle now what this file otherwise leaves for later or assumes absent. PLAN's Fase actual and Estado general, and README's Estado, come from the user; PLAN marks a phase `complete` only with its acceptance evidence from the repository. STACK's Platform Versions and Dependencies are filled now from the manifests and the generated blocks. README's Inicio rápido and Comandos take only commands the project defines that were verified in this session without installs (`03`, `17`); the rest stay later. For an existing interface, record the open decision to document it through the UI design workflow in BACKLOG.md and reference it from DESIGN, rather than waiting for a first screen.
+When the Progress state finds existing code, the repository and the user settle now what this file otherwise leaves for later or assumes absent. PLAN's Fase actual and Estado general, and README's Estado, come from the user; PLAN records a delivered phase only with its acceptance evidence from the repository. STACK's Platform Versions and Dependencies are filled now from the manifests and the generated blocks. README's Inicio rápido and Comandos take only commands the project defines that were verified in this session without installs (`03`, `17`); the rest stay later. For an existing interface, record the open decision to document it through the UI design workflow in BACKLOG.md and reference it from DESIGN, rather than waiting for a first screen.
 
 ## PRODUCT.md
 
@@ -41,7 +41,7 @@ English. Load `33` first.
 Spanish, decision level only: no reproduced implementation identifiers, route paths, or versions, and nothing STACK already holds; pending-item identifiers and links are allowed. Until directories exist, `Ruta o sistema propietario` names the owning area or system.
 
 - Ask now: Objetivo; Fase actual and Estado general as they stand (`planificación, sin código` without existing code); Restricciones y decisiones técnicas; Arquitectura y propiedad; Datos, contratos e integraciones; Fases de implementación, recording unfinished phases in BACKLOG.md and only their references in PLAN, except verified phases that Existing code allows; Estrategia de validación; Entrega y operación; Riesgos y decisiones abiertas as references to BACKLOG.md (`35`).
-- The line `Verificación interactiva en navegador por agente` must end as adopted (a web surface and the user agrees), `No aplica: sin superficie web`, or `TODO` with a register entry, because `17` depends on it.
+- The line `Verificación interactiva en navegador por agente` must end as adopted (a web surface and the user agrees), `No aplica: sin superficie web`, or `TODO` with a BACKLOG.md entry (`35`), because `17` depends on it.
 - Later: Última verificación and Registro de avance, which record verified work only.
 
 ## SECURITY.md and README.md

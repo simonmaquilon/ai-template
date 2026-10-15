@@ -38,11 +38,11 @@ El estado debe describir trabajo verificado en el repositorio, no avance previst
 
 ## Fases de implementación
 
-Las fases pendientes se detallan en [BACKLOG.md](BACKLOG.md). Registra aquí fases entregadas con evidencia de aceptación y referencias a las fases pendientes.
+Registra en la tabla solo las fases entregadas, con su evidencia de aceptación. Las fases pendientes se detallan en [BACKLOG.md](BACKLOG.md); enlázalas debajo de la tabla.
 
-| Fase | Resultado | Alcance propietario | Dependencias | Evidencia de aceptación | Estado |
-| --- | --- | --- | --- | --- | --- |
-| TODO | TODO | TODO | TODO | TODO | TODO |
+| Fase | Resultado | Alcance propietario | Dependencias | Evidencia de aceptación |
+| --- | --- | --- | --- | --- |
+| TODO | TODO | TODO | TODO | TODO |
 
 ## Estrategia de validación
 
@@ -75,6 +75,6 @@ Los riesgos que requieren trabajo y las decisiones técnicas o de entrega pendie
 
 Registra únicamente hitos duraderos que hayan sido verificados; el historial de investigación pertenece a incidencias, commits o notas de tareas, no a este archivo.
 
-| Fecha | Fase | Resultado verificado | Evidencia | Trabajo restante |
-| --- | --- | --- | --- | --- |
-| TODO | TODO | TODO | TODO | TODO |
+| Fecha | Fase | Resultado verificado | Evidencia |
+| --- | --- | --- | --- |
+| TODO | TODO | TODO | TODO |
