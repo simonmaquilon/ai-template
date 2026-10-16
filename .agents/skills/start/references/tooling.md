@@ -4,7 +4,7 @@ Adapt the agent tooling once STACK's Selected Stack is settled, or, with existin
 
 ## Skills
 
-- Baseline skills, never retired, because the template's rules and documents rely on them: `commit`, `prompt`, `prompt-plan`, `start`, `security-audit`, `impeccable`, `playwright-cli`, `context7-mcp`. Retiring one is a deviation under `01`.
+- Baseline skills are the ones `.readme/90-agent-skills.md` lists as the template's base; the template's rules and documents rely on them, so they are never retired, and retiring one is a deviation under `01`.
 - Every other vendored skill in `.agents/skills/` is stack-specific: judge each against the Selected Stack, or the installed stack with existing code, and whether the project has a user-facing surface.
 - Retire one with `node .scripts/run-pinned.mjs skills remove <names> -y`, after confirming the options with the pinned version's `--help` (`04`). Afterwards confirm that only that skill's folder and its `skills-lock.json` entry changed, and that `.claude/skills` is still a symlink. Never edit the lockfile by hand (`06`).
 - Keep one the stack does not use by writing in its STACK skills Notes cell: `Kept by user decision on <YYYY-MM-DD>; the stack does not use it.`
