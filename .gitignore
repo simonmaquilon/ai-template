@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Editors
+*.swp
+*.swo
+.idea/
+
+# Repository-owned temporary artifacts
+.temp/
+
+# Local agent overrides and credentials
+.claude/settings.local.json
+.codex/auth.json
+

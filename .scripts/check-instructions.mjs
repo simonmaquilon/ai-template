@@ -1,0 +1,114 @@
+#!/usr/bin/env node
+// Reports instruction files and .readme/ documents that break the structure
+// 01-meta-guidelines.md and 10-documents.md set: AGENTS.md holds at most
+// AGENTS_LIMIT bytes; every file under .agents/instructions/ needs an entry in
+// the routing table of AGENTS.md, holds at most MODULE_LIMIT bytes, and keeps
+// each rule on one line, so after its heading every non-blank line is its one
+// scope line or a line that starts a rule with "- "; and no two instruction
+// files, or two documents directly under .readme/, share a numeric prefix,
+// compared by value so 07- and 7- clash, nor reuse the prefix of one the git
+// history shows retired; a rename that keeps its prefix retires nothing, and
+// neither does a project's history up to the commit that first added
+// .agents/template-version, whose files belonged to the set the baseline
+// replaced on adoption. A routing entry that names a missing file is left to
+// check-doc-links.mjs. Runs from any directory of the repository and prints
+// plain text, which the agent clients add to the model's context; prints
+// nothing when every file complies, outside git, or in another repository.
+
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
+import { enterRepositoryRoot, git } from './hook-support.mjs';
+
+const AGENTS_LIMIT = 8 * 1024;
+const MODULE_LIMIT = 6 * 1024;
+const INSTRUCTIONS = join('.agents', 'instructions');
+const TEMPLATE_VERSION = '.agents/template-version';
+const ROUTING_ENTRY = /^- `(\d+-[\w-]+\.md)`:/gm;
+
+if (!enterRepositoryRoot()) process.exit(0);
+
+const markdown = (dir) => (existsSync(dir) ? readdirSync(dir).filter((entry) => entry.endsWith('.md')).sort() : []);
+
+const prefixOf = (name) => (/^(\d+)-/.test(name) ? Number(/^(\d+)-/.exec(name)[1]) : null);
+
+// Groups of file names that share a numeric prefix.
+function sharedPrefixes(names) {
+  const byPrefix = new Map();
+  for (const name of names) {
+    const prefix = prefixOf(name);
+    if (prefix !== null) byPrefix.set(prefix, [...(byPrefix.get(prefix) ?? []), name]);
+  }
+  return [...byPrefix.values()].filter((group) => group.length > 1).map((group) => group.join(' and '));
+}
+
+// The history that governs prefixes: the commits after the one that first
+// added .agents/template-version, which adopted the baseline and may replace
+// the project's earlier files; all of it when the file was never added; none
+// while an adoption is still uncommitted.
+function governedHistory() {
+  const added = git(['log', '--diff-filter=A', '--format=%H', '--', TEMPLATE_VERSION])?.trim();
+  if (added) return [`${added.split('\n').at(-1)}..HEAD`];
+  return existsSync(TEMPLATE_VERSION) ? null : [];
+}
+
+// Current names in dir that take the prefix of a file the history retired:
+// deleted, or renamed to another prefix, under a different name. A deletion
+// and an addition with the same prefix in one commit are a rename, as when a
+// rename rewrites the file too much for git to pair them.
+function reusedPrefixes(dir, names) {
+  const range = governedHistory();
+  if (range === null) return [];
+  const log = git(['log', ...range, '--format=%x1e', '--name-status', '-M', '--diff-filter=ADR', '--', dir]) ?? '';
+  const retired = [];
+  for (const commit of log.split('\x1e')) {
+    const entries = commit.split('\n').map((line) => line.split('\t')).filter(([, path]) => path && dirname(path) === dir);
+    const arrived = entries.filter(([status]) => status === 'A').map(([, path]) => prefixOf(basename(path)));
+    for (const [status, path, renamed] of entries) {
+      const moved = status.startsWith('R') && prefixOf(basename(renamed)) !== prefixOf(basename(path));
+      if ((status === 'D' && !arrived.includes(prefixOf(basename(path)))) || moved) retired.push(basename(path));
+    }
+  }
+  return names.flatMap((name) =>
+    retired.filter((old) => old !== name && prefixOf(old) !== null && prefixOf(old) === prefixOf(name)).map((old) => `${name} (retired ${old})`),
+  );
+}
+
+// Lines, numbered from 1, that continue a rule or the scope line instead of
+// starting one.
+function wrappedLines(text) {
+  const lines = text.split(/\r?\n/);
+  const wrapped = [];
+  let scope = false;
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i].trim() === '' || lines[i].startsWith('- ')) continue;
+    if (!scope && !/^\s/.test(lines[i]) && lines[i - 1].trim() === '') scope = true;
+    else wrapped.push(i + 1);
+  }
+  return wrapped;
+}
+
+const instructions = markdown(INSTRUCTIONS);
+const agents = existsSync('AGENTS.md') ? readFileSync('AGENTS.md', 'utf8') : '';
+const routed = new Set([...agents.matchAll(ROUTING_ENTRY)].map(([, name]) => name));
+const unrouted = [];
+const oversized = [];
+const wrapped = [];
+for (const name of instructions) {
+  if (!routed.has(name)) unrouted.push(name);
+  const text = readFileSync(join(INSTRUCTIONS, name), 'utf8');
+  const bytes = Buffer.byteLength(text);
+  if (bytes > MODULE_LIMIT) oversized.push(`${name} (${bytes} bytes)`);
+  wrapped.push(...wrappedLines(text).map((line) => `${name}:${line}`));
+}
+
+const reports = [
+  ['Instruction files without a routing entry in AGENTS.md (01-meta-guidelines.md)', unrouted],
+  [`AGENTS.md over ${AGENTS_LIMIT} bytes (01-meta-guidelines.md)`, Buffer.byteLength(agents) > AGENTS_LIMIT ? [`${Buffer.byteLength(agents)} bytes`] : []],
+  [`Instruction files over ${MODULE_LIMIT} bytes (01-meta-guidelines.md)`, oversized],
+  ['Instruction rules wrapped across lines (01-meta-guidelines.md)', wrapped],
+  ['Instruction files sharing a numeric prefix (01-meta-guidelines.md)', sharedPrefixes(instructions)],
+  ['.readme/ documents sharing a numeric prefix (10-documents.md)', sharedPrefixes(markdown('.readme'))],
+  ['Instruction files reusing the prefix of a retired one (01-meta-guidelines.md)', reusedPrefixes('.agents/instructions', instructions)],
+  ['.readme/ documents reusing the prefix of a retired one (10-documents.md)', reusedPrefixes('.readme', markdown('.readme'))],
+];
+for (const [title, items] of reports) if (items.length > 0) console.log(`${title}: ${items.join(', ')}`);
