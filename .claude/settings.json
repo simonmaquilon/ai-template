@@ -196,6 +196,20 @@
         ]
       },
       {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-markdown.mjs",
+              "--hook"
+            ],
+            "statusMessage": "Checking Markdown structure"
+          }
+        ]
+      },
+      {
         "matcher": "Edit|Write|Bash|PowerShell",
         "hooks": [
           {

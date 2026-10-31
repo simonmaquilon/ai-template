@@ -102,6 +102,17 @@
         ]
       },
       {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-markdown.mjs\" ] || exit 0; node \"$r/.scripts/check-markdown.mjs\" --hook",
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-markdown.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\" -- --hook",
+            "statusMessage": "Checking Markdown structure"
+          }
+        ]
+      },
+      {
         "matcher": "Edit|Write|apply_patch|Bash",
         "hooks": [
           {

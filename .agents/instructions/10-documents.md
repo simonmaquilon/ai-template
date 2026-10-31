@@ -17,4 +17,5 @@ Read before editing `README.md`, a primary reference, or `.readme/`, and before 
 - Update upstream intent first (`.docs/product.md`, `.docs/design.md`), then `.docs/stack.md`, then `.docs/plan.md`, then the delivered records (`.docs/coverage.md`, `.docs/bugs.md`, `.docs/security.md`, `.readme/`, `README.md`), recording a pending entry before referencing it.
 - Ground each claim in authoritative evidence, label planned or unverified behavior, and run the commands the documentation asserts or name those not run.
 - Keep history only where a schema requires it; every other document describes the current truth.
+- Keep Markdown structurally clean, and fix every warning the structure check reports on the lines a change touched.
 - Report pre-existing drift outside the changed facts without modifying it, and before closing reread the affected documents and fix every discrepancy the change caused.
