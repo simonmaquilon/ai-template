@@ -4,12 +4,15 @@
 // vendored and binary files, and reports through additionalContext only the warnings on lines that differ from HEAD,
 // every line of an untracked file; it always exits 0 and writes nothing to stderr. Run by hand, `node
 // .scripts/check-markdown.mjs <files>` lints whole files without filters and exits 1 when it printed a warning, 2
-// without arguments or when a file could not be read, and 0 otherwise.
+// without arguments or when a file could not be read, and 0 otherwise; `--all` lints instead, from any folder, every
+// regular .md file Git lists whose real path stays inside the repository and that no attribute marks vendored or
+// generated, and also exits 2 outside a repository or without git.
 
 import { spawnSync } from 'node:child_process';
 import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, realpathSync } from 'node:fs';
 import { extname, isAbsolute, relative, resolve } from 'node:path';
-import { enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
+import { changedLines, enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
+import { marked, repositoryMarkdown } from './markdown-files.mjs';
 import { markdownWarnings } from './markdown-rules.mjs';
 
 const MAX_BYTES = 1024 * 1024;
@@ -20,11 +23,11 @@ const format = (path, warning) => `${path}:${warning.line} [${warning.id}] ${war
 if (!process.argv.includes('--hook')) {
   const files = process.argv.slice(2);
   if (files.length === 0) {
-    console.error('Usage: node .scripts/check-markdown.mjs <file>...');
+    console.error('Usage: node .scripts/check-markdown.mjs --all | <file>...');
     process.exit(2);
   }
   let warned = false, unreadable = false;
-  for (const file of files) {
+  for (const file of files.length === 1 && files[0] === '--all' ? repositoryMarkdown() : files) {
     let text;
     try {
       text = readFileSync(file, 'utf8');
@@ -65,18 +68,6 @@ function readCapped(full) {
   } finally {
     if (fd !== undefined) closeSync(fd);
   }
-}
-
-// The new-side line numbers the working tree changed against HEAD, or null when every line counts.
-function changedLines(local, untracked) {
-  const diff = untracked.has(local) ? null
-    : git(['--literal-pathspecs', 'diff', '--no-ext-diff', '--no-color', '--no-textconv', '--unified=0', '--inter-hunk-context=0', 'HEAD', '--', local]);
-  if (diff === null) return null;
-  const lines = new Set();
-  for (const [, start, count = '1'] of diff.matchAll(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm)) {
-    for (let i = 0; i < Number(count); i++) lines.add(Number(start) + i);
-  }
-  return lines;
 }
 
 const input = await readHookInput();
@@ -120,12 +111,9 @@ const ignored = spawnSync('git', ['check-ignore', '--no-index', '-z', '--stdin']
 if (ignored.status !== 0 && ignored.status !== 1) emitContext('edit not checked; ignore rules unavailable.');
 for (const path of ignored.stdout.split('\0')) candidates.delete(path);
 if (candidates.size === 0) process.exit(0);
-const attrs = git(['check-attr', '-z', '--stdin', 'linguist-generated', 'linguist-vendored'], [...candidates.keys()].join('\0'));
-if (attrs === null) emitContext('edit not checked; file attributes unavailable.');
-const fields = attrs.split('\0');
-for (let i = 0; i + 2 < fields.length; i += 3) {
-  if (['set', 'true'].includes(fields[i + 2])) candidates.delete(fields[i]);
-}
+const skipped = marked([...candidates.keys()]);
+if (!skipped) emitContext('edit not checked; file attributes unavailable.');
+for (const path of skipped) candidates.delete(path);
 
 const untracked = new Set(others.split('\0').filter(Boolean));
 const report = [];

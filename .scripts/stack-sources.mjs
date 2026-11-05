@@ -101,7 +101,13 @@ export function skills(root) {
   return byName(rows);
 }
 
-const endpoint = (server) => (typeof server?.url === 'string' ? clean(server.url) : command(server?.command));
+// A URL goes in code, fenced by a longer backtick run than any it holds, so that a Markdown check does not take it for a bare URL.
+const code = (value) => {
+  const fence = '`'.repeat(1 + (value.match(/`+/g) ?? []).reduce((most, run) => Math.max(most, run.length), 0));
+  const pad = /^`|`$/.test(value) ? ' ' : '';
+  return `${fence}${pad}${value}${pad}${fence}`;
+};
+const endpoint = (server) => (typeof server?.url === 'string' ? code(clean(server.url)) : command(server?.command));
 
 export function mcpServers(root) {
   const servers = new Map();

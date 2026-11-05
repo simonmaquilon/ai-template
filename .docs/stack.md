@@ -1,6 +1,6 @@
 # Technology Stack
 
-The technology the project uses and the tooling its agents run. Product decisions live in [product.md](product.md), technical decisions in [plan.md](plan.md), and each component's security state in [security.md](security.md). `.scripts/sync-stack.mjs` rewrites the blocks between `stack:generated` markers from the files that pin them, through the agent hooks: edit only their Notes column. Outside those blocks and the version tables, name the file that pins a value instead of copying it. Template Tooling belongs to the template; every other section belongs to the project. Replace each `TODO`.
+The technology the project uses and the tooling its agents run. Product decisions live in [product.md](product.md), technical decisions in [plan.md](plan.md), and each component's security state in [security.md](security.md). `.scripts/update-stack-doc.mjs` rewrites the blocks between `stack:generated` markers from the files that pin them, through the agent hooks: edit only their Notes column. Outside those blocks and the version tables, name the file that pins a value instead of copying it. Template Tooling belongs to the template; every other section belongs to the project. Replace each `TODO`.
 
 ## Selected Stack
 
@@ -102,7 +102,7 @@ Generated from the files that pin each part; their configuration is described in
 <!-- stack:generated mcp-servers -->
 | Server | Claude Code | Codex | Endpoint or command | Notes |
 | --- | --- | --- | --- | --- |
-| context7 | yes | yes | https://mcp.context7.com/mcp | |
+| context7 | yes | yes | `https://mcp.context7.com/mcp` | |
 <!-- /stack:generated mcp-servers -->
 
 ### Claude Code Plugins

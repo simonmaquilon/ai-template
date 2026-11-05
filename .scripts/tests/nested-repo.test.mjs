@@ -10,9 +10,6 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { WINDOWS, hookFor, makeRepo, numbered, ruleHooks, run, runClientHook } from './support.mjs';
 
-// A command whose effect stages a path it does not name, the case the effect hook records and judges.
-const HIDDEN_STAGING = 'python tools/stage.py';
-
 const name = (hook) => hook.args.join(' ').replace('${CLAUDE_PROJECT_DIR}/.scripts/', '');
 const fire = (repo, dir, hook, input = {}) =>
   runClientHook('claude', hook, repo, { cwd: dir, input: { session_id: 'session', tool_use_id: 'call', cwd: dir, ...input } });
@@ -49,11 +46,9 @@ test('claude: no hook reads, blocks, writes, or deletes in an independent reposi
   for (const event of ['SessionStart', 'UserPromptSubmit']) for (const hook of ruleHooks('claude', event)) fireAt(event, hook);
   // The edit comes after the turn started, so the turn-end pass would see it.
   repo.write('nested/big.mjs', numbered(151));
-  step('PreToolUse', 'check-staging.mjs', bash('git add -A'));
-  step('PreToolUse', 'check-staging-effect.mjs', bash(HIDDEN_STAGING));
+  step('PreToolUse', 'check-bulk-staging.mjs', bash('git add -A'));
   assert.equal(repo.git('-C', 'nested', 'add', '--', 'big.mjs').status, 0);
   step('PostToolUse', 'check-file-length.mjs', edit(nested));
-  step('PostToolUse', 'check-staging-effect.mjs', bash(HIDDEN_STAGING));
   step('Stop', 'check-file-length.mjs', { stop_hook_active: false });
 
   const quiet = Object.fromEntries(Object.keys(observed).map((hook) => [hook, 'silent']));
@@ -79,7 +74,7 @@ test('claude: the project and its linked worktrees stay governed', (t) => {
   if (!WINDOWS) {
     const alias = join(repo.dir, '.temp', 'alias');
     symlinkSync(repo.dir, alias);
-    const staging = fire(repo, alias, hookFor('claude', 'PreToolUse', 'check-staging.mjs'), bash('git add -A'));
+    const staging = fire(repo, alias, hookFor('claude', 'PreToolUse', 'check-bulk-staging.mjs'), bash('git add -A'));
     assert.equal(staging.status, 2, outcome(staging));
   }
 });
@@ -87,7 +82,7 @@ test('claude: the project and its linked worktrees stay governed', (t) => {
 test('claude: a command from a nested repository that may reach the project is still checked', (t) => {
   const repo = makeRepo(t);
   const nested = nestedProject(repo);
-  const hook = hookFor('claude', 'PreToolUse', 'check-staging.mjs');
+  const hook = hookFor('claude', 'PreToolUse', 'check-bulk-staging.mjs');
   for (const command of [`git -C ${repo.dir} add -A`, 'cd .. && git add -A', `git --git-dir=${join(repo.dir, '.git')} add .`]) {
     assert.equal(fire(repo, nested, hook, bash(command)).status, 2, command);
   }

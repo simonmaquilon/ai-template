@@ -28,7 +28,7 @@ for (const client of ['claude', 'codex']) {
     repo.write('Makefile', 'check:\n\t@echo ok\nstage: check\n\tgit add -A\nsafe:\n\tgit add src/a.ts\ngated:\nifeq ($(CI),)\n\tgit add -A\nendif\nFILES := src/a.ts\nALL = .\nrelease:\n\tgit add $(FILES) && echo $$HOME\nsweep-all:\n\tgit add ${ALL}\n');
     repo.write('other.mk', 'sweep:\n\t-git add --all\n');
     repo.write('notes/doc.md', 'Never run git add -A here.\n');
-    const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
+    const hook = hookFor(client, 'PreToolUse', 'check-bulk-staging.mjs');
     const value = { tool_name: 'PowerShell', cwd: repo.dir, tool_input: { command: "$f = 'notes/doc.md'; Get-Content $f" } };
     assert.equal(runClientHook(client, hook, repo, { input: value }).status, 0);
     for (const [command, status] of CASES) {

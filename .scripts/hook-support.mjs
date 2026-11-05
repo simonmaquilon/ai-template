@@ -15,6 +15,21 @@ export function git(args, input) {
   return run.status === 0 ? run.stdout : null;
 }
 
+// The new-side line numbers the working tree changed against HEAD, or null when every line counts: a path in the
+// untracked set, or a repository without HEAD. Context lines never merge hunks, whatever the configuration says, and
+// a file that attributes mark -diff or binary still yields its lines; callers skip files that hold NUL bytes.
+export function changedLines(local, untracked) {
+  const diff = untracked.has(local) ? null
+    : git(['--literal-pathspecs', 'diff', '--no-ext-diff', '--no-color', '--no-textconv', '--text', '--unified=0',
+      '--inter-hunk-context=0', 'HEAD', '--', local]);
+  if (diff === null) return null;
+  const lines = new Set();
+  for (const [, start, count = '1'] of diff.matchAll(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm)) {
+    for (let i = 0; i < Number(count); i++) lines.add(Number(start) + i);
+  }
+  return lines;
+}
+
 // Hook input arrives as JSON on stdin; a missing or malformed payload reads as
 // an empty object so that a hook never fails on its own input.
 export async function readHookInput() {

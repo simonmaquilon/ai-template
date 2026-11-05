@@ -35,7 +35,7 @@
 Before the first edit, state the change's level in one line.
 
 | Level | The change | Load | Specification | Verification |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Trivial | alters no executable behavior or contract: typos, comments, documentation, formatting, a copy fix that keeps meaning and layout | `01` or `10` for their files | one line on what changes | the smallest applicable check |
 | Normal | alters behavior without reaching a risk area | `02`, `03`, `04`, `14`, and matching area modules | objective and criteria, each with its check | tests and checks |
 | Risk | reaches authentication, authorization, trust boundaries, secrets, storage, persisted data or schemas, public contracts, deployment, automation, agent permissions or hooks, or an irreversible operation | normal plus the area module and `05` | full | independent verification |

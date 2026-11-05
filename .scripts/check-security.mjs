@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 // Non-blocking, local security leads after edits (08-security-and-data.md).
 // Scan only Git-visible files within this repository; omit ignored, generated,
-// vendored, secret-store and binary files. Output no source or captured values.
+// vendored, secret-store and binary files. Read only the lines that differ from
+// HEAD, every line of an untracked file; each lead names its CWE and its OWASP
+// Top 10:2025 category. Output no source or captured values.
 
 import { spawnSync } from 'node:child_process';
 import { closeSync, constants, fstatSync, openSync, readSync, realpathSync } from 'node:fs';
 import { basename, extname, isAbsolute, relative, resolve } from 'node:path';
-import { enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
+import { changedLines, enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
 import { securityLeads } from './security-patterns.mjs';
 
 const MAX_BYTES = 1024 * 1024;
+const MAX_LEADS = 20;
 const FORMATS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.astro', '.html',
   '.py', '.sh', '.bash', '.zsh', '.rb', '.php', '.go', '.java', '.cs', '.rs', '.json', '.yaml', '.yml', '.toml']);
 const RULE = '08-security-and-data.md';
@@ -37,7 +40,8 @@ try {
 }
 
 const visible = git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']);
-if (visible === null) {
+const others = git(['ls-files', '--others', '--exclude-standard', '-z']);
+if (visible === null || others === null) {
   emitContext(`Security guidance (${RULE}): edit not scanned; repository file inventory unavailable.`);
   process.exit(0);
 }
@@ -79,6 +83,7 @@ for (let i = 0; i + 2 < fields.length; i += 3) {
   if (['set', 'true'].includes(fields[i + 2])) candidates.delete(fields[i]);
 }
 
+const untracked = new Set(others.split('\0').filter(Boolean));
 const warnings = [];
 for (const [local, full] of candidates) {
   const label = JSON.stringify(local);
@@ -108,9 +113,12 @@ for (const [local, full] of candidates) {
     }
     const bytes = data.subarray(0, length);
     if (bytes.includes(0)) continue;
-    const leads = securityLeads(bytes.toString('utf8'));
-    for (const lead of leads) warnings.push(`${label}:${lead.line} [${lead.id}] ${lead.message}`);
-    if (leads.length === 20) warnings.push(`${label}: only the first 20 candidates are shown; review the complete file.`);
+    // One lead past the cap tells whether any was left out.
+    const leads = securityLeads(bytes.toString('utf8'), changedLines(local, untracked), MAX_LEADS + 1);
+    for (const lead of leads.slice(0, MAX_LEADS)) warnings.push(`${label}:${lead.line} [${lead.id}] ${lead.message}`);
+    if (leads.length > MAX_LEADS) {
+      warnings.push(`${label}: more than ${MAX_LEADS} candidates; only the first ${MAX_LEADS} are shown. Review this file's changes in the task diff.`);
+    }
   } catch {
     warnings.push(`${label}: not scanned; file unavailable. Review the task diff explicitly.`);
   } finally {

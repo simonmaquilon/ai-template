@@ -8,13 +8,57 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "excludedCommands": ["node .scripts/run-checks.mjs*", "node .scripts/browser.mjs*"],
+    "excludedCommands": [
+      "node .scripts/run-checks.mjs*",
+      "node .scripts/browser.mjs*",
+      "gh repo view*",
+      "gh repo list*",
+      "gh pr view*",
+      "gh pr list*",
+      "gh pr diff*",
+      "gh pr checks*",
+      "gh run list*",
+      "gh run view*",
+      "gh run watch*",
+      "gh workflow list*",
+      "gh workflow view*",
+      "gh issue view*",
+      "gh issue list*"
+    ],
     "network": {
       "allowedDomains": ["*"],
       "allowLocalBinding": true
     }
   },
   "permissions": {
+    "allow": [
+      "Bash(gh repo view*)",
+      "Bash(gh repo list*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh run list*)",
+      "Bash(gh run view*)",
+      "Bash(gh run watch*)",
+      "Bash(gh workflow list*)",
+      "Bash(gh workflow view*)",
+      "Bash(gh issue view*)",
+      "Bash(gh issue list*)",
+      "PowerShell(gh repo view*)",
+      "PowerShell(gh repo list*)",
+      "PowerShell(gh pr view*)",
+      "PowerShell(gh pr list*)",
+      "PowerShell(gh pr diff*)",
+      "PowerShell(gh pr checks*)",
+      "PowerShell(gh run list*)",
+      "PowerShell(gh run view*)",
+      "PowerShell(gh run watch*)",
+      "PowerShell(gh workflow list*)",
+      "PowerShell(gh workflow view*)",
+      "PowerShell(gh issue view*)",
+      "PowerShell(gh issue list*)"
+    ],
     "deny": [
       "Bash(sudo *)",
       "Bash(su *)",
@@ -43,7 +87,24 @@
       "Bash(gh pr merge*)",
       "Bash(gh pr close*)",
       "Bash(gh release *)",
-      "Bash(gh repo *)",
+      "Bash(gh repo create*)",
+      "Bash(gh repo delete*)",
+      "Bash(gh repo edit*)",
+      "Bash(gh repo rename*)",
+      "Bash(gh repo archive*)",
+      "Bash(gh repo unarchive*)",
+      "Bash(gh repo fork*)",
+      "Bash(gh repo sync*)",
+      "Bash(gh repo deploy-key*)",
+      "Bash(gh repo autolink*)",
+      "Bash(gh issue delete*)",
+      "Bash(gh issue transfer*)",
+      "Bash(gh run delete*)",
+      "Bash(gh cache delete*)",
+      "Bash(gh label delete*)",
+      "Bash(gh gist delete*)",
+      "Bash(gh variable delete*)",
+      "Bash(gh * --web*)",
       "Bash(gh workflow run*)",
       "Bash(gh secret *)",
       "Bash(gh api *)",
@@ -54,7 +115,24 @@
       "PowerShell(gh pr merge*)",
       "PowerShell(gh pr close*)",
       "PowerShell(gh release *)",
-      "PowerShell(gh repo *)",
+      "PowerShell(gh repo create*)",
+      "PowerShell(gh repo delete*)",
+      "PowerShell(gh repo edit*)",
+      "PowerShell(gh repo rename*)",
+      "PowerShell(gh repo archive*)",
+      "PowerShell(gh repo unarchive*)",
+      "PowerShell(gh repo fork*)",
+      "PowerShell(gh repo sync*)",
+      "PowerShell(gh repo deploy-key*)",
+      "PowerShell(gh repo autolink*)",
+      "PowerShell(gh issue delete*)",
+      "PowerShell(gh issue transfer*)",
+      "PowerShell(gh run delete*)",
+      "PowerShell(gh cache delete*)",
+      "PowerShell(gh label delete*)",
+      "PowerShell(gh gist delete*)",
+      "PowerShell(gh variable delete*)",
+      "PowerShell(gh * --web*)",
       "PowerShell(gh workflow run*)",
       "PowerShell(gh secret *)",
       "PowerShell(gh api *)",
@@ -71,19 +149,10 @@
             "type": "command",
             "command": "node",
             "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging.mjs",
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-bulk-staging.mjs",
               "--hook"
             ],
             "statusMessage": "Checking explicit Git staging"
-          },
-          {
-            "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
-              "--before"
-            ],
-            "statusMessage": "Recording staging before command"
           }
         ]
       }
@@ -127,7 +196,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/sync-stack.mjs",
+              "${CLAUDE_PROJECT_DIR}/.scripts/update-stack-doc.mjs",
               "--hook"
             ],
             "statusMessage": "Syncing .docs/stack.md"
@@ -146,7 +215,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/remind-routing.mjs"
+              "${CLAUDE_PROJECT_DIR}/.scripts/remind-instructions.mjs"
             ],
             "statusMessage": "Reminding instruction routing"
           }
@@ -165,20 +234,6 @@
               "--hook"
             ],
             "statusMessage": "Checking edited file lengths"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
-              "--after"
-            ],
-            "statusMessage": "Checking staging after command"
           }
         ]
       },
@@ -216,37 +271,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/sync-stack.mjs",
-              "--hook"
-            ],
-            "statusMessage": "Syncing .docs/stack.md"
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/check-staging-effect.mjs",
-              "--after"
-            ],
-            "statusMessage": "Checking staging after failed command"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/.scripts/sync-stack.mjs",
+              "${CLAUDE_PROJECT_DIR}/.scripts/update-stack-doc.mjs",
               "--hook"
             ],
             "statusMessage": "Syncing .docs/stack.md"
@@ -273,7 +298,7 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true
   },
-  "model": "claude-opus-5-5",
+  "model": "opus",
   "effortLevel": "xhigh",
   "outputStyle": "Concise",
   "viewMode": "focus",

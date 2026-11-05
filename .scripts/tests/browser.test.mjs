@@ -132,8 +132,9 @@ test('browser runs nothing when its arguments or the CLI configuration could tak
   assert.throws(() => browser.npmCalls(), 'npm never ran');
 });
 
+// claude-permissions.test.mjs keeps the gh exclusions to read-only commands.
 test('the Claude Code sandbox exempts the browser script and nothing broader', () => {
   const excluded = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8')).sandbox.excludedCommands;
   assert.ok(excluded.includes('node .scripts/browser.mjs*'));
-  assert.ok(excluded.every((pattern) => pattern.startsWith('node .scripts/')), excluded.join(', '));
+  assert.ok(excluded.every((pattern) => pattern.startsWith('node .scripts/') || pattern.startsWith('gh ')), excluded.join(', '));
 });

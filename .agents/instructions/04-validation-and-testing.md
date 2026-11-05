@@ -8,6 +8,7 @@ Read before validating or testing a normal or risk change, before debugging or r
 - When no supported check covers a change, perform the closest runtime or manual verification and report it as such.
 - Validate documentation and instructions with the repository's link, cited-path, structure, and syntax checks.
 - Resolve the error-level language-server diagnostics a change introduces unless the server cannot use the project's language version; diagnostics add to the configured checks and never replace them.
+- Run a command the client settings exempt from the sandbox alone, in the exact form its exemption declares, before treating it as blocked.
 - A command the environment blocked never ran: name the restriction and the coverage it left open, and propose a durable sandbox exemption instead of working around it.
 - Add automated tests for every new, changed, or fixed executable behavior when the project has a compatible test harness, writing each before the implementation and seeing it fail for the expected reason; a test for preserved behavior passes before and after.
 - Without a compatible harness, add no testing infrastructure without approval: verify by the closest means, report the gap, and ask when automated coverage is material to acceptance.

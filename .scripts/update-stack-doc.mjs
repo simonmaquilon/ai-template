@@ -3,8 +3,10 @@
 // <!-- /stack:generated <id> --> from the files that pin their facts, keeping
 // the Notes column of every row whose first cell still exists. Everything
 // outside the markers is left as written (06-dependencies-and-stack.md).
-//   node .scripts/sync-stack.mjs          rewrite .docs/stack.md and say what changed
-//   node .scripts/sync-stack.mjs --hook   the same, reporting as an agent hook
+//   node .scripts/update-stack-doc.mjs          rewrite .docs/stack.md and say what changed
+//   node .scripts/update-stack-doc.mjs --hook   the same, reporting as an agent hook
+//   node .scripts/update-stack-doc.mjs --check  write nothing; name the blocks that are out of date or cannot be
+//                                               synced and exit 1, or exit 0 when every block is current
 // It writes and reports nothing when .docs/stack.md is already up to date, and a
 // block whose markers or sources are unusable stays as it is.
 
@@ -63,7 +65,7 @@ function blocks(text) {
   return { found, failed };
 }
 
-function sync() {
+function sync(write) {
   const path = join(ROOT, '.docs', 'stack.md');
   if (!existsSync(path) || !lstatSync(path).isFile()) return { changed: [], failed: [] };
   const before = readFileSync(path, 'utf8');
@@ -86,16 +88,20 @@ function sync() {
     last = stop;
   }
   after += before.slice(last);
-  if (after !== before) writeFileSync(path, after);
+  if (write && after !== before) writeFileSync(path, after);
   return { changed: [...changed], failed: [...new Set(failed)] };
 }
 
 const hook = process.argv.includes('--hook');
+const check = process.argv.includes('--check');
 const input = hook ? await readHookInput() : {};
 const lines = [];
 try {
-  const { changed, failed } = sync();
-  if (changed.length > 0) lines.push(`.docs/stack.md synced (${RULE}): ${changed.join(', ')}. Review the change; only the Notes columns are edited by hand.`);
+  const { changed, failed } = sync(!check);
+  if (changed.length > 0) {
+    lines.push(check ? `.docs/stack.md blocks out of date (${RULE}): ${changed.join(', ')}. Run node .scripts/update-stack-doc.mjs to regenerate them.`
+      : `.docs/stack.md synced (${RULE}): ${changed.join(', ')}. Review the change; only the Notes columns are edited by hand.`);
+  }
   if (failed.length > 0) lines.push(`.docs/stack.md blocks not synced (${RULE}): ${failed.join(', ')}; check their markers and sources.`);
 } catch (error) {
   if (!hook) throw error;
@@ -103,10 +109,11 @@ try {
 }
 if (lines.length === 0) process.exit(0);
 const message = lines.join('\n');
-// Claude Code fires PostToolUseFailure after a failed command, with the same
-// JSON contract under its own event name; both reach the model only as JSON.
-if (hook && ['PostToolUse', 'PostToolUseFailure'].includes(input.hook_event_name)) {
+// PostToolUse output reaches the model only as JSON.
+if (hook && input.hook_event_name === 'PostToolUse') {
   console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: input.hook_event_name, additionalContext: message } }));
 } else {
   console.log(message);
 }
+// With --check, anything reported means the document is not current.
+if (check) process.exitCode = 1;

@@ -15,9 +15,9 @@ const ROUTING = [
 ].join('\n');
 
 for (const client of ['claude', 'codex']) {
-  const hook = () => hookFor(client, 'UserPromptSubmit', 'remind-routing.mjs');
+  const hook = () => hookFor(client, 'UserPromptSubmit', 'remind-instructions.mjs');
 
-  test(`${client}: the routing hook lists only the path of each module on every turn`, (t) => {
+  test(`${client}: the instruction reminder lists only the path of each module on every turn`, (t) => {
     const repo = makeRepo(t);
     repo.write('AGENTS.md', ROUTING);
     repo.write('sub/keep.txt', 'kept\n');
@@ -26,7 +26,7 @@ for (const client of ['claude', 'codex']) {
     const paths = turn();
     assert.equal(paths.status, 0, paths.stderr);
     assert.equal(paths.stderr, '');
-    assert.match(paths.stdout, /^Instruction routing \(AGENTS\.md\): /);
+    assert.match(paths.stdout, /^Instruction routing \(AGENTS\.md\): apply its core rules on every turn; before acting, /);
     assert.match(paths.stdout, /^\.agents\/instructions\/05-layout\.md$/m);
     assert.match(paths.stdout, /^\.agents\/instructions\/06-commands\.md$/m);
     assert.doesNotMatch(paths.stdout, /when moving code|before running or recommending/);
@@ -36,7 +36,7 @@ for (const client of ['claude', 'codex']) {
     assert.equal(existsSync(join(repo.dir, '.temp')), false);
   });
 
-  test(`${client}: the routing hook prints nothing without routing entries`, (t) => {
+  test(`${client}: the instruction reminder prints nothing without routing entries`, (t) => {
     const repo = makeRepo(t);
     assert.equal(runClientHook(client, hook(), repo).stdout, '');
     repo.write('AGENTS.md', '# AGENTS.md\n\nNo routing table yet.\n');
@@ -46,6 +46,6 @@ for (const client of ['claude', 'codex']) {
   });
 
   test(`${client}: no hook runs when a session starts`, () => {
-    assert.throws(() => hookFor(client, 'SessionStart', 'remind-routing.mjs'));
+    assert.throws(() => hookFor(client, 'SessionStart', 'remind-instructions.mjs'));
   });
 }

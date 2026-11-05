@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { isBulk } from '../bulk-staging.mjs';
 import { ROOT, WINDOWS, hookFor, makeRepo, run, runClientHook } from './support.mjs';
 
 const BLOCKED = [
@@ -27,7 +28,7 @@ const BLOCKED = [
 // Blocked where a POSIX shell may run the command; PowerShell alone reads the backquote as an escape.
 const POSIX_BLOCKED = ['git commit -m "Fix `git add -A` handling"'];
 const ALLOWED = [
-  'git add README.md', 'git add -- .scripts/check-staging.mjs', 'git commit -m "explicit"', 'git status',
+  'git add README.md', 'git add -- .scripts/check-bulk-staging.mjs', 'git commit -m "explicit"', 'git status',
   'git -C docs add README.md', 'git -C docs commit -m "explicit"',
   'git add ./src/app.ts', 'git add .gitignore', 'git add :/src/app.ts', 'git commit -m "fix -a flag"',
   "git commit -m 'explain git add -A and git add .'", 'git commit -m all',
@@ -48,44 +49,54 @@ const POWERSHELL = [
   [`git add -- @(${Array.from({ length: 150 }, (_, i) => `'src/components/card-${i}.vue'`).join(',')})`, 0], ["git add @('src/a.ts','src/b.ts')", 0], ['git commit -m "msg $(git add -A)"', 2],
 ];
 
+// The decision is read in process, with the POSIX reading and with both readings the Codex hook passes on Windows
+// through --powershell; the hook runs the same code whatever the command, so launching it for each case adds nothing
+// that the launches of each client below do not cover. A command that is bulk read as POSIX stays bulk with both.
+test('the staging guard rejects bulk staging and allows explicit paths', (t) => {
+  const repo = makeRepo(t);
+  repo.write('src/a.ts', 'a\n');
+  const bulk = (command, readings = [false]) => isBulk(command, { readings, cwd: repo.dir });
+  for (const command of [...BLOCKED, ...POSIX_BLOCKED]) assert.equal(bulk(command), true, command);
+  for (const command of ALLOWED) {
+    assert.equal(bulk(command), false, command);
+    assert.equal(bulk(command, [true, false]), false, `${command} (--powershell)`);
+  }
+  // A symlink to a directory is one file to git, as .claude/skills is.
+  if (!WINDOWS) {
+    symlinkSync('src', join(repo.dir, 'linked'));
+    assert.equal(bulk('git add linked'), false);
+  }
+});
+
 for (const client of ['claude', 'codex']) {
-  test(`${client}: the staging guard rejects bulk staging and allows explicit paths`, (t) => {
+  test(`${client}: the staging guard blocks bulk staging citing its rule and lets explicit paths through`, (t) => {
     const repo = makeRepo(t);
-    repo.write('src/a.ts', 'a\n');
-    const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
-    for (const command of [...BLOCKED, ...POSIX_BLOCKED]) {
-      const result = runClientHook(client, hook, repo, { input: { tool_input: { command } } });
-      assert.equal(result.status, 2, `${command}: ${result.stderr}`);
-      assert.match(result.stderr, /12-version-control\.md/);
-    }
-    for (const command of ALLOWED) {
-      const result = runClientHook(client, hook, repo, { input: { tool_input: { command } } });
-      assert.equal(result.status, 0, `${command}: ${result.stderr}`);
-    }
-    // A symlink to a directory is one file to git, as .claude/skills is.
-    if (!WINDOWS) {
-      symlinkSync('src', join(repo.dir, 'linked'));
-      assert.equal(runClientHook(client, hook, repo, { input: { tool_input: { command: 'git add linked' } } }).status, 0);
-    }
+    const hook = hookFor(client, 'PreToolUse', 'check-bulk-staging.mjs');
+    const blocked = runClientHook(client, hook, repo, { input: { tool_input: { command: 'git add -A' } } });
+    assert.equal(blocked.status, 2, blocked.stderr);
+    assert.match(blocked.stderr, /12-version-control\.md/);
+    const allowed = runClientHook(client, hook, repo, { input: { tool_input: { command: 'git add README.md' } } });
+    assert.equal(allowed.status, 0, allowed.stderr);
+    assert.equal(allowed.stderr, '');
   });
 
   test(`${client}: the staging guard reads an argument list and runs from a subdirectory`, (t) => {
     const repo = makeRepo(t);
     mkdirSync(join(repo.dir, 'docs'));
-    const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
+    const hook = hookFor(client, 'PreToolUse', 'check-bulk-staging.mjs');
     const input = { tool_input: { command: ['git', 'add', '-A'] } };
     assert.equal(runClientHook(client, hook, repo, { cwd: join(repo.dir, 'docs'), input }).status, 2);
     const quoted = { tool_input: { command: ['bash', '-lc', `git commit -m "block sh -c 'git add .'"`] } };
     assert.equal(runClientHook(client, hook, repo, { input: quoted }).status, 0);
     assert.equal(runClientHook(client, hook, repo, { input: {} }).status, 0);
-    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook'], { input: 'null' }).status, 0);
+    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-bulk-staging.mjs'), '--hook'], { input: 'null' }).status, 0);
     const nested = { tool_input: { command: `${'echo "$('.repeat(4000)}x${')"'.repeat(4000)}` } };
-    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook'], { input: JSON.stringify(nested) }).status, 2);
+    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-bulk-staging.mjs'), '--hook'], { input: JSON.stringify(nested) }).status, 2);
   });
 
   test(`${client}: the staging guard reads PowerShell quoting when the client names that tool`, (t) => {
     const repo = makeRepo(t);
-    const hook = hookFor(client, 'PreToolUse', 'check-staging.mjs');
+    const hook = hookFor(client, 'PreToolUse', 'check-bulk-staging.mjs');
     for (const [command, status] of POWERSHELL) {
       const result = runClientHook(client, hook, repo, { input: { tool_name: 'PowerShell', tool_input: { command } } });
       assert.equal(result.status, status, `${command}: ${result.stderr}`);
@@ -97,18 +108,18 @@ for (const client of ['claude', 'codex']) {
 
 test('claude: the staging guard matches both of its shell tools', () => {
   const settings = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8'));
-  const group = settings.hooks.PreToolUse.find((candidate) => JSON.stringify(candidate).includes('check-staging.mjs'));
+  const group = settings.hooks.PreToolUse.find((candidate) => JSON.stringify(candidate).includes('check-bulk-staging.mjs'));
   assert.deepEqual(group.matcher.split('|').sort(), ['Bash', 'PowerShell']);
 });
 
 test('codex: on Windows the staging guard reads the Bash tool command both as PowerShell and as POSIX', (t) => {
   const repo = makeRepo(t);
-  const hook = hookFor('codex', 'PreToolUse', 'check-staging.mjs');
+  const hook = hookFor('codex', 'PreToolUse', 'check-bulk-staging.mjs');
   assert.match(hook.commandWindows, /--powershell/);
   assert.doesNotMatch(hook.command, /--powershell/);
   for (const [command, status] of [...POWERSHELL, ...POSIX_BLOCKED.map((command) => [command, 2])]) {
     const input = JSON.stringify({ tool_name: 'Bash', tool_input: { command } });
-    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-staging.mjs'), '--hook', '--powershell'], { input }).status, status, command);
+    assert.equal(run(process.execPath, [join(ROOT, '.scripts', 'check-bulk-staging.mjs'), '--hook', '--powershell'], { input }).status, status, command);
     if (WINDOWS) assert.equal(runClientHook('codex', hook, repo, { input: JSON.parse(input) }).status, status, command);
   }
 });

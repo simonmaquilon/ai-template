@@ -21,7 +21,7 @@ for (const client of ['claude', 'codex']) {
     assert.match(result.context, /08-security-and-data\.md/);
     assert.match(result.context, /not confirmed vulnerabilities/);
     assert.match(result.context, /src\/app\.js.*:1.*html-injection/);
-    assert.match(result.context, /:2.*dynamic-evaluation/);
+    assert.match(result.context, /:2.*code-eval/);
     assert.match(result.context, /:3.*credential-literal/);
     assert.doesNotMatch(result.stdout, new RegExp(`${fake}|request\\.body`));
     assert.equal(result.stderr, '');
@@ -35,6 +35,31 @@ for (const client of ['claude', 'codex']) {
     assert.equal(result.stdout, '');
   });
 
+  test(`${client}: security guidance reports only the lines an edit changed, and every line of a new file`, (t) => {
+    const repo = makeRepo(t);
+    repo.write('old.js', 'eval(oldInput);\nconst ok = 1;\n');
+    // Git diffs a -diff file as binary, with no line numbers, unless asked for text.
+    repo.write('.gitattributes', 'old.js -diff\n');
+    assert.equal(repo.git('add', '--', '.gitignore', '.gitattributes', 'old.js').status, 0);
+    assert.equal(repo.git('commit', '-q', '-m', 'initial').status, 0);
+    repo.git('config', 'diff.interHunkContext', '10');
+    repo.write('old.js', 'eval(oldInput);\nconst ok = 1;\ndocument.write(html);\n');
+    const changed = scan(repo, { file_path: 'old.js' });
+    assert.match(changed.context, /"old\.js":3 \[CWE-79 html-injection\] .*\(OWASP A05:2025 Injection\)/);
+    assert.doesNotMatch(changed.context, /:1 \[/);
+    const aws = `AKIA${'B'.repeat(16)}`;
+    repo.write('new.js', `eval(a);\nconst id = "${aws}";\nconst pem = "-----BEGIN PRIVATE KEY-----";\n`);
+    const fresh = scan(repo, { file_path: 'new.js' });
+    assert.match(fresh.context, /"new\.js":1 \[CWE-95 code-eval\]/);
+    assert.match(fresh.context, /"new\.js":2 \[CWE-798 credential-literal\]/);
+    assert.match(fresh.context, /"new\.js":3 \[CWE-321 private-key\]/);
+    assert.doesNotMatch(fresh.stdout, new RegExp(`${aws}|BEGIN`));
+    repo.write('many.js', 'eval(a);\n'.repeat(21));
+    assert.match(scan(repo, { file_path: 'many.js' }).context, /"many\.js": more than 20 candidates; only the first 20 are shown/);
+    repo.write('twenty.js', 'eval(a);\n'.repeat(20));
+    assert.doesNotMatch(scan(repo, { file_path: 'twenty.js' }).context, /more than 20/);
+  });
+
   test(`${client}: security guidance resolves paths below the root and scans patch paths only once`, (t) => {
     const repo = makeRepo(t);
     repo.write('src/a.js', 'new Function(input);\n');
@@ -42,9 +67,9 @@ for (const client of ['claude', 'codex']) {
     const patch = '*** Begin Patch\n*** Update File: a.js\n*** Update File: b.js\n*** Update File: a.js\n*** End Patch';
     const result = scan(repo, { command: patch }, join(repo.dir, 'src'));
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.context, /dynamic-construction/);
-    assert.match(result.context, /disabled-tls-verification/);
-    assert.equal(result.context.match(/dynamic-construction/g).length, 1);
+    assert.match(result.context, /code-eval/);
+    assert.match(result.context, /tls-verification-off/);
+    assert.equal(result.context.match(/code-eval/g).length, 1);
   });
 
   test(`${client}: security guidance excludes ignored, vendored, generated and external paths`, (t) => {
@@ -100,7 +125,7 @@ for (const client of ['claude', 'codex']) {
     const large = scan(repo, { file_path: 'large.js' });
     assert.equal(large.status, 0, large.stderr);
     assert.match(large.context, /not scanned.*size limit/);
-    assert.doesNotMatch(large.stdout, /dynamic-evaluation/);
+    assert.doesNotMatch(large.stdout, /code-eval/);
     assert.equal(scan(repo, { file_path: 'binary.js' }).stdout, '');
   });
 
@@ -110,8 +135,8 @@ for (const client of ['claude', 'codex']) {
     repo.write('unsafe.py', 'pickle.loads(payload)\nyaml.load(payload)\n');
     const js = scan(repo, { file_path: 'unsafe.js' });
     assert.equal(js.status, 0, js.stderr);
-    assert.match(js.context, /interpolated-query/);
-    assert.match(js.context, /shell-input/);
+    assert.match(js.context, /sql-interpolation/);
+    assert.match(js.context, /command-shell/);
     const py = scan(repo, { file_path: 'unsafe.py' });
     assert.equal(py.status, 0, py.stderr);
     assert.match(py.context, /unsafe-deserialization/);

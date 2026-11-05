@@ -25,13 +25,13 @@ const SOURCES = {
 
 export function fixture(t) {
   mkdirSync(join(ROOT, '.temp'), { recursive: true });
-  const dir = mkdtempSync(join(ROOT, '.temp', 'sync-stack-'));
+  const dir = mkdtempSync(join(ROOT, '.temp', 'update-stack-doc-'));
   t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 5 }));
   const write = (path, content) => {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), content);
   };
-  for (const name of ['sync-stack.mjs', 'stack-sources.mjs', 'hook-support.mjs']) {
+  for (const name of ['update-stack-doc.mjs', 'stack-sources.mjs', 'hook-support.mjs']) {
     write(join('.scripts', name), readFileSync(join(ROOT, '.scripts', name)));
   }
   for (const [path, content] of Object.entries(SOURCES)) write(path, content);
@@ -40,7 +40,7 @@ export function fixture(t) {
     dir,
     write,
     stack: () => readFileSync(join(dir, '.docs', 'stack.md'), 'utf8'),
-    sync: (input) => run(process.execPath, [join(dir, '.scripts', 'sync-stack.mjs'), ...(input ? ['--hook'] : [])],
+    sync: (input) => run(process.execPath, [join(dir, '.scripts', 'update-stack-doc.mjs'), ...(input ? ['--hook'] : [])],
       { cwd: dir, input: input && JSON.stringify(input) }),
   };
 }
