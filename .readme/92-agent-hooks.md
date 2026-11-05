@@ -10,7 +10,7 @@ Todos viven en `.claude/settings.json` y en `.codex/hooks.json`. Cada handler de
 | --- | --- | --- | --- |
 | Rechaza el `git add` y el `git commit` en bloque | `PreToolUse`, sobre la herramienta de shell | `12-version-control.md` | `.scripts/check-bulk-staging.mjs` |
 | Recuerda en cada mensaje aplicar las reglas de `AGENTS.md` y las rutas de los módulos de instrucciones enrutados | `UserPromptSubmit` | `AGENTS.md` y su tabla de enrutado | `.scripts/remind-instructions.mjs` |
-| Elimina directorios vacíos no ignorados y las carpetas `.claude/.cc-writes` vacías que Claude Code deja bajo la raíz | `UserPromptSubmit` | `03-code-authoring.md` | `.scripts/check-empty-dirs.mjs` |
+| Elimina directorios vacíos no ignorados y las carpetas `.cc-writes` vacías que Claude Code deja dentro de `.claude` bajo la raíz | `UserPromptSubmit` | `03-code-authoring.md` | `.scripts/check-empty-dirs.mjs` |
 | Avisa de enlaces y rutas citadas rotos en la documentación | `UserPromptSubmit` | `04-validation-and-testing.md` | `.scripts/check-doc-links.mjs` |
 | Avisa de módulos de instrucciones sin entrada de enrutado en `AGENTS.md`, que superan su límite de bytes, con reglas partidas en varias líneas o con prefijo repetido o retirado, de un `AGENTS.md` que supera el suyo, y de documentos de `.readme/` con prefijo repetido o retirado; los retirados antes de adoptar la plantilla no cuentan, como explica [Adopción de versiones de la plantilla](96-template-adoption.md) | `UserPromptSubmit` | `01-meta-guidelines.md` y `10-documents.md` | `.scripts/check-instructions.mjs` |
 | Avisa de symlinks versionados que el checkout dejó como archivos | `UserPromptSubmit` | `13-agent-tooling.md` | `.scripts/check-symlinks.mjs` |
