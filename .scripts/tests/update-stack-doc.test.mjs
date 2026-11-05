@@ -20,7 +20,7 @@ test('update-stack-doc regenerates only the marked blocks from their sources', (
   for (const row of ['| .nvmrc | node 24 |', '| package.json engines.node | >=22 |', '| pnpm | 9.1.0 | package.json packageManager |',
     '| vue | ^3.5.0 | 3.5.13 | production | MIT |', '| vitest | ^3.0.0 | not installed | development | unknown |',
     '| nuxt | antfu/skills | skills-lock.json |', '| own | this repository | none |', '| docs | yes | yes | `https://example.invalid/mcp` |',
-    '| local | no | yes | server |', '| typescript-lsp | official | yes |',
+    '| local | no | yes | `server` |', '| typescript-lsp | official | yes |',
     '| ci.yml | ubuntu-24.04, windows-2025 | 24 | actions/checkout v7.0.1, actions/setup-node v4 |']) {
     assert.ok(stack.includes(row), row);
   }
@@ -56,21 +56,30 @@ test('update-stack-doc reports as an agent hook only when it changed something',
   assert.doesNotMatch(postToolContext(broken), /not json|Unexpected/);
 });
 
-test('update-stack-doc renders a URL endpoint in code so that it is not a bare URL, and a command as written', (t) => {
+test('update-stack-doc renders a URL endpoint and a command in code so that neither is a bare URL', (t) => {
   const repo = fixture(t);
   repo.sync();
   const endpoints = repo.stack().split('\n').filter((line) => line.startsWith('| docs |') || line.startsWith('| local |'));
-  assert.deepEqual(endpoints, ['| docs | yes | yes | `https://example.invalid/mcp` | |', '| local | no | yes | server | |']);
+  assert.deepEqual(endpoints, ['| docs | yes | yes | `https://example.invalid/mcp` | |', '| local | no | yes | `server` | |']);
+});
+
+test('update-stack-doc shows the command of a server literally, in code, when its name holds Markdown or HTML', (t) => {
+  const repo = fixture(t);
+  const commands = { a: 'my_*server*_bin --token SECRET', b: '<b>x</b>' };
+  repo.write('.mcp.json', JSON.stringify({ mcpServers: Object.fromEntries(Object.entries(commands).map(([name, command]) => [name, { command }])) }));
+  repo.sync();
+  const rows = repo.stack().split('\n').filter((line) => /^\| [ab] \|/.test(line));
+  assert.deepEqual(rows, ['| a | yes | no | `my_*server*_bin` | |', '| b | yes | no | `<b>x</b>` | |']);
 });
 
 test('update-stack-doc fences a URL endpoint with a longer backtick run than it holds, padded when it ends in one', (t) => {
   const repo = fixture(t);
-  const urls = { a: 'https://exa`mple.invalid/mcp', b: 'https://a`www.example.com/mcp', c: 'custom://host`', d: 'https://exa``mple.invalid/mcp' };
+  const urls = { a: 'https://exa`mple.invalid/mcp', b: 'https://a`www.example.com/mcp', c: 'custom://host`', d: 'https://exa``mple.invalid/mcp', e: 'https://example.invalid/a|b' };
   repo.write('.mcp.json', JSON.stringify({ mcpServers: Object.fromEntries(Object.entries(urls).map(([name, url]) => [name, { url }])) }));
   repo.sync();
-  const rows = repo.stack().split('\n').filter((line) => /^\| [a-d] \|/.test(line));
+  const rows = repo.stack().split('\n').filter((line) => /^\| [a-e] \|/.test(line));
   assert.deepEqual(rows, ['| a | yes | no | ``https://exa`mple.invalid/mcp`` | |', '| b | yes | no | ``https://a`www.example.com/mcp`` | |',
-    '| c | yes | no | `` custom://host` `` | |', '| d | yes | no | ```https://exa``mple.invalid/mcp``` | |']);
+    '| c | yes | no | `` custom://host` `` | |', '| d | yes | no | ```https://exa``mple.invalid/mcp``` | |', '| e | yes | no | `https://example.invalid/a\\|b` | |']);
   assert.deepEqual(markdownWarnings(repo.stack()).filter((warning) => warning.id === 'MD034'), []);
 });
 

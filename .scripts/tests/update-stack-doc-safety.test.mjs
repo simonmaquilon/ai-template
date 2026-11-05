@@ -14,7 +14,7 @@ test('update-stack-doc never copies credentials, queries, fragments, hashes, or 
   repo.write('.github/workflows/ci.yml', `steps:\n  - uses: a/b@${'f'.repeat(64)}\n  - uses: c/d@abcdef1234 # pinned SECRET\n`);
   repo.sync();
   const stack = repo.stack();
-  for (const row of ['| a | yes | no | `https://mcp.example/mcp` |', '| b | yes | no | unknown |', '| s | https://github.com/o/r.git | skills-lock.json |',
+  for (const row of ['| a | yes | no | `https://mcp.example/mcp` |', '| b | yes | no | `unknown` |', '| s | https://github.com/o/r.git | skills-lock.json |',
     '| g | https://github.com/o/r.git |', '| h | github:o/r |', 'a/b (pinned by commit), c/d (pinned by commit)']) {
     assert.ok(stack.includes(row), row);
   }

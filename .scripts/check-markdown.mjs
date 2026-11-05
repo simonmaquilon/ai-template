@@ -18,6 +18,10 @@ import { markdownWarnings } from './markdown-rules.mjs';
 const MAX_BYTES = 1024 * 1024;
 const MAX_LINES = 20;
 const PREFIX = 'Markdown structure (10-documents.md): ';
+// A path as printed: control characters, line separators and characters that change text direction escaped, so that a
+// file name cannot split, forge or reorder a report line.
+const shown = (path) => JSON.stringify(toPosix(path)).slice(1, -1)
+  .replace(/[\p{Cc}\p{Bidi_Control}\u2028\u2029]/gu, (char) => `\\u${char.codePointAt(0).toString(16).padStart(4, '0')}`);
 const format = (path, warning) => `${path}:${warning.line} [${warning.id}] ${warning.message}`;
 
 if (!process.argv.includes('--hook')) {
@@ -28,16 +32,17 @@ if (!process.argv.includes('--hook')) {
   }
   let warned = false, unreadable = false;
   for (const file of files.length === 1 && files[0] === '--all' ? repositoryMarkdown() : files) {
+    const label = shown(file);
     let text;
     try {
       text = readFileSync(file, 'utf8');
     } catch (error) {
-      console.error(`${file}: not checked; ${error.code ?? error.message}`);
+      console.error(`${label}: not checked; ${error.code ?? error.message}`);
       unreadable = true;
       continue;
     }
     for (const warning of markdownWarnings(text)) {
-      console.log(format(toPosix(file), warning));
+      console.log(format(label, warning));
       warned = true;
     }
   }
@@ -118,7 +123,7 @@ for (const path of skipped) candidates.delete(path);
 const untracked = new Set(others.split('\0').filter(Boolean));
 const report = [];
 for (const [local, full] of candidates) {
-  const label = JSON.stringify(local).slice(1, -1);
+  const label = shown(local);
   // A path that realpath could not resolve is null, which openSync rejects.
   const bytes = readCapped(full);
   if (typeof bytes === 'string') report.push(`${label}: not checked; ${bytes}.`);

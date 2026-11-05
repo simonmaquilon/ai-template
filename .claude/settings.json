@@ -302,5 +302,11 @@
   "effortLevel": "xhigh",
   "outputStyle": "Concise",
   "viewMode": "focus",
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR}/.scripts/status-line.mjs\"",
+    "refreshInterval": 60
+  },
+  "idleCompaction": true
 }
