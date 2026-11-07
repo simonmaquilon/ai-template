@@ -15,15 +15,15 @@
 // any Stop hook already continued, or a directory outside git or in another
 // repository, passes silently.
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
 import { exemptPaths, isSource } from './source-files.mjs';
+import { markTurnStart } from './turn-marker.mjs';
 
 const LIMIT = 150;
 const PATCH_HEADER = /^\*\*\* (Add File|Update File|Move to): (.+)$/;
 const MARKERS = '.temp/check-file-length';
-const MARKER_LIFETIME = 7 * 24 * 60 * 60 * 1000;
 
 // Paths an edit touched, as [path, previous path] pairs: an edit tool names one
 // file, and a patch names each file it adds, updates, or moves.
@@ -69,16 +69,6 @@ function lineCount(text) {
   return text.endsWith('\n') ? lines - 1 : lines;
 }
 
-// Records when the session's turn began and drops markers of idle sessions.
-function markTurnStart(marker) {
-  mkdirSync(MARKERS, { recursive: true });
-  writeFileSync(marker, String(Date.now()));
-  for (const name of readdirSync(MARKERS)) {
-    const path = join(MARKERS, name);
-    if (Date.now() - statSync(path).mtimeMs > MARKER_LIFETIME) unlinkSync(path);
-  }
-}
-
 // Real location of a path, with the case the file system stores; a file that
 // does not exist yet keeps its name under its real directory.
 function realPath(full) {
@@ -107,7 +97,7 @@ const session = String(input.session_id ?? '').replace(/[^\w-]/g, '_');
 const marker = session ? join(MARKERS, session) : null;
 if (process.argv.includes('--turn-start')) {
   try {
-    if (marker) markTurnStart(marker);
+    if (marker) markTurnStart(root, MARKERS, session);
   } catch {}
   process.exit(0);
 }

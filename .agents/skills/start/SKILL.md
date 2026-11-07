@@ -68,5 +68,5 @@ In the user's language, one line per item: cleanup, remote, each document, defer
 ## Client bindings
 
 - Invocation: `/start` in Claude Code, `$start` in Codex. Questions are plain chat text in every client.
-- When a client's sandbox blocks a step, such as `git remote add` writing `.git/config` or `skills add` writing `.agents/skills/`, retry that one command through the client's approval or escalation prompt, or give the user the exact command; never widen sandbox settings. A blocked command never ran (`04`).
+- When a client's sandbox blocks a step, such as `git remote add` writing `.git/config`, `skills add` writing `.agents/skills/`, or deleting the template-only files under `.scripts/`, retry that one command through the client's approval or escalation prompt, or give the user the exact command; never widen sandbox settings. A blocked command never ran (`04`).
 - Non-interactive sessions, such as `claude -p` or `codex exec`, only report the progress state.

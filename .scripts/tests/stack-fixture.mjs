@@ -31,7 +31,7 @@ export function fixture(t) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), content);
   };
-  for (const name of ['update-stack-doc.mjs', 'stack-sources.mjs', 'hook-support.mjs']) {
+  for (const name of ['update-stack-doc.mjs', 'stack-sources.mjs', 'hook-support.mjs', 'safe-fs.mjs']) {
     write(join('.scripts', name), readFileSync(join(ROOT, '.scripts', name)));
   }
   for (const [path, content] of Object.entries(SOURCES)) write(path, content);

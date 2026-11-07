@@ -10,10 +10,11 @@
 // It writes and reports nothing when .docs/stack.md is already up to date, and a
 // block whose markers or sources are unusable stays as it is.
 
-import { existsSync, lstatSync, readFileSync, writeFileSync } from 'node:fs';
+import { closeSync, constants, existsSync, lstatSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readHookInput } from './hook-support.mjs';
+import { inFolder, openRegular } from './safe-fs.mjs';
 import * as sources from './stack-sources.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -65,10 +66,24 @@ function blocks(text) {
   return { found, failed };
 }
 
+// A sandboxed command can write .docs/ while this runs outside the sandbox, so the work happens inside the verified
+// folder and reaches stack.md by name without following links (safe-fs.mjs); a link in place of either leaves it as is.
 function sync(write) {
-  const path = join(ROOT, '.docs', 'stack.md');
-  if (!existsSync(path) || !lstatSync(path).isFile()) return { changed: [], failed: [] };
-  const before = readFileSync(path, 'utf8');
+  const unchanged = { changed: [], failed: [] };
+  if (!existsSync(join(ROOT, '.docs', 'stack.md'))) return unchanged;
+  return inFolder(ROOT, '.docs', false, () => syncStack(write)) ?? unchanged;
+}
+
+function syncStack(write) {
+  const path = 'stack.md';
+  if (!lstatSync(path).isFile()) return { changed: [], failed: [] };
+  const input = openRegular(path, constants.O_RDONLY);
+  let before;
+  try {
+    before = readFileSync(input, 'utf8');
+  } finally {
+    closeSync(input);
+  }
   const eol = before.includes('\r\n') ? '\r\n' : '\n';
   const { found, failed } = blocks(before);
   const changed = new Set();
@@ -88,7 +103,14 @@ function sync(write) {
     last = stop;
   }
   after += before.slice(last);
-  if (write && after !== before) writeFileSync(path, after);
+  if (write && after !== before) {
+    const output = openRegular(path, constants.O_WRONLY | constants.O_TRUNC);
+    try {
+      writeFileSync(output, after);
+    } finally {
+      closeSync(output);
+    }
+  }
   return { changed: [...changed], failed: [...new Set(failed)] };
 }
 
