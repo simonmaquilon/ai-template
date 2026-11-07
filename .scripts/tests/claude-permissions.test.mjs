@@ -32,6 +32,10 @@ const CHANGES = [
   'gh release -R x/y delete 1.0.0 --yes', 'gh release --repo=x/y create 1.0.0', 'gh secret set X', 'gh pr merge 1', 'gh pr close 1', 'gh issue delete 1 --yes',
   'gh issue transfer 1 owner/other', 'gh run delete 1', 'gh cache delete key', 'gh label delete bug --yes', 'gh gist delete 1',
   'gh variable delete X',
+  // Options before the command group, or between the group and its subcommand, still reach the subcommand.
+  'gh -R x/y pr merge 1', 'gh --repo=x/y issue delete 1 --yes', 'gh -R x/y release delete 1.0.0 --yes', 'gh pr -R x/y merge 1',
+  'gh pr -R x/y close 1', 'gh issue -R x/y delete 1', 'gh issue -R x/y transfer 1 owner/other', 'gh run -R x/y delete 1',
+  'gh cache -R x/y delete key', 'gh label -R x/y delete bug', 'gh workflow -R x/y run checks.yml', 'gh variable -R x/y delete X',
 ];
 // Read commands that open the browser.
 const WEB = ['gh repo view --web', 'gh pr view 1 --web', 'gh issue list --web', 'gh release view 1.0.0 --web'];
