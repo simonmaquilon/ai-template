@@ -1,6 +1,6 @@
 ---
 name: copilot-opus
-description: Strong-tier agent on Opus at high effort for architecture, reviews, difficult decisions, specialized security, data, or contract work, and independent verification.
+description: Strong-tier agent on Opus at high effort for implementation beyond the standard tier, architecture, reviews, difficult decisions, specialized security, data, or contract design, and independent verification.
 model: opus
 effort: high
 ---

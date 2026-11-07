@@ -1,6 +1,6 @@
 ---
 name: copilot-haiku
-description: Fast-tier agent on Haiku at high effort for exploration, search, and read-only analysis, including independent questions fanned out to parallel subagents; use it proactively.
+description: Fast-tier agent on Haiku at high effort for exploration, search, read-only analysis, and mechanical or fully specified edits whose brief spells out every change, including independent tasks fanned out to parallel subagents; use it proactively.
 model: haiku
 effort: high
 ---

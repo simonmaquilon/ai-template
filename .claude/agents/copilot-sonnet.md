@@ -1,6 +1,6 @@
 ---
 name: copilot-sonnet
-description: Standard-tier agent on Sonnet at high effort for implementation, debugging, refactors, and multi-file changes whose acceptance criteria are already fixed.
+description: Standard-tier agent on Sonnet at high effort for implementation, debugging, and refactors that need judgment, risk changes included, against acceptance criteria already fixed.
 model: sonnet
 effort: high
 ---
