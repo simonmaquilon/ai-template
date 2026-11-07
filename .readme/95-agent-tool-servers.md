@@ -15,9 +15,9 @@ Los clientes de agente pueden conectarse a servidores MCP externos que les añad
 - Expone dos herramientas: `resolve-library-id`, que convierte el nombre de una librería en su identificador de Context7, y `query-docs`, que devuelve documentación y ejemplos para ese identificador.
 - Es un servicio remoto, así que no se puede fijar su versión: el servidor informa la suya al conectarse y puede cambiar sin aviso. `13-agent-tooling.md` pide fijar cada dependencia solo hasta donde su configuración lo permite.
 - No requiere API key; una key gratuita de context7.com solo sube los límites de uso. Si un proyecto la añade, va por el mecanismo de secretos y nunca en la configuración versionada, como exige `AGENTS.md`.
-- La skill `context7-mcp` del [catálogo opcional](90-agent-skills.md#catálogo-opcional), que se instala desde `upstash/context7`, indica cuándo consultar estas dos herramientas y cómo elegir la librería; si está instalada, la cargan los dos clientes, Claude Code a través del symlink `.claude/skills`. El servidor funciona sin ella y sigue declarado aunque no esté instalada. Si declara `allowed-tools` o hooks, es una decisión abierta que se registra en [Skills de agentes](90-agent-skills.md).
+- Al conectarse, el servidor devuelve en el campo `instructions` de MCP cuándo consultarlo, que Claude Code y Codex añaden al contexto del modelo como guía de uso del servidor. Por eso la plantilla no adopta la skill `context7-mcp` que publica `upstash/context7`, que da esa misma indicación.
 
-Se comprobó que, sin API key, el endpoint lista esas dos herramientas y resuelve una consulta de prueba.
+Se comprobó que, sin API key, el endpoint devuelve esas instrucciones, lista esas dos herramientas y resuelve una consulta de prueba.
 
 ### Datos que salen de la máquina
 

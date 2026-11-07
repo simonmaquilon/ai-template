@@ -71,7 +71,6 @@ La plantilla no instala las skills que dependen del stack. Un proyecto instala d
 | `vueuse-functions` | `vueuse/skills` | El proyecto usa VueUse en Vue 3 o Nuxt 3 o posterior. |
 | `frontend-design` | `anthropics/skills` | El proyecto tiene interfaz y necesita criterios de dirección estética y tipografía. |
 | `playwright-cli` | `microsoft/playwright-cli` | El proyecto adopta la verificación en navegador por el agente que registra `.docs/plan.md`, cuyas sesiones lanza el [lanzador del navegador](#lanzador-del-navegador). |
-| `context7-mcp` | `upstash/context7` | El proyecto consulta con el servidor `context7` la documentación de sus librerías, como explica [Servidores de herramientas de agentes](95-agent-tool-servers.md). |
 
 Se instalan con el mismo CLI y el mismo script que el resto de comandos:
 
