@@ -17,7 +17,7 @@
     ".agents/instructions/14-delegation.md": "2a1eef82dfb3f7f7587d22b395e95bc78492e36f",
     ".agents/instructions/15-contracts-and-automation.md": "a066ef7a9b14e48832229d144db323a710f5bf3f",
     ".agents/skills/commit/SKILL.md": "235da3efa1ac721bfa163083386bbd5bbdcb0abd",
-    ".agents/skills/prompt-plan/SKILL.md": "dadb8a0494670ab5b63f808fef2dabb1c34da719",
+    ".agents/skills/prompt-plan/SKILL.md": "7d36f17caa2b30b3d794b02b33fc27cb3fa2f8a6",
     ".agents/skills/prompt-plan/agents/openai.yaml": "5b1f887a9138416870f64ba2fe21602e4a59cfa7",
     ".agents/skills/prompt-plan/references/execution.md": "46f9b34c22eab24d494a5de40520e5299f6af72b",
     ".agents/skills/prompt-plan/references/plan-workspace.md": "277b2952f55c251f7720f92bddaa904e6657e64f",
@@ -60,7 +60,7 @@
     ".agents/skills/security-audit/validate-coverage-ledger.test.cjs": "b1444f57e1b021a61175733b8c356171861c8701",
     ".agents/skills/security-audit/validate-findings.cjs": "2843feceddb7e30bf10d6e4f7bbe6640e4c57799",
     ".agents/skills/security-audit/validate-findings.test.cjs": "8d245b226bbe2fdf28b46b3203b99c2824039d2d",
-    ".agents/skills/start/SKILL.md": "0773c8211d39a5d954a658dcd935fcb895fba1a0",
+    ".agents/skills/start/SKILL.md": "fdaa16d9566cfdef8dd164c19fdc7577bcf8cc43",
     ".agents/skills/start/agents/openai.yaml": "5b1f887a9138416870f64ba2fe21602e4a59cfa7",
     ".agents/skills/start/references/documents.md": "6db869b16e49a7d338bdc932bfe1d72d08c7e950",
     ".agents/skills/start/references/tooling.md": "b2232224702b2b7e0cbc091c882122fe9b1492c4",
@@ -126,7 +126,7 @@
     ".scripts/template-manifest.mjs": "2e80893e0301136c4b468b31ec053f325821d187",
     ".scripts/update-stack-doc.mjs": "a9e7f00b6ffdb41b55a2c268f136a4b0913824d5",
     ".temp/.gitignore": "d6b7ef32c8478a48c3994dcadc86837f4371184d",
-    "AGENTS.md": "fbe4a3fd1a15f1ea2ba4a869e726f905017623d0",
+    "AGENTS.md": "8b29a0aa7192a99ce2600419f7777ccf930548fe",
     "README.md": "ea24df449320b69b231e7d6bf7450972436590be",
     "skills-lock.json": "3fa7efe08f92443265d91e28b31b4df218cd1265"
   }
