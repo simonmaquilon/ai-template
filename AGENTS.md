@@ -65,7 +65,7 @@ Before the first edit, state the change's level in one line.
 Modules live in `.agents/instructions/`. Before acting, load each module whose condition matches the request, and only those.
 
 - `01-meta-guidelines.md`: before editing `AGENTS.md`, an instruction module, a primary-reference or root `README.md` skeleton, template-owned `.readme/` documents, or `.agents/template-version`.
-- `02-change-workflow.md`: before the first edit of a normal or risk change, and whenever its criteria, contracts, or scope must change.
+- `02-change-workflow.md`: before planning or editing a normal or risk change, and whenever its criteria, contracts, or scope must change.
 - `03-code-authoring.md`: before writing or modifying code, placing new files, or running repository commands or local services in a normal or risk change.
 - `04-validation-and-testing.md`: before validating or testing a normal or risk change, before debugging or reviewing, and whenever a check fails.
 - `05-independent-verification.md`: for a risk change, and when a criterion reaches the fix-cycle limit.

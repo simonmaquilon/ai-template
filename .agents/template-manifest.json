@@ -2,7 +2,7 @@
   "version": "2.4.2",
   "files": {
     ".agents/instructions/01-meta-guidelines.md": "032f2a73fc462b4b507990a214870fc1b00c2134",
-    ".agents/instructions/02-change-workflow.md": "bb1ddc4ed9e58e9133357b1484168af84f62a28e",
+    ".agents/instructions/02-change-workflow.md": "20db0ed239bc3299414c58bb196b79aea48261e6",
     ".agents/instructions/03-code-authoring.md": "0e8ec91404992c5e06f1de08de7c7a6fc6a3fa43",
     ".agents/instructions/04-validation-and-testing.md": "a8d47ca4807c6c7eb7dc1851acdc0c82b7dc6b02",
     ".agents/instructions/05-independent-verification.md": "d805d9e317cd86cfd915683916da53eb366934d0",
@@ -126,7 +126,7 @@
     ".scripts/template-manifest.mjs": "2e80893e0301136c4b468b31ec053f325821d187",
     ".scripts/update-stack-doc.mjs": "a9e7f00b6ffdb41b55a2c268f136a4b0913824d5",
     ".temp/.gitignore": "d6b7ef32c8478a48c3994dcadc86837f4371184d",
-    "AGENTS.md": "8b29a0aa7192a99ce2600419f7777ccf930548fe",
+    "AGENTS.md": "f21e7b7b99c6108e474f9026007d7d64b9c4cd52",
     "README.md": "ea24df449320b69b231e7d6bf7450972436590be",
     "skills-lock.json": "3fa7efe08f92443265d91e28b31b4df218cd1265"
   }

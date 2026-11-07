@@ -1,6 +1,6 @@
 # Change Workflow
 
-Read before the first edit of a normal or risk change, and whenever its criteria, contracts, or scope must change.
+Read before planning or editing a normal or risk change, and whenever its criteria, contracts, or scope must change.
 
 - Locate the affected code through the project's code index or language server when it has one, otherwise through scoped searches, then reconcile it with the relevant project documentation and the official documentation of the APIs involved.
 - For a new project or missing source, start from the available requirements, configuration, and approved technology choices without requiring an index or an installation.
