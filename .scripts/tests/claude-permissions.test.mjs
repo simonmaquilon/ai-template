@@ -95,6 +95,20 @@ test('a read-only gh command that opens the browser asks', () => {
   }
 });
 
+// The template checks run without asking only as their own launcher; no other node command gains that.
+test('the template checks run without asking, and that allow rule reaches no other node command', () => {
+  for (const tool of TOOLS) {
+    for (const command of ['node .scripts/run-checks.mjs', 'node .scripts/run-checks.mjs --base 2b2e8d6']) {
+      assert.ok(rules(settings.permissions.allow, tool).some((pattern) => matches(pattern, command)), `${tool} allow: ${command}`);
+      assert.ok(!rules(settings.permissions.ask, tool).some((pattern) => matches(pattern, command)), `${tool} ask: ${command}`);
+    }
+    for (const command of ['node .scripts/browser.mjs open', 'node .scripts/update-stack-doc.mjs', 'node -e 1', 'node run-checks.mjs',
+      'node .scripts/run-checks.mjsx', 'node .scripts/run-checks.mjs.bak.mjs']) {
+      assert.ok(!rules(settings.permissions.allow, tool).some((pattern) => matches(pattern, command)), `${tool} allow: ${command}`);
+    }
+  }
+});
+
 // A plain push only adds to the remote; these forms overwrite or delete what it holds.
 const PUSHES = ['git push', 'git push origin main', 'git push -u origin feature', 'git push origin 2.4.0',
   'git -C sub push origin main', 'git push --follow-tags'];

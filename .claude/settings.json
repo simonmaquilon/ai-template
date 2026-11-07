@@ -35,6 +35,8 @@
   },
   "permissions": {
     "allow": [
+      "Bash(node .scripts/run-checks.mjs)",
+      "Bash(node .scripts/run-checks.mjs *)",
       "Bash(gh repo view*)",
       "Bash(gh repo list*)",
       "Bash(gh pr view*)",
@@ -51,6 +53,8 @@
       "Bash(gh release list*)",
       "Bash(gh release view*)",
       "Bash(gh release verify*)",
+      "PowerShell(node .scripts/run-checks.mjs)",
+      "PowerShell(node .scripts/run-checks.mjs *)",
       "PowerShell(gh repo view*)",
       "PowerShell(gh repo list*)",
       "PowerShell(gh pr view*)",
