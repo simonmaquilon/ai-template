@@ -22,7 +22,7 @@ const BLOCKED = [
   'git diff --name-only | git add --pathspec-from-file=-', 'git add -p <<< "y"', 'yes |& git add -p', 'yes | (git add -p)',
   'G=git; $G add -A', 'export G=git; ${G} add .', 'cat > n.md <<\\EOF\nhi\nEOF\ngit add -A',
   "bash <<'EOF' 2>&1 | tail -5\ngit add -A\nEOF", "bash <<'EOF'; echo done\ngit add -A\nEOF",
-  'git add src', 'git add src/', "git add '*.vue'", "git add 'src/*.ts'", 'git add docs/?.md', 'git commit -m x -- src',
+  'git add src', 'git add src/', 'timeout 5 git add .', 'nice -n 10 git add -A', 'stdbuf -oL git add -u', 'git --attr-source HEAD add .', "git add '*.vue'", "git add 'src/*.ts'", 'git add docs/?.md', 'git commit -m x -- src',
   "git add -- src ':!src/gen'",
 ];
 // Blocked where a POSIX shell may run the command; PowerShell alone reads the backquote as an escape.

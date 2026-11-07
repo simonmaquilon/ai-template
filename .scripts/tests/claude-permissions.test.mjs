@@ -84,3 +84,35 @@ test('a read-only gh command that opens the browser asks', () => {
     }
   }
 });
+
+// A plain push only adds to the remote; these forms overwrite or delete what it holds.
+const PUSHES = ['git push', 'git push origin main', 'git push -u origin feature', 'git push origin 2.4.0',
+  'git -C sub push origin main', 'git push --follow-tags'];
+const OVERWRITES = ['git push --force', 'git push -f origin main', 'git push origin main --force-with-lease',
+  'git push origin +main', 'git push --delete origin old', 'git push origin -d old', 'git push --mirror',
+  'git push --prune origin', 'git -C sub push --force origin main',
+  // git accepts unambiguous prefixes of long options, and inline config can turn a plain push into a mirror.
+  'git push --de origin old', 'git push --m', 'git push --pru origin', 'git -c remote.origin.mirror=true push',
+  'git --config-env=remote.origin.mirror=MIRROR push'];
+
+test('a plain git push runs without asking, and one that overwrites or deletes remote refs asks', () => {
+  for (const tool of TOOLS) {
+    for (const command of PUSHES) {
+      assert.ok(!rules(settings.permissions.ask, tool).some((pattern) => matches(pattern, command)), `${tool} ask: ${command}`);
+    }
+    for (const command of OVERWRITES) {
+      assert.ok(rules(settings.permissions.ask, tool).some((pattern) => matches(pattern, command)), `${tool} ask: ${command}`);
+    }
+  }
+});
+
+// Claude Code reads a trailing :* as its prefix syntax, so a rule that also uses * elsewhere never expands that *.
+test('no permission rule mixes the * wildcard with the trailing :* prefix syntax', () => {
+  for (const list of ['allow', 'ask', 'deny']) {
+    for (const tool of TOOLS) {
+      for (const pattern of rules(settings.permissions[list], tool)) {
+        assert.ok(!(pattern.endsWith(':*') && pattern.slice(0, -2).includes('*')), `${tool} ${list}: ${pattern}`);
+      }
+    }
+  }
+});

@@ -1,14 +1,15 @@
 // Walks every simple command a script runs, for the staging hooks. Within a
 // script it substitutes the variables the script assigns, PowerShell names
 // ignoring case, and skips shell keywords, environment assignments, and
-// wrappers such as env or sudo with their options; after xargs it reports the
-// git command xargs runs. It then descends into what the command runs beyond
+// wrappers such as env, sudo, or timeout with their options; after xargs it
+// reports the git command xargs runs. It then descends into what the command runs beyond
 // its text through hidden-commands.mjs: eval, a shell's -c or file script, a
 // here-document fed to a shell, a sourced or path-run file, make targets, and
 // git aliases; a PowerShell $name = <command> runs its command too.
-// visit({ name, args, fed, xargs, cwd }) returns true to stop, and walk
-// returns whether it stopped; nesting deeper than MAX_DEPTH throws. A script
-// may also be an argument list, read as one command.
+// visit({ name, args, fed, xargs, cwd, env }) returns true to stop, env holding
+// the assignments in front of the command, and walk returns whether it stopped;
+// nesting deeper than MAX_DEPTH throws. A script may also be an argument list,
+// read as one command.
 
 import { aliasScripts, fileScripts, makeScripts, shellScripts } from './hidden-commands.mjs';
 import { commands } from './shell-commands.mjs';
@@ -16,20 +17,24 @@ import { commands } from './shell-commands.mjs';
 export const GIT = /^(?:.*[\\/])?git(?:\.exe)?$/i;
 const SHELL = /^(?:.*[\\/])?(?:(?:ba|z|k|da)?sh|pwsh|powershell)(?:\.exe)?$/i;
 const KEYWORDS = new Set(['!', '{', '}', 'if', 'then', 'else', 'elif', 'fi', 'do', 'done', 'while', 'until']);
-const WRAPPERS = new Set(['command', 'env', 'exec', 'nohup', 'sudo', 'time']);
-const GLOBAL_VALUES = new Set(['-C', '-c', '--git-dir', '--work-tree', '--namespace', '--super-prefix', '--config-env']);
+const WRAPPERS = new Set(['command', 'env', 'exec', 'nice', 'nohup', 'stdbuf', 'sudo', 'time', 'timeout']);
+// The options of a wrapper that take the next word as their value; -u and -g, as for sudo and env, by default.
+const OPTION_VALUES = { timeout: /^(?:-[sk]|--signal|--kill-after)$/, nice: /^(?:-n|--adjustment)$/, stdbuf: /^(?:-[ioe]|--(?:input|output|error))$/ };
+const GLOBAL_VALUES = new Set(['-C', '-c', '--git-dir', '--work-tree', '--namespace', '--super-prefix', '--config-env', '--attr-source']);
 const MAX_DEPTH = 8;
 
-// Where a git command's subcommand starts after its global options, and the
-// values of its -c options.
+// Where a git command's subcommand starts after its global options, the values
+// of its -c options, and every global option as [name, value] or [name].
 export function gitSubcommand(args) {
   let index = 0;
   const globals = [];
+  const options = [];
   while (args[index]?.startsWith('-')) {
     if (args[index] === '-c') globals.push(args[index + 1] ?? '');
+    options.push(GLOBAL_VALUES.has(args[index]) ? [args[index], args[index + 1] ?? ''] : [args[index]]);
     index += GLOBAL_VALUES.has(args[index]) ? 2 : 1;
   }
-  return { index, globals };
+  return { index, globals, options };
 }
 
 // Variables a command assigns without running anything, as [name, value] pairs.
@@ -60,18 +65,26 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
   // value, such as a path, rather than a command naming a file to run.
   function run(expanded, bodies, fed, value) {
     let i = 0;
+    const env = [];
     while (i < expanded.length) {
       if (expanded[i] === 'xargs') {
         const git = expanded.findIndex((word, k) => k > i && GIT.test(word));
         return git !== -1 && visit({ name: expanded[git], args: expanded.slice(git + 1), fed: true, xargs: true, cwd });
       }
-      if (/^\w+=/.test(expanded[i]) || KEYWORDS.has(expanded[i])) i++;
-      else if (WRAPPERS.has(expanded[i])) for (i++; expanded[i]?.startsWith('-'); ) i += /^-[ug]$/.test(expanded[i]) ? 2 : 1;
+      if (/^\w+=/.test(expanded[i])) env.push(expanded[i++]);
+      else if (KEYWORDS.has(expanded[i])) i++;
+      else if (WRAPPERS.has(expanded[i])) {
+        const takes = OPTION_VALUES[expanded[i]] ?? /^-[ug]$/;
+        // timeout also takes its duration before the command.
+        const duration = expanded[i++] === 'timeout' ? 1 : 0;
+        for (; expanded[i]?.startsWith('-'); ) i += takes.test(expanded[i]) ? 2 : 1;
+        i += duration;
+      }
       else break;
     }
     const [name, ...args] = expanded.slice(i);
     if (name === undefined) return false;
-    if (visit({ name, args, fed, xargs: false, cwd })) return true;
+    if (visit({ name, args, fed, xargs: false, cwd, env })) return true;
     if (name === 'eval') return nested({ script: args.join(' '), powershell });
     let hidden;
     if (GIT.test(name)) {

@@ -76,6 +76,14 @@ function isOther(common) {
 
 export const inOtherRepository = (dir) => isOther(commonDir(dir));
 
+// Where a command might leave the folder it starts in, or name another repository.
+const MAY_LEAVE = /(?:^|[\s;&|(`"'])(?:cd|chdir|pushd|Set-Location|Push-Location|sl)(?=$|[\s;&|)])|\s-C\b|--git-dir|--work-tree|GIT_DIR|GIT_WORK_TREE/i;
+
+// Whether this repository's rules govern a command's text run from cwd: not one that starts in another repository,
+// such as an independent project nested in this one, unless it may reach this one. Asked only before acting on a
+// finding, so the commands it lets through cost no extra git call.
+export const governed = (text, cwd) => MAY_LEAVE.test(text) || !inOtherRepository(cwd);
+
 // Moves to the repository root and returns it, or returns null outside git and in another repository. One git call
 // usually gives both the root and the git directory; output that is not exactly those two lines, as from a path
 // holding a line break, is read again with one call each.

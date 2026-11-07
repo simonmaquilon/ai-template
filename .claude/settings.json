@@ -91,8 +91,15 @@
       "PowerShell(chown -R *)"
     ],
     "ask": [
-      "Bash(git push *)",
-      "Bash(git * push *)",
+      "Bash(git*push*--force*)",
+      "Bash(git*push* -f*)",
+      "Bash(git*push*--de*)",
+      "Bash(git*push* -d*)",
+      "Bash(git*push* +*)",
+      "Bash(git*push*--m*)",
+      "Bash(git*push*--pru*)",
+      "Bash(git* -c *push*)",
+      "Bash(git*--config-env*push*)",
       "Bash(gh pr merge*)",
       "Bash(gh pr close*)",
       "Bash(gh release -*)",
@@ -172,8 +179,15 @@
       "Bash(gh cs cp*)",
       "Bash(npm publish*)",
       "Bash(npm * publish*)",
-      "PowerShell(git push *)",
-      "PowerShell(git * push *)",
+      "PowerShell(git*push*--force*)",
+      "PowerShell(git*push* -f*)",
+      "PowerShell(git*push*--de*)",
+      "PowerShell(git*push* -d*)",
+      "PowerShell(git*push* +*)",
+      "PowerShell(git*push*--m*)",
+      "PowerShell(git*push*--pru*)",
+      "PowerShell(git* -c *push*)",
+      "PowerShell(git*--config-env*push*)",
       "PowerShell(gh pr merge*)",
       "PowerShell(gh pr close*)",
       "PowerShell(gh release -*)",
@@ -268,6 +282,15 @@
               "--hook"
             ],
             "statusMessage": "Checking explicit Git staging"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-destructive-push.mjs",
+              "--hook"
+            ],
+            "statusMessage": "Checking destructive Git pushes"
           }
         ]
       }
