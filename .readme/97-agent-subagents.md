@@ -44,7 +44,7 @@ La plantilla no sustituye ni configura los agentes integrados de los clientes. E
 
 Cada cliente solo carga su propio directorio de agentes, así que la sesión ve únicamente los de su cliente y usa la fila que le corresponde sin configurar nada: Claude Code los de `.claude/agents/` y Codex los de `.codex/agents/`.
 
-En Claude Code, Claude los elige por su `description`, o se le pide uno de forma explícita con `@agent-copilot-haiku`, `@agent-copilot-sonnet` o `@agent-copilot-opus`. El esfuerzo del archivo prevalece sobre el de la sesión, salvo que la variable de entorno `CLAUDE_CODE_EFFORT_LEVEL` lo fije. Un modelo o un esfuerzo que se pasen en la invocación prevalecen sobre los del archivo, y la regla de delegación sube de nivel cuando un resultado falla por falta de capacidad o una revisión vuelve a rechazar su corrección. La regla de delegación solo baja el esfuerzo en la invocación para los encargos que no necesitan criterio, con `effort: "medium"`; en Codex no está comprobado que `spawn_agent` acepte un esfuerzo por encargo, así que sus encargos usan el del rol.
+En Claude Code, Claude los elige por su `description`, o se le pide uno de forma explícita con `@agent-copilot-haiku`, `@agent-copilot-sonnet` o `@agent-copilot-opus`. El esfuerzo del archivo prevalece sobre el de la sesión, salvo que la variable de entorno `CLAUDE_CODE_EFFORT_LEVEL` lo fije. Un modelo o un esfuerzo que se pasen en la invocación prevalecen sobre los del archivo, y la regla de delegación sube de nivel cuando un resultado falla por falta de capacidad o una revisión vuelve a rechazar su corrección.
 
 En Codex se lanzan con `spawn_agent` y `agent_type` igual al nombre del rol (`copilot_luna`, `copilot_terra` o `copilot_sol`).
 
