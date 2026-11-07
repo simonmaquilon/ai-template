@@ -74,9 +74,17 @@ Lo demás es del proyecto: el código, lo que añadió en archivos de la plantil
 Cada versión publicada de la plantilla es una etiqueta `MAJOR.MINOR.PATCH`, sin `v` delante. Una versión MAJOR obliga a migrar algo del proyecto; una MINOR solo añade; una PATCH corrige. Añade la plantilla como remoto, lista sus versiones y trae la que quieres adoptar a un espacio de nombres propio, para que sus etiquetas no se mezclen con las del proyecto:
 
 ```bash
-git remote add plantilla <url de la plantilla>
+git remote add --no-tags plantilla <url de la plantilla>
 git ls-remote --tags plantilla
-git fetch plantilla "refs/tags/<versión>:refs/plantilla/<versión>"
+git fetch --no-tags plantilla "refs/tags/<versión>:refs/plantilla/<versión>"
+```
+
+Sin `--no-tags`, git trae además, por omisión, las etiquetas de la plantilla que apuntan al historial traído y las crea en `refs/tags/`, junto a las del proyecto. En `git remote add` lo fija para cualquier `git fetch` posterior de ese remoto, y en el `fetch` cubre un remoto `plantilla` añadido sin él; `git config remote.plantilla.tagOpt --no-tags` deja ese remoto como si se hubiera añadido con `--no-tags`. Si un `fetch` anterior ya creó esas etiquetas, este bucle borra solo las locales que apuntan al mismo objeto que la etiqueta de igual nombre en la plantilla, y conserva las del proyecto, también una que se llame como una versión de la plantilla pero apunte a otro commit:
+
+```bash
+git ls-remote --tags --refs plantilla | while read -r id ref; do
+  [ "$(git rev-parse -q --verify "$ref")" = "$id" ] && git tag -d "${ref#refs/tags/}"
+done
 ```
 
 Si `.agents/template-version` no guarda una versión `MAJOR.MINOR.PATCH`, sigue «Numeración anterior de versiones». Para ver el cambio de la plantilla entre la versión que tienes y la nueva, trae también la tuya y compáralas:
