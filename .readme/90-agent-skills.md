@@ -2,6 +2,8 @@
 
 Las skills de agentes se versionan en este repositorio bajo `.agents/skills/`. La base de la plantilla son cinco: `commit`, `prompt`, `prompt-plan` y `start`, propias de la plantilla, que no figuran en el lockfile y se editan directamente en `.agents/skills/`, y `security-audit`, que se instala desde un repositorio público y que `skills-lock.json`, en la raíz, fija a su origen y a un hash de integridad. Las reglas y los documentos de la plantilla se apoyan en ellas, así que retirar una es una desviación. Las demás skills dependen del stack y forman el [catálogo opcional](#catálogo-opcional), que un proyecto instala cuando las necesita.
 
+`prompt` y `prompt-plan` también se usan en proyectos que no derivan de la plantilla, así que se mantienen agnósticas de cualquier proyecto, este incluido: no nombran sus reglas, rutas, agentes ni niveles, como `.agents/instructions/`, `.temp/plans/` o los agentes `copilot-*`, y remiten lo que varía según el proyecto a las instrucciones que gobiernan la sesión o a las reglas del proyecto destino. Al revisarlas se juzga su coherencia interna y entre ellas, nunca su conformidad con las reglas de este repositorio.
+
 ## Herramienta
 
 Las gestiona el CLI [`vercel-labs/skills`](https://github.com/vercel-labs/skills), que se ejecuta con `npx` sin instalarse como dependencia del proyecto. Los comandos de este documento lo ejecutan con `node .scripts/run-pinned.mjs`, que toma la versión fijada de Template Tooling en [stack.md](../.docs/stack.md), donde también consta su procedencia; cambiarla es una actualización que `06-dependencies-and-stack.md` somete a aprobación.
