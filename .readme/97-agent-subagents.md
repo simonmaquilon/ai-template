@@ -6,8 +6,8 @@ Claude Code y Codex delegan tareas en subagentes que la plantilla declara en `.c
 
 | Agente | Cliente | Nivel | Uso | Modelo | Esfuerzo |
 | --- | --- | --- | --- | --- | --- |
-| `copilot-haiku` | Claude Code | rápido (`fast`) | Exploración, búsqueda y análisis de solo lectura, incluidas las preguntas independientes repartidas en subagentes paralelos | el que fija `.claude/agents/copilot-haiku.md` | `xhigh` |
-| `copilot-sonnet` | Claude Code | estándar (`standard`) | Implementación, depuración, refactors y cambios en varios archivos con los criterios de aceptación ya fijados | el que fija `.claude/agents/copilot-sonnet.md` | `xhigh` |
+| `copilot-haiku` | Claude Code | rápido (`fast`) | Exploración, búsqueda y análisis de solo lectura, incluidas las preguntas independientes repartidas en subagentes paralelos | el que fija `.claude/agents/copilot-haiku.md` | `high` |
+| `copilot-sonnet` | Claude Code | estándar (`standard`) | Implementación, depuración, refactors y cambios en varios archivos con los criterios de aceptación ya fijados | el que fija `.claude/agents/copilot-sonnet.md` | `high` |
 | `copilot-opus` | Claude Code | fuerte (`strong`) | Arquitectura, revisiones, decisiones difíciles, trabajo especializado de seguridad, datos o contratos, y la verificación independiente | el que fija `.claude/agents/copilot-opus.md` | `high` |
 | `copilot_luna` | Codex | rápido (`fast`) | El mismo que `copilot-haiku` | el que fija `.codex/agents/copilot-luna.toml` | `max` |
 | `copilot_terra` | Codex | estándar (`standard`) | El mismo que `copilot-sonnet` | el que fija `.codex/agents/copilot-terra.toml` | `max` |
@@ -15,7 +15,7 @@ Claude Code y Codex delegan tareas en subagentes que la plantilla declara en `.c
 
 Los agentes de Claude Code declaran el modelo con un alias (`haiku`, `sonnet`, `opus`), que según la [configuración de modelos](https://code.claude.com/docs/en/model-config) apunta a la versión recomendada para el proveedor y se actualiza sola cuando sale una nueva; en Amazon Bedrock o Google Cloud, `haiku` y `sonnet` resuelven hoy a versiones anteriores. Los de Codex no tienen alias y fijan el ID del modelo.
 
-Los esfuerzos siguen la regla de `13-agent-tooling.md`: un nivel con un modelo más capaz que el del nivel de abajo lleva un esfuerzo que no supera el de este, como Sonnet con el mismo `xhigh` que Haiku y Opus con `high` en Claude Code, y en Codex `copilot_terra` con el mismo `max` que `copilot_luna` y `copilot_sol` con `high`; uno con el mismo modelo llevaría más; la sesión principal queda por encima del agente fuerte, como la de Codex, también en Sol, con `max` sobre el `high` de `copilot_sol`. Así ningún esfuerzo se repite dentro de un mismo modelo, y la elección de cada tarea empieza por el nivel rápido.
+Los esfuerzos siguen la regla de `13-agent-tooling.md`: un nivel con un modelo más capaz que el del nivel de abajo lleva un esfuerzo que no supera el de este, como Sonnet y Opus con el mismo `high` que Haiku en Claude Code, y en Codex `copilot_terra` con el mismo `max` que `copilot_luna` y `copilot_sol` con `high`; uno con el mismo modelo llevaría más; la sesión principal queda por encima del agente fuerte, como la de Codex, también en Sol, con `max` sobre el `high` de `copilot_sol`. Así ningún esfuerzo se repite dentro de un mismo modelo, y la elección de cada tarea empieza por el nivel rápido.
 
 ## Sesión principal
 
