@@ -23,6 +23,9 @@ const READS = [
   'gh pr checks 1', 'gh run list', 'gh run view 1 --log', 'gh run watch 1', 'gh workflow list --all', 'gh workflow view checks.yml',
   'gh issue view 1', 'gh issue list', 'gh release list', 'gh release list --limit 5 --json tagName',
   'gh release view 1.0.0', 'gh release verify 1.0.0', 'gh release verify-asset 1.0.0 a.zip',
+  // In gh run list, -w is --workflow, a filter; a lone -c, -v, or -y, or a w inside an argument, opens nothing.
+  'gh run list -w checks.yml', 'gh run list --workflow checks.yml', 'gh run list -L 5 -w checks.yml', 'gh run list -aw checks.yml',
+  'gh pr view 1 -c', 'gh pr view 1 --json reviews', 'gh run view 1 -v', 'gh workflow view checks.yml -y', 'gh repo view -b work',
 ];
 const CHANGES = [
   'gh repo create x', 'gh repo delete x --yes', 'gh repo edit --visibility private', 'gh repo rename y', 'gh repo archive',
@@ -53,7 +56,14 @@ const CHANGES = [
   'gh skill add owner/skills', 'gh skills add owner/skills', 'gh codespace cp a remote:b', 'gh cs ssh -c x',
 ];
 // Read commands that open the browser.
-const WEB = ['gh repo view --web', 'gh pr view 1 --web', 'gh issue list --web', 'gh release view 1.0.0 --web'];
+const WEB = ['gh repo view --web', 'gh pr view 1 --web', 'gh issue list --web', 'gh release view 1.0.0 --web',
+  // -w is --web in these commands, before or after the argument, and grouped with other short flags.
+  'gh repo view -w', 'gh repo view owner/name -w', 'gh repo view -wb main', 'gh pr view -w 1', 'gh pr view 1 -w', 'gh pr view -cw 1',
+  'gh pr view 1 -wc', 'gh pr list -w', 'gh pr list -L 5 -w', 'gh pr list -dw', 'gh pr list -wL 5', 'gh pr diff -w 1', 'gh pr diff 1 -w',
+  'gh pr checks -w 1', 'gh pr checks 1 -w', 'gh run view -w 1', 'gh run view 1 -w', 'gh run view 1 -vw', 'gh workflow view -w checks.yml',
+  'gh workflow view checks.yml -w', 'gh workflow view checks.yml -yw', 'gh issue view -w 1', 'gh issue view 1 -w', 'gh issue view 1 -cw',
+  'gh issue list -w', 'gh issue list -l bug -w', 'gh release view -w 1.0.0', 'gh release view 1.0.0 -w',
+];
 
 test('the read-only gh commands run outside the Claude Code sandbox without asking', () => {
   assert.deepEqual(ghOnly(settings.sandbox.excludedCommands), READ_PATTERNS);
