@@ -126,7 +126,7 @@
     ".scripts/template-manifest.mjs": "2e80893e0301136c4b468b31ec053f325821d187",
     ".scripts/update-stack-doc.mjs": "a9e7f00b6ffdb41b55a2c268f136a4b0913824d5",
     ".temp/.gitignore": "d6b7ef32c8478a48c3994dcadc86837f4371184d",
-    "AGENTS.md": "4329fe941a8ac5aada402fb0c2d4f6b3367fc27c",
+    "AGENTS.md": "fbe4a3fd1a15f1ea2ba4a869e726f905017623d0",
     "README.md": "ea24df449320b69b231e7d6bf7450972436590be",
     "skills-lock.json": "3fa7efe08f92443265d91e28b31b4df218cd1265"
   }
