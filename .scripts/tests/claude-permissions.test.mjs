@@ -36,6 +36,21 @@ const CHANGES = [
   'gh -R x/y pr merge 1', 'gh --repo=x/y issue delete 1 --yes', 'gh -R x/y release delete 1.0.0 --yes', 'gh pr -R x/y merge 1',
   'gh pr -R x/y close 1', 'gh issue -R x/y delete 1', 'gh issue -R x/y transfer 1 owner/other', 'gh run -R x/y delete 1',
   'gh cache -R x/y delete key', 'gh label -R x/y delete bug', 'gh workflow -R x/y run checks.yml', 'gh variable -R x/y delete X',
+  // Aliases, commands that overwrite or delete outside a repository, credentials, extensions, and gh aliases.
+  'gh variable remove X', 'gh repo new x', 'gh variable set X', 'gh label clone owner/other --force', 'gh project delete 1',
+  'gh codespace delete -c x', 'gh cs delete -c x', 'gh ssh-key delete 1', 'gh gpg-key delete k', 'gh auth token',
+  'gh auth status --show-token', 'gh auth logout', 'gh extension install owner/gh-x', 'gh ext install owner/gh-x',
+  'gh extensions exec x', 'gh extension upgrade --all', 'gh ext remove x', 'gh extension uninstall x', 'gh alias set m "pr merge"',
+  'gh alias import aliases.yml', 'gh extensions install owner/gh-x', 'gh ext exec x', 'gh auth login',
+  // A --flag=value before the subcommand reaches it in every group, also in those that reject -R there.
+  'gh repo --yes=true delete x', 'gh gist --yes=true delete 1', 'gh project --owner=x delete 1', 'gh codespace -c x delete',
+  'gh cs --all=true delete', 'gh ssh-key --yes=true delete 1', 'gh gpg-key --yes=true delete k',
+  'gh alias --clobber=true set m "pr merge"', 'gh alias --clobber=true import aliases.yml',
+  // Commands that install or run code, can print the token, or delete, close, or reach into projects and codespaces.
+  'gh skill install owner/skills', 'gh skills update', 'gh skill publish', 'gh copilot suggest x',
+  'gh config get -h github.com oauth_token', 'gh config set editor vim', 'gh project item-delete 1 --id x',
+  'gh project field-delete --id x', 'gh project close 1', 'gh project unlink 1', 'gh codespace ssh -c x', 'gh cs cp a remote:b',
+  'gh skill add owner/skills', 'gh skills add owner/skills', 'gh codespace cp a remote:b', 'gh cs ssh -c x',
 ];
 // Read commands that open the browser.
 const WEB = ['gh repo view --web', 'gh pr view 1 --web', 'gh issue list --web', 'gh release view 1.0.0 --web'];
