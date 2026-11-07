@@ -99,7 +99,7 @@
     ".scripts/browser.mjs": "b35ef5563c2a4de1554eb6033220c8e6ca28f3d6",
     ".scripts/bulk-staging.mjs": "84d039776ace161229cb37c53edb3acafd797f01",
     ".scripts/check-bulk-staging.mjs": "058b5e09b172cac39233efaa1417a279e06a2a74",
-    ".scripts/check-doc-links.mjs": "414e32ca9047154506ed6aa15f3ff7c5fe6fa1b9",
+    ".scripts/check-doc-links.mjs": "9ed1774c7a88483dc47133de09f4b725ee63aa29",
     ".scripts/check-empty-dirs.mjs": "72615f9698db343997a6db2817d2fe9217896da0",
     ".scripts/check-file-length.mjs": "f5c224ebef315437317f7682257ad3708319ad4e",
     ".scripts/check-instructions.mjs": "7b16fd32e90235c7d661247944330c604260d5d3",

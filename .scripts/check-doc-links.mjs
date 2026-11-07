@@ -14,7 +14,8 @@
 // belongs upstream. It runs from the repository root whatever directory it
 // starts in, prints nothing when it starts in another repository, such as an
 // independent project nested in this one, and reports paths with forward
-// slashes on every system.
+// slashes on every system. An entry that disappears while it is read, as when the
+// empty-directory hook runs alongside, counts as absent.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -30,12 +31,23 @@ const CODE_SPAN = /`([^`]+)`/g;
 const NOT_A_PATH = /[\s*[\]<>{}$~|]/;
 const CITED_FILE = /^(?:\d{2}|[1-9]\d{2})-[a-z][\w-]*\.md$/;
 
+function ignoreMissing(read, fallback) {
+  try {
+    return read();
+  } catch (error) {
+    if (error.code === 'ENOENT') return fallback;
+    throw error;
+  }
+}
+
 function collect(dir, recurse) {
   if (!existsSync(dir)) return [];
   const files = [];
-  for (const entry of readdirSync(dir)) {
+  for (const entry of ignoreMissing(() => readdirSync(dir), [])) {
     const path = join(dir, entry);
-    if (statSync(path).isDirectory()) {
+    const stats = ignoreMissing(() => statSync(path), null);
+    if (!stats) continue;
+    if (stats.isDirectory()) {
       if (recurse && !entry.startsWith('.')) files.push(...collect(path, true));
     } else if (entry.endsWith('.md')) {
       files.push(path);
