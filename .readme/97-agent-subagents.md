@@ -9,15 +9,15 @@ Claude Code y Codex delegan tareas en subagentes que la plantilla declara en `.c
 | `copilot-haiku` | Claude Code | rápido (`fast`) | Exploración, búsqueda, análisis de solo lectura y ediciones mecánicas o totalmente especificadas con cada cambio detallado en el encargo | el que fija `.claude/agents/copilot-haiku.md` | `high` |
 | `copilot-sonnet` | Claude Code | estándar (`standard`) | Implementación, depuración y refactors que requieren criterio, también en cambios de riesgo, con los criterios de aceptación ya fijados | el que fija `.claude/agents/copilot-sonnet.md` | `high` |
 | `copilot-opus` | Claude Code | fuerte (`strong`) | Implementación que supera al nivel estándar, arquitectura, revisiones, decisiones difíciles, diseño especializado de seguridad, datos o contratos, y la verificación independiente | el que fija `.claude/agents/copilot-opus.md` | `high` |
-| `copilot_luna` | Codex | rápido (`fast`) | El mismo que `copilot-haiku` | el que fija `.codex/agents/copilot-luna.toml` | `max` |
-| `copilot_terra` | Codex | estándar (`standard`) | El mismo que `copilot-sonnet` | el que fija `.codex/agents/copilot-terra.toml` | `max` |
+| `copilot_luna` | Codex | rápido (`fast`) | El mismo que `copilot-haiku` | el que fija `.codex/agents/copilot-luna.toml` | `high` |
+| `copilot_terra` | Codex | estándar (`standard`) | El mismo que `copilot-sonnet` | el que fija `.codex/agents/copilot-terra.toml` | `high` |
 | `copilot_sol` | Codex | fuerte (`strong`) | El mismo que `copilot-opus` | el que fija `.codex/agents/copilot-sol.toml` | `high` |
 
 De menor a mayor capacidad y costo, los niveles son rápido, estándar y fuerte, y por encima está la sesión principal, que orquesta y usa el modelo del nivel fuerte con más esfuerzo. Cada tarea va al nivel más bajo que la resuelve, a juicio del orquestador; un nivel superior puede hacer cualquier trabajo de los de abajo cuando la dificultad lo pide, y una tarea sube un nivel si falla por falta de capacidad o si una revisión vuelve a rechazar su corrección, como fija la regla de delegación.
 
 Los agentes de Claude Code declaran el modelo con un alias (`haiku`, `sonnet`, `opus`), que según la [configuración de modelos](https://code.claude.com/docs/en/model-config) apunta a la versión recomendada para el proveedor y se actualiza sola cuando sale una nueva; en Amazon Bedrock o Google Cloud, `haiku` y `sonnet` resuelven hoy a versiones anteriores. Los de Codex no tienen alias y fijan el ID del modelo.
 
-Los esfuerzos siguen la regla de `13-agent-tooling.md`: un nivel con un modelo más capaz que el del nivel de abajo lleva un esfuerzo que no supera el de este, como Sonnet y Opus con el mismo `high` que Haiku en Claude Code, y en Codex `copilot_terra` con el mismo `max` que `copilot_luna` y `copilot_sol` con `high`; uno con el mismo modelo llevaría más; la sesión principal queda por encima del agente fuerte, como la de Codex, también en Sol, con `max` sobre el `high` de `copilot_sol`. Así ningún esfuerzo se repite dentro de un mismo modelo, y la elección de cada tarea empieza por el nivel rápido.
+Los esfuerzos siguen la regla de `13-agent-tooling.md`: un nivel con un modelo más capaz que el del nivel de abajo lleva un esfuerzo que no supera el de este, como Sonnet y Opus con el mismo `high` que Haiku en Claude Code, y en Codex `copilot_terra` y `copilot_sol` con el mismo `high` que `copilot_luna`; uno con el mismo modelo llevaría más; la sesión principal queda por encima del agente fuerte, como la de Codex, también en Sol, con `xhigh` sobre el `high` de `copilot_sol`. Así ningún esfuerzo se repite dentro de un mismo modelo, y la elección de cada tarea empieza por el nivel rápido.
 
 ## Sesión principal
 
@@ -26,9 +26,9 @@ La sesión principal planifica, orquesta, descompone el trabajo y toma las decis
 | Cliente | Modelo | Esfuerzo | Dónde se fija |
 | --- | --- | --- | --- |
 | Claude Code | el que fija `.claude/settings.json` | `xhigh` | `model` y `effortLevel` en `.claude/settings.json` |
-| Codex | el que fija `.codex/config.toml` | `max` | `model` y `model_reasoning_effort` en `.codex/config.toml` |
+| Codex | el que fija `.codex/config.toml` | `xhigh` | `model` y `model_reasoning_effort` en `.codex/config.toml` |
 
-En Claude Code, el `model` del proyecto es el alias `opus`, el mismo que usa `copilot-opus`: los dos pasan juntos a cada versión nueva, y la sesión sigue por encima del agente fuerte por su esfuerzo. Ese `model` se vuelve a aplicar en cada arranque y `/model` solo lo cambia en esa sesión. El `effortLevel` del proyecto vale para cualquier modelo y no admite `max`. El `effort` de cada agente prevalece sobre el de la sesión. Para cambiar el modelo o el esfuerzo en una sola máquina se usa `.claude/settings.local.json`, como explica la [documentación de modelos](https://code.claude.com/docs/en/model-config). En Codex, `.codex/config.toml` solo se carga cuando la persona confía en el proyecto, prevalece sobre su configuración y sus perfiles, y solo lo cambian `--model` o `-c` en la línea de comandos, como explica la [configuración avanzada de Codex](https://learn.chatgpt.com/docs/config-file/config-advanced). Que Sol acepte `max` depende de la cuenta.
+En Claude Code, el `model` del proyecto es el alias `opus`, el mismo que usa `copilot-opus`: los dos pasan juntos a cada versión nueva, y la sesión sigue por encima del agente fuerte por su esfuerzo. Ese `model` se vuelve a aplicar en cada arranque y `/model` solo lo cambia en esa sesión. El `effortLevel` del proyecto vale para cualquier modelo y no admite `max`. El `effort` de cada agente prevalece sobre el de la sesión. Para cambiar el modelo o el esfuerzo en una sola máquina se usa `.claude/settings.local.json`, como explica la [documentación de modelos](https://code.claude.com/docs/en/model-config). En Codex, `.codex/config.toml` solo se carga cuando la persona confía en el proyecto, prevalece sobre su configuración y sus perfiles, y solo lo cambian `--model` o `-c` en la línea de comandos, como explica la [configuración avanzada de Codex](https://learn.chatgpt.com/docs/config-file/config-advanced).
 
 ## Qué heredan
 
