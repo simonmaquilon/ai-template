@@ -2,7 +2,7 @@
 
 Read before an authorized staging, commit, ignore-rule change, or pull request.
 
-- Stage only the files of the authorized change, by explicit path, leaving unrelated or pre-existing modifications unstaged; never use bulk-staging or commit-all options, and never stage ignored files, build or dependency output, local environment files, or secrets.
+- Stage only the files of the authorized change, by explicit path, leaving unrelated or pre-existing modifications unstaged; never use bulk-staging or commit-all options, and never stage ignored files, build or dependency output, or local environment files.
 - When a change introduces a path that must stay untracked, cover it with ignore rules instead of selective staging.
 - Split unrelated changes into separate commits that can each be reverted on its own.
 - Follow the repository's message convention from its history, in English, stating what changed and why, with no attribution, co-author, or tool trailers.

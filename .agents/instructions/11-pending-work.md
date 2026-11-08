@@ -11,4 +11,4 @@ Read before answering about, recording, updating, moving, or closing pending wor
 - Never record execution boards or task history in `.docs/backlog.md`; integrating with or writing to the team's external board needs approval.
 - Reuse an existing item when another document describes the same work, keeping its identifiers as aliases and merging evidence; when moving one, keep its identifiers, metadata, decisions, and evidence, and verify its links before removing the old detail.
 - Before removing completed work, verify its completion criteria and record the delivered facts in their owning documents, then remove the entry and its index row and repoint or remove incoming references; after a partial delivery, remove only the delivered detail.
-- When no entries remain, leave `.docs/backlog.md` empty and keep the file; keep secrets out of entries and reference private evidence instead.
+- When no entries remain, leave `.docs/backlog.md` empty and keep the file; reference private evidence instead of copying it.
