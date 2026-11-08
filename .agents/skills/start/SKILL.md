@@ -24,7 +24,7 @@ Take a project the user just created from this template, or an existing project 
 
 ## Template guard
 
-First action, every run: read the template URL from `.readme/96-template-adoption.md` and compare it with `git remote get-url origin`, ignoring protocol, the `git@host:` form, a trailing `.git`, and case. When they match, this is the maintained template: change nothing, run nothing else, explain in the user's language that a project is created with `gh repo create <name> --template <owner>/<repo> --private --clone` (or `--public`), then `cd <name>`, opening the agent there, and invoking `/start` or `$start`, and that an existing project adopts it as `.readme/96-template-adoption.md` describes; then stop. Without git or without `origin`, treat the repository as a derived project and, unless `plantilla` already exists, mark the remote step ⏸.
+First action, every run: read the template URL from `.readme/96-template-adoption.md` and compare it with `git remote get-url origin`, ignoring protocol, the `git@host:` form, a trailing `.git`, and case. When they match, this is the maintained template: change nothing, run nothing else, explain in the user's language that a project is created with `gh repo create <name> --template <owner>/<repo> --private --clone` (or `--public`), then `cd <name>`, opening the agent there, and invoking `/start` or `$start`, and that an existing project adopts it as `.readme/96-template-adoption.md` describes; then stop. Without git or without `origin`, treat the repository as a derived project and, unless `plantilla` already exists, mark the remote step ⏳.
 
 ## Progress state
 
@@ -63,7 +63,7 @@ Recompute it on every run from the repository itself; keep no state file.
 
 ## Report
 
-In the user's language, one line per item: cleanup, remote, each document, deferred decisions with their backlog.md identifiers, skills, tool servers, language-server binary, the Codex hook-trust notice, and the checks; start each line with ✅, ❌, ⏸, ⚠️, or ℹ️, grouping the lines in that order. Close with the next step, which is part of the output `/start` was asked for: a first commit of these changes, made only if the user asks (`12`, or `/commit`); without existing code, installing the approved stack and scaffolding come after and are outside this skill, while with existing code the stack is already installed and the work continues on it.
+In the user's language, one line per item: cleanup, remote, each document, deferred decisions with their backlog.md identifiers, skills, tool servers, language-server binary, the Codex hook-trust notice, and the checks; start each line with ✅, ❌, ⏳, ⚠️, or ℹ️, grouping the lines in that order. Close with the next step, which is part of the output `/start` was asked for: a first commit of these changes, made only if the user asks (`12`, or `/commit`); without existing code, installing the approved stack and scaffolding come after and are outside this skill, while with existing code the stack is already installed and the work continues on it.
 
 ## Client bindings
 

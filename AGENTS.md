@@ -58,7 +58,7 @@ Before the first edit, state the change's level in one line.
 - Answer in the language of the user's latest own words, using `.docs/product.md` domain terminology without synonyms.
 - Lead with the answer, code, or command, as short as a technical reader needs, without preambles, recaps, or unasked offers or next steps unless the work is blocked or scope was left out.
 - Keep code blocks copy-paste ready and link files with workspace-relative clickable links.
-- For a change, report the outcome, its cause when established, the changed areas, the validation actually run with its result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with ✅ done, ❌ failed, ⏸ pending, ⚠️ risk, or ℹ️ info for a stateless note, grouping lines in that order, and use those markers nowhere else.
+- For a change, report the outcome, its cause when established, the changed areas, the validation actually run with its result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with ✅ done, ❌ failed, ⏳ pending, ⚠️ risk, or ℹ️ info for a stateless note, grouping lines in that order, and use those markers nowhere else.
 
 ## Instruction routing
 
