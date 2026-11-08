@@ -15,6 +15,7 @@ Read before validating or testing a normal or risk change, before debugging or r
 - A fix of executable behavior needs a regression test that reproduces the defect at the observable level, serves as the check of the fix's first criterion, and cites the stable `BUG-…` identifier as the suite's convention does.
 - Cover behavior at the lowest sufficient level, with end-to-end coverage only for behavior that depends on real browser navigation, rendering, or client-server integration; agent-operated browser sessions verify interactively and never count as automated coverage.
 - Keep tests deterministic and isolated: control time, randomness, external dependencies, mutable state, and order, and never depend on production data or services.
+- Give a server or service a test run starts its own persistence, build output, caches, and locks, so it runs alongside the developer's instance instead of excluding it.
 - When removing or rewriting tests, keep every assertion whose behavior survives, adapted to the new interface, and add or replace test tooling only with approval.
 - Before a run that starts long-lived processes, clear only those an abandoned run left; treat runs that seed or mutate shared local state as mutually exclusive across sessions, asking when one may be in progress, and clear what an interrupted run leaves behind.
 - Before fixing an unmet criterion, establish its cause with exact evidence or label it a hypothesis.
