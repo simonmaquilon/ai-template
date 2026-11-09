@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { ROOT, WINDOWS } from './support.mjs';
+import { ROOT, WINDOWS, run } from './support.mjs';
 import { postToolContext } from './hook-context.mjs';
 import { SHA, block, fixture } from './stack-fixture.mjs';
 
@@ -79,6 +79,32 @@ test('update-stack-doc keeps other blocks in sync when one source is unreadable'
   assert.match(result.stdout, /synced .*runtime/);
   assert.match(result.stdout, /blocks not synced .*: skills;/);
   assert.ok(repo.stack().includes('| package.json engines.node | >=24 |'));
+});
+
+// A sandboxed command can delete .docs/stack.md between the hook's read and its write; the write must then fail
+// instead of creating the file again, on every system.
+test('update-stack-doc does not recreate a stack document removed between the read and the write', (t) => {
+  const repo = fixture(t);
+  const stack = join(repo.dir, '.docs', 'stack.md');
+  repo.write('.temp/remove.mjs', `
+import fs from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
+const original = fs.openSync;
+let fired = false;
+fs.openSync = (path, ...rest) => {
+  if (!fired && String(path).endsWith('stack.md') && (rest[0] & 3) === 1) {
+    fired = true;
+    fs.rmSync(${JSON.stringify(stack)});
+  }
+  return original(path, ...rest);
+};
+syncBuiltinESMExports();
+await import('../.scripts/update-stack-doc.mjs');
+`);
+  const result = run(process.execPath, ['.temp/remove.mjs', '--hook'], { cwd: repo.dir, input: JSON.stringify({ hook_event_name: 'UserPromptSubmit' }) });
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /not synced.*ENOENT/);
+  assert.equal(existsSync(stack), false);
 });
 
 test('update-stack-doc parses large workflow files in linear time', (t) => {

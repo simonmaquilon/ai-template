@@ -126,7 +126,7 @@
     ".scripts/status-line.mjs": "26ec19719da0c5115ae7ae496823495161a94bba",
     ".scripts/template-manifest.mjs": "2e80893e0301136c4b468b31ec053f325821d187",
     ".scripts/turn-marker.mjs": "4fc86fef30fa99c7adb884fb4745be6e532d2224",
-    ".scripts/update-stack-doc.mjs": "0e31512fa140a32679e77f05c947183f6fd2606b",
+    ".scripts/update-stack-doc.mjs": "f3af8d83eb271f0fe525ca96c6490ca0c85ef101",
     ".temp/.gitignore": "d6b7ef32c8478a48c3994dcadc86837f4371184d",
     "AGENTS.md": "d10f4e7c1a956cce3230375ff69eb2b0166e3c6a",
     "README.md": "ea24df449320b69b231e7d6bf7450972436590be",

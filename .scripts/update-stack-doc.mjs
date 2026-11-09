@@ -10,7 +10,7 @@
 // It writes and reports nothing when .docs/stack.md is already up to date, and a
 // block whose markers or sources are unusable stays as it is.
 
-import { closeSync, constants, existsSync, lstatSync, readFileSync, writeFileSync } from 'node:fs';
+import { closeSync, constants, existsSync, ftruncateSync, lstatSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readHookInput } from './hook-support.mjs';
@@ -104,8 +104,11 @@ function syncStack(write) {
   }
   after += before.slice(last);
   if (write && after !== before) {
-    const output = openRegular(path, constants.O_WRONLY | constants.O_TRUNC);
+    // Windows refuses O_TRUNC without O_CREAT (EINVAL), and O_CREAT would recreate a file removed since the read, so
+    // the descriptor is truncated after the open instead.
+    const output = openRegular(path, constants.O_WRONLY);
     try {
+      ftruncateSync(output, 0);
       writeFileSync(output, after);
     } finally {
       closeSync(output);
