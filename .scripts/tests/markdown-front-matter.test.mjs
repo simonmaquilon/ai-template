@@ -7,7 +7,7 @@ import { makeRepo, run } from './support.mjs';
 
 const show = (text) => markdownWarnings(text).map((w) => `${w.line} [${w.id}] ${w.message}`);
 
-// Front matter forms markdownlint 0.41.1 accepts (its frontMatterRe) that the check must skip whole.
+// Front matter forms markdownlint 0.41.1 accepts (its frontMatterRe) that the check must leave whole.
 const FORMS = {
   'a --- delimiter with trailing whitespace': '--- \ntitle: x\ntags:\n    - a\n---\n# T\n',
   'a closing --- with trailing whitespace': '---\ntitle: x  \n---  \n# T\n',

@@ -2,18 +2,19 @@ import assert from 'node:assert/strict';
 import { linkSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { ROOT, WINDOWS, makeRepo, run } from './support.mjs';
+import { ROOT, makeRepo, run } from './support.mjs';
 
 const H = '# T\n\n';
 const read = (repo, path) => readFileSync(join(repo.dir, path), 'utf8');
 const fix = (repo, cwd, ...args) => run(process.execPath, [join(repo.dir, '.scripts', 'check-markdown.mjs'), '--fix', ...args], { cwd });
 
-test('markdown fix: refuses a vendored file reached through a symbolic link to its folder', { skip: WINDOWS }, (t) => {
+// A junction on Windows, which needs no privilege; other systems ignore the type and create a symbolic link.
+test('markdown fix: refuses a vendored file reached through a symbolic link to its folder', (t) => {
   const repo = makeRepo(t);
   repo.write('.gitattributes', '.agents/skills/** linguist-vendored\n');
   repo.write('.agents/skills/security-audit/SKILL.md', `${H}* a\n`);
   repo.write('docs/keep.md', 'text\n');
-  symlinkSync(join('..', '.agents', 'skills', 'security-audit'), join(repo.dir, 'docs', 'linkdir'));
+  symlinkSync(join(repo.dir, '.agents', 'skills', 'security-audit'), join(repo.dir, 'docs', 'linkdir'), 'junction');
   const result = fix(repo, repo.dir, 'docs/linkdir/SKILL.md');
   assert.equal(read(repo, '.agents/skills/security-audit/SKILL.md'), `${H}* a\n`);
   assert.equal(result.status, 1);
@@ -30,7 +31,7 @@ test('markdown fix: still fixes a regular file named with ./, ../ or an absolute
   assert.deepEqual(names.map((name) => read(repo, name)), names.map(() => `${H}- a\n`));
 });
 
-test('markdown fix: leaves the target of a symbolic link to a file unchanged and says why', { skip: WINDOWS }, (t) => {
+test('markdown fix: leaves the target of a symbolic link to a file unchanged and says why', (t) => {
   const repo = makeRepo(t);
   repo.write('real.md', `${H}* a\n`);
   symlinkSync('real.md', join(repo.dir, 'link.md'));
@@ -49,7 +50,7 @@ test('markdown fix: leaves a file unchanged outside a repository and says why', 
   assert.ok(result.stderr.includes('doc.md: not modified; file attributes unavailable'), result.stderr);
 });
 
-test('markdown fix: refuses a hard link to a file that the attributes skip', (t) => {
+test('markdown fix: refuses a hard link to a file that the attributes exclude', (t) => {
   const repo = makeRepo(t);
   repo.write('.gitattributes', '.agents/skills/** linguist-vendored\n');
   repo.write('.agents/skills/security-audit/SKILL.md', `${H}* a\n`);
