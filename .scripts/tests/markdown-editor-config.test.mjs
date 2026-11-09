@@ -31,8 +31,8 @@ const config = parseJsonc(readFileSync(join(ROOT, '.markdownlint-cli2.jsonc'), '
 
 // The rule ids the engine can emit: each quoted 'MDnnn' in its sources.
 function engineRules() {
-  const scripts = join(ROOT, '.scripts');
-  const sources = readdirSync(scripts).filter((name) => /^markdown-.*\.mjs$/.test(name));
+  const scripts = join(ROOT, '.scripts', 'markdown');
+  const sources = readdirSync(scripts).filter((name) => name.endsWith('.mjs'));
   return new Set(sources.flatMap((name) => [...readFileSync(join(scripts, name), 'utf8').matchAll(/'(MD\d{3})'/g)].map((m) => m[1])));
 }
 

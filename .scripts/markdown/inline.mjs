@@ -1,4 +1,4 @@
-// Text helpers of markdown-rules.mjs, pure functions of one line of text: code spans, bare URLs, table cells and the
+// Text helpers of rules.mjs, pure functions of one line of text: code spans, bare URLs, table cells and the
 // escaping of text that a warning copies from the file.
 
 // Link and image pattern that cannot contain its own opener, so no scan restarts from every opener; repeated, it strips

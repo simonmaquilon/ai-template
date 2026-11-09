@@ -1,4 +1,4 @@
-// The correction each warning of markdown-rules.mjs carries in its `fix` field, so that a later --fix applies what the
+// The correction each warning of rules.mjs carries in its `fix` field, so that a later --fix applies what the
 // engine knows instead of parsing messages. Columns count UTF-16 units of the line as readBlocks splits it and lines
 // count from 1, like the warnings. The operations:
 //   { op: 'report' }                           no correction the engine knows: a person decides

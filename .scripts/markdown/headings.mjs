@@ -1,8 +1,8 @@
-// First-heading (MD041) and link-fragment (MD051) rules of markdown-rules.mjs, as markdownlint 0.41.1 applies them.
+// First-heading (MD041) and link-fragment (MD051) rules of rules.mjs, as markdownlint 0.41.1 applies them.
 // MD041 widens its front_matter_title option to `name`, so that a definition with `name:` needs no heading. MD051 only
 // detects: a person decides whether to fix the link or the heading. `add` records a warning.
 
-import { escapeText, splitCode, stripCode } from './markdown-inline.mjs';
+import { escapeText, splitCode, stripCode } from './inline.mjs';
 
 const TITLE = /^\s*"?(?:title|name)"?\s*[:=]/i;
 const NOT_WORD = /[^\p{L}\p{M}\p{N}\p{Pc}\- ]/gu;

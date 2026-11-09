@@ -1,14 +1,14 @@
-// Markdown style rules over the blocks markdown-blocks.mjs reads. A pure function of the text: it never reads files
+// Markdown style rules over the blocks that blocks.mjs reads. A pure function of the text: it never reads files
 // or the environment. It backs the edit hook and manual check of check-markdown.mjs (rule 10-documents.md). Ids and
 // messages follow markdownlint 0.41.1, which the editor extension runs with the rules and options that
-// .markdownlint-cli2.jsonc selects. Each warning carries a `fix` (see markdown-fixes.mjs): how to correct it, or that
+// .markdownlint-cli2.jsonc selects. Each warning carries a `fix` (see fixes.mjs): how to correct it, or that
 // only a person can.
 
-import { readBlocks } from './markdown-blocks.mjs';
-import { DELETE_LINE, FINAL_NEWLINE, REPORT, fixesFor } from './markdown-fixes.mjs';
-import { firstHeadingWarning, fragmentWarnings } from './markdown-headings.mjs';
-import { hasBare } from './markdown-inline.mjs';
-import { tableWarnings } from './markdown-tables.mjs';
+import { readBlocks } from './blocks.mjs';
+import { DELETE_LINE, FINAL_NEWLINE, REPORT, fixesFor } from './fixes.mjs';
+import { firstHeadingWarning, fragmentWarnings } from './headings.mjs';
+import { hasBare } from './inline.mjs';
+import { tableWarnings } from './tables.mjs';
 
 const around = (what) => `${what} should be surrounded by blank lines`;
 const byLine = (a, b) => a.line - b.line || a.id.localeCompare(b.id);

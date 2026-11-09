@@ -1,10 +1,10 @@
-// The --fix side of check-markdown.mjs: applies the `fix` that every warning of markdown-rules.mjs carries (see
-// markdown-fixes.mjs), never one derived from a message, and writes a file only when attributes allow it.
+// The --fix side of check-markdown.mjs: applies the `fix` that every warning of rules.mjs carries (see
+// fixes.mjs), never one derived from a message, and writes a file only when attributes allow it.
 
 import { lstatSync, realpathSync, writeFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { toPosix } from './hook-support.mjs';
-import { markdownWarnings } from './markdown-rules.mjs';
+import { toPosix } from '../hook-support.mjs';
+import { markdownWarnings } from './rules.mjs';
 
 const BREAK = /\r\n?|\n/;
 const MAX_PASSES = 20;

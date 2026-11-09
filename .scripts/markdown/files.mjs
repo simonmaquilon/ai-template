@@ -5,7 +5,7 @@
 
 import { lstatSync, realpathSync } from 'node:fs';
 import { isAbsolute, relative } from 'node:path';
-import { enterRepositoryRoot, git, toPosix } from './hook-support.mjs';
+import { enterRepositoryRoot, git, toPosix } from '../hook-support.mjs';
 
 export function marked(paths) {
   const attributes = ['linguist-generated', 'linguist-vendored', 'markdown-structure'];

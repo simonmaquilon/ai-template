@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { markdownWarnings } from '../markdown-rules.mjs';
+import { markdownWarnings } from '../markdown/rules.mjs';
 
 const show = (text) => markdownWarnings(text).map((w) => `${w.line} [${w.id}] ${w.message}`);
 const M041 = 'First line in a file should be a top-level heading';

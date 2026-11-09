@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readBlocks } from '../markdown-blocks.mjs';
-import { markdownWarnings } from '../markdown-rules.mjs';
+import { readBlocks } from '../markdown/blocks.mjs';
+import { markdownWarnings } from '../markdown/rules.mjs';
 
 const H = '# T\n\n';
 const TABLE = '| a |\n| --- |\n';

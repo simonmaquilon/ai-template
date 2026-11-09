@@ -1,4 +1,4 @@
-// HTML block starts for markdown-blocks.mjs, after CommonMark: HTML_BLOCK matches a line that starts a block of type 1
+// HTML block starts for blocks.mjs, after CommonMark: HTML_BLOCK matches a line that starts a block of type 1
 // to 6 (type 2, the comment, aside), and openHtml says how the block ends. Types 1 to 5 end at a line that holds their
 // own end condition, blank lines included; type 6 and the lone tags of type 7 end at a blank line. It never reads
 // files or the environment.

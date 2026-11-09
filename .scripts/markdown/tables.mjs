@@ -1,7 +1,7 @@
-// Table rules of markdown-rules.mjs (MD055, MD056, MD058, MD060) over the tables markdown-blocks.mjs reads. `add`
+// Table rules of rules.mjs (MD055, MD056, MD058, MD060) over the tables that blocks.mjs reads. `add`
 // records a warning with its fix, `gap` tells whether a line leaves a table apart.
 
-import { PIPE, cells } from './markdown-inline.mjs';
+import { PIPE, cells } from './inline.mjs';
 
 const PIPE_STYLES = ['no_leading_or_trailing', 'trailing_only', 'leading_only', 'leading_and_trailing'];
 const COMPACT = 'for style "compact"';

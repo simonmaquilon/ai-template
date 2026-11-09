@@ -1,4 +1,4 @@
-// Mirrors .scripts/markdown-rules.mjs for the editor extension: only the rules the check implements, with its options.
+// Mirrors .scripts/markdown/rules.mjs for the editor extension: only the rules the check implements, with its options.
 // The skills left out of the silence in "overrides" must match the markdown-structure lines of .gitattributes.
 {
   "config": {

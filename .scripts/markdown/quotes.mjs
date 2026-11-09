@@ -1,4 +1,4 @@
-// Open list items across blockquote depth changes for markdown-blocks.mjs: a quote that starts inside an open item (its
+// Open list items across blockquote depth changes for blocks.mjs: a quote that starts inside an open item (its
 // marker at or past the item's content column) is part of that item, which `saved` keeps until a line leaves the
 // quote; any other quote ends the open items. It never reads files or the environment.
 

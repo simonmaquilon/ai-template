@@ -29,8 +29,9 @@ export function makeRepo(t) {
   t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 5 }));
   const scripts = join(ROOT, '.scripts');
   mkdirSync(join(dir, '.scripts'));
-  for (const name of readdirSync(scripts)) {
-    if (name.endsWith('.mjs')) cpSync(join(scripts, name), join(dir, '.scripts', name));
+  for (const entry of readdirSync(scripts, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.mjs')) cpSync(join(scripts, entry.name), join(dir, '.scripts', entry.name));
+    else if (entry.isDirectory() && entry.name !== 'tests') cpSync(join(scripts, entry.name), join(dir, '.scripts', entry.name), { recursive: true });
   }
   const identity = ['-c', 'user.name=Hook Test', '-c', 'user.email=hook-test@example.invalid', '-c', 'core.autocrlf=false'];
   const repo = {

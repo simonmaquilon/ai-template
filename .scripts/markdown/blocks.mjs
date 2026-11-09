@@ -1,13 +1,13 @@
-// Line-based reading of CommonMark/GFM blocks for markdown-rules.mjs, which backs the edit hook and manual check of
+// Line-based reading of CommonMark/GFM blocks for rules.mjs, which backs the edit hook and manual check of
 // check-markdown.mjs (rule 10-documents.md). An approximation, not a full parser: it classifies every line (skip for
 // front matter, blank, code, fence, comment, html, heading, setext, rule, item, para, table) and collects headings,
 // list items, lists, fences, tables, and the blockquote prefix of every line. It never reads files or the environment.
 
-import { frontMatterLength } from './markdown-front.mjs';
-import { headingText } from './markdown-headings.mjs';
-import { HTML_BLOCK, openHtml } from './markdown-html.mjs';
-import { PIPE, cells } from './markdown-inline.mjs';
-import { changeQuote } from './markdown-quotes.mjs';
+import { frontMatterLength } from './front.mjs';
+import { headingText } from './headings.mjs';
+import { HTML_BLOCK, openHtml } from './html.mjs';
+import { PIPE, cells } from './inline.mjs';
+import { changeQuote } from './quotes.mjs';
 
 const FENCE = /^(?:(`{3,})([^`]*)|(~{3,})(.*))$/;
 const QUOTE = /^(?: {0,3}>[ \t]?)*/;

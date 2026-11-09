@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Markdown structure warnings from markdown-rules.mjs (10-documents.md). With --hook it is a non-blocking PostToolUse
+// Markdown structure warnings from markdown/rules.mjs (10-documents.md). With --hook it is a non-blocking PostToolUse
 // hook: it lints the Git-visible .md files an edit or patch names within this repository, omitting ignored and binary
 // files and those the attributes skip (vendored or generated unless `markdown-structure` is set, or marked
 // `-markdown-structure`), and reports through additionalContext only the warnings on lines that differ from HEAD,
@@ -12,10 +12,10 @@ import { spawnSync } from 'node:child_process';
 import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, realpathSync } from 'node:fs';
 import { extname, isAbsolute, relative, resolve } from 'node:path';
 import { changedLines, enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
-import { fixFile, realPath } from './markdown-apply.mjs';
-import { escapeText } from './markdown-inline.mjs';
-import { marked, repositoryMarkdown } from './markdown-files.mjs';
-import { markdownWarnings } from './markdown-rules.mjs';
+import { fixFile, realPath } from './markdown/apply.mjs';
+import { escapeText } from './markdown/inline.mjs';
+import { marked, repositoryMarkdown } from './markdown/files.mjs';
+import { markdownWarnings } from './markdown/rules.mjs';
 
 const MAX_BYTES = 1024 * 1024;
 const MAX_LINES = 20;

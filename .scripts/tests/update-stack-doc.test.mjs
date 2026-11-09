@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { markdownWarnings } from '../markdown-rules.mjs';
+import { markdownWarnings } from '../markdown/rules.mjs';
 import { hookFor, makeRepo, run, runClientHook } from './support.mjs';
 import { postToolContext } from './hook-context.mjs';
 import { IDS, SHA, block, fixture } from './stack-fixture.mjs';

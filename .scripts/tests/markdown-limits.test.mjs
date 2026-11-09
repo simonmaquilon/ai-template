@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { markdownWarnings } from '../markdown-rules.mjs';
+import { markdownWarnings } from '../markdown/rules.mjs';
 
 const MIB = 2 ** 20;
 // Single-line inputs that made the engine quadratic in the line length.
