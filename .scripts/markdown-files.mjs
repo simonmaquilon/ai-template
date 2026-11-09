@@ -1,14 +1,21 @@
 // The files that `check-markdown.mjs --all` lints: the .md files Git lists from the repository root that are regular
-// files whose real path stays inside the repository and that no attribute marks vendored or generated. Also the
-// attribute filter that the edit hook of check-markdown.mjs shares.
+// files whose real path stays inside the repository and that are not skipped by attribute: vendored or generated files
+// are skipped unless `markdown-structure` is set on them, and `-markdown-structure` skips any file. Also the attribute
+// filter that the edit hook of check-markdown.mjs shares.
 
 import { lstatSync, realpathSync } from 'node:fs';
 import { isAbsolute, relative } from 'node:path';
 import { enterRepositoryRoot, git, toPosix } from './hook-support.mjs';
 
 export function marked(paths) {
-  const fields = git(['check-attr', '-z', '--stdin', 'linguist-generated', 'linguist-vendored'], paths.join('\0'))?.split('\0');
-  return fields && new Set(fields.filter((_, i) => i % 3 === 0 && ['set', 'true'].includes(fields[i + 2])));
+  const attributes = ['linguist-generated', 'linguist-vendored', 'markdown-structure'];
+  const fields = git(['check-attr', '-z', '--stdin', ...attributes], paths.join('\0'))?.split('\0');
+  if (!fields) return fields;
+  const values = new Map();
+  for (let i = 0; i + 2 < fields.length; i += 3) values.set(`${fields[i]}\0${fields[i + 1]}`, fields[i + 2]);
+  const on = (path, name) => ['set', 'true'].includes(values.get(`${path}\0${name}`));
+  return new Set(paths.filter((path) => values.get(`${path}\0markdown-structure`) === 'unset'
+    || ((on(path, 'linguist-generated') || on(path, 'linguist-vendored')) && !on(path, 'markdown-structure'))));
 }
 
 // Whether a listed path is a regular file that stays inside the repository once its links are resolved. Only absence

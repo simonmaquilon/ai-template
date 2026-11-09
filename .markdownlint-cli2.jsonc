@@ -1,0 +1,36 @@
+// Mirrors .scripts/markdown-rules.mjs for the editor extension: only the rules the check implements, with its options.
+// The skills left out of the silence in "overrides" must match the markdown-structure lines of .gitattributes.
+{
+  "config": {
+    "default": false,
+    "MD001": { "front_matter_title": "" },
+    "MD004": { "style": "dash" },
+    "MD007": { "indent": 2 },
+    "MD009": { "br_spaces": 2 },
+    "MD010": { "code_blocks": false },
+    "MD012": { "maximum": 1 },
+    "MD022": true,
+    "MD024": true,
+    "MD025": { "front_matter_title": "" },
+    "MD026": { "punctuation": ".,;:!。，；：！" },
+    "MD029": { "style": "ordered" },
+    "MD031": true,
+    "MD032": true,
+    "MD034": true,
+    "MD040": true,
+    "MD041": { "front_matter_title": "^\\s*\"?(?:title|name)\"?\\s*[:=]" },
+    "MD047": true,
+    "MD051": true,
+    "MD055": { "style": "consistent" },
+    "MD056": true,
+    "MD058": true,
+    "MD060": { "style": "compact" }
+  },
+  "overrides": [
+    {
+      "filter": [".agents/skills/**", "!.agents/skills/commit/**", "!.agents/skills/prompt/**", "!.agents/skills/prompt-plan/**", "!.agents/skills/start/**"],
+      "config": { "default": false },
+      "combine": "replace"
+    }
+  ]
+}

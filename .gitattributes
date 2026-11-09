@@ -6,3 +6,8 @@
 
 # Agent skills, vendored or template-authored, exempt from the source-file limit (see .readme/92-agent-hooks.md)
 .agents/skills/** linguist-vendored
+# Template-authored skills, still held to the Markdown structure check (see .readme/92-agent-hooks.md)
+.agents/skills/commit/** markdown-structure
+.agents/skills/prompt/** markdown-structure
+.agents/skills/prompt-plan/** markdown-structure
+.agents/skills/start/** markdown-structure

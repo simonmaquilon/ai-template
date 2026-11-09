@@ -1,41 +1,47 @@
 #!/usr/bin/env node
 // Markdown structure warnings from markdown-rules.mjs (10-documents.md). With --hook it is a non-blocking PostToolUse
-// hook: it lints the Git-visible .md files an edit or patch names within this repository, omitting ignored, generated,
-// vendored and binary files, and reports through additionalContext only the warnings on lines that differ from HEAD,
-// every line of an untracked file; it always exits 0 and writes nothing to stderr. Run by hand, `node
-// .scripts/check-markdown.mjs <files>` lints whole files without filters and exits 1 when it printed a warning, 2
-// without arguments or when a file could not be read, and 0 otherwise; `--all` lints instead, from any folder, every
-// regular .md file Git lists whose real path stays inside the repository and that no attribute marks vendored or
-// generated, and also exits 2 outside a repository or without git.
+// hook: it lints the Git-visible .md files an edit or patch names within this repository, omitting ignored and binary
+// files and those the attributes skip (vendored or generated unless `markdown-structure` is set, or marked
+// `-markdown-structure`), and reports through additionalContext only the warnings on lines that differ from HEAD,
+// every line of an untracked file; it always exits 0, writes nothing to stderr, modifies nothing. By hand, `node
+// .scripts/check-markdown.mjs [--fix] <files>` lints whole files and exits 1 when it printed a warning, 2 without
+// arguments or when a file could not be read, 0 otherwise; `--all` lints the Git-listed .md files no attribute skips,
+// and exits 2 outside a repository. `--fix` first corrects in place what needs no judgment, never in a skipped file.
 
 import { spawnSync } from 'node:child_process';
 import { closeSync, constants, fstatSync, openSync, readFileSync, readSync, realpathSync } from 'node:fs';
 import { extname, isAbsolute, relative, resolve } from 'node:path';
 import { changedLines, enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
+import { fixFile, realPath } from './markdown-apply.mjs';
+import { escapeText } from './markdown-inline.mjs';
 import { marked, repositoryMarkdown } from './markdown-files.mjs';
 import { markdownWarnings } from './markdown-rules.mjs';
 
 const MAX_BYTES = 1024 * 1024;
 const MAX_LINES = 20;
 const PREFIX = 'Markdown structure (10-documents.md): ';
-// A path as printed: control characters, line separators and characters that change text direction escaped, so that a
-// file name cannot split, forge or reorder a report line.
-const shown = (path) => JSON.stringify(toPosix(path)).slice(1, -1)
-  .replace(/[\p{Cc}\p{Bidi_Control}\u2028\u2029]/gu, (char) => `\\u${char.codePointAt(0).toString(16).padStart(4, '0')}`);
+// A path as printed, escaped so that a file name cannot split, forge or reorder a report line.
+const shown = (path) => escapeText(JSON.stringify(toPosix(path)).slice(1, -1));
 const format = (path, warning) => `${path}:${warning.line} [${warning.id}] ${warning.message}`;
 
 if (!process.argv.includes('--hook')) {
-  const files = process.argv.slice(2);
-  if (files.length === 0) {
-    console.error('Usage: node .scripts/check-markdown.mjs --all | <file>...');
+  const fix = process.argv.includes('--fix');
+  const args = process.argv.slice(2).filter((arg) => arg !== '--fix');
+  if (args.length === 0) {
+    console.error('Usage: node .scripts/check-markdown.mjs [--fix] --all | [--fix] <file>...');
     process.exit(2);
   }
+  const files = args.length === 1 && args[0] === '--all' ? repositoryMarkdown() : args;
+  const skipped = fix ? marked(files.map(realPath)) : null;
   let warned = false, unreadable = false;
-  for (const file of files.length === 1 && files[0] === '--all' ? repositoryMarkdown() : files) {
+  for (const file of files) {
     const label = shown(file);
     let text;
     try {
-      text = readFileSync(file, 'utf8');
+      const bytes = readFileSync(file);
+      const done = fix ? fixFile(file, bytes, skipped) : { text: bytes.toString('utf8') };
+      if (done.note) console.error(`${label}: not modified; ${done.note}`);
+      text = done.text;
     } catch (error) {
       console.error(`${label}: not checked; ${error.code ?? error.message}`);
       unreadable = true;

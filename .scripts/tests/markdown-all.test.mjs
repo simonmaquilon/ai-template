@@ -15,16 +15,16 @@ test('markdown --all: lints whole every Git-listed regular file that no attribut
   const repo = startRepo(t, {
     '.gitattributes': 'vendor/** linguist-vendored\ngenerated/** linguist-generated\n',
     '.gitignore': '.temp/\nignored/\n',
-    'docs/tracked.md': '* a\n', 'docs/clean.md': '# A\n', 'gone.md': '* a\n', 'old/inner.md': '* a\n',
+    'docs/tracked.md': '# A\n\n* a\n', 'docs/clean.md': '# A\n', 'gone.md': '* a\n', 'old/inner.md': '* a\n',
     'vendor/v.md': '* a\n', 'generated/g.md': '* a\n',
   });
   rmSync(join(repo.dir, 'gone.md'));
   rmSync(join(repo.dir, 'old'), { recursive: true });
   repo.write('old', 'now a file\n');
-  repo.write('docs/new.md', 'b   \n');
-  repo.write('docs/UPPER.MD', '* a\n');
+  repo.write('docs/new.md', '# A\n\nb   \n');
+  repo.write('docs/UPPER.MD', '# A\n\n* a\n');
   repo.write('ignored/i.md', '* a\n');
-  const expected = [`docs/UPPER.MD:1 [MD004] ${STAR}`, `docs/new.md:1 [MD009] ${SPACES}`, `docs/tracked.md:1 [MD004] ${STAR}`];
+  const expected = [`docs/UPPER.MD:3 [MD004] ${STAR}`, `docs/new.md:3 [MD009] ${SPACES}`, `docs/tracked.md:3 [MD004] ${STAR}`];
   for (const cwd of [repo.dir, join(repo.dir, 'docs')]) {
     const result = all(repo, cwd);
     assert.deepEqual([result.status, lines(result), result.stderr], [1, expected, ''], cwd);
@@ -71,9 +71,9 @@ test('markdown --all: exits 2 for a file it could not read, and 1 when it also p
     const locked = all(repo);
     assert.deepEqual([locked.status, locked.stdout, locked.stderr.split('\n').filter(Boolean).sort()],
       [2, '', ['locked.md: not checked; EACCES', 'locked/b.md: not checked; EACCES']]);
-    repo.write('warn.md', '* a\n');
+    repo.write('warn.md', '# A\n\n* a\n');
     const both = all(repo);
-    assert.deepEqual([both.status, both.stdout], [1, `warn.md:1 [MD004] ${STAR}\n`]);
+    assert.deepEqual([both.status, both.stdout], [1, `warn.md:3 [MD004] ${STAR}\n`]);
   } finally {
     chmodSync(join(repo.dir, 'locked'), 0o755);
   }
@@ -87,7 +87,33 @@ test('markdown --all: skips a tracked folder replaced by a symbolic link to a fo
   symlinkSync(join(outside.dir, 'd'), join(repo.dir, 'd'));
   const skipped = all(repo);
   assert.deepEqual([skipped.status, skipped.stdout, skipped.stderr], [0, '', '']);
-  repo.write('warn.md', '* a\n');
+  repo.write('warn.md', '# A\n\n* a\n');
   const linted = all(repo);
-  assert.deepEqual([linted.status, linted.stdout, linted.stderr], [1, `warn.md:1 [MD004] ${STAR}\n`, '']);
+  assert.deepEqual([linted.status, linted.stdout, linted.stderr], [1, `warn.md:3 [MD004] ${STAR}\n`, '']);
+});
+
+test('markdown --all: checks a template-authored skill marked markdown-structure', (t) => {
+  const repo = startRepo(t, {
+    '.gitattributes': 'vendor/** linguist-vendored\ngenerated/** linguist-generated\nvendor/own/** markdown-structure\n' +
+      'generated/own/** markdown-structure\n',
+    'vendor/v.md': '* a\n', 'vendor/own/o.md': '# A\n\n* a\n', 'generated/g.md': '* a\n', 'generated/own/g.md': '# A\n\n* a\n',
+  });
+  const result = all(repo);
+  assert.deepEqual([result.status, lines(result), result.stderr],
+    [1, [`generated/own/g.md:3 [MD004] ${STAR}`, `vendor/own/o.md:3 [MD004] ${STAR}`], '']);
+});
+
+test('markdown --all: never checks a file marked -markdown-structure', (t) => {
+  const repo = startRepo(t, { '.gitattributes': 'plain/** -markdown-structure\n', 'plain/p.md': '* a\n', 'x.md': '# A\n\n* a\n' });
+  const result = all(repo);
+  assert.deepEqual([result.status, lines(result), result.stderr], [1, [`x.md:3 [MD004] ${STAR}`], '']);
+});
+
+test('markdown --all: skips a new skill under .agents/skills without markdown-structure', (t) => {
+  const repo = startRepo(t, {
+    '.gitattributes': '.agents/skills/** linguist-vendored\n.agents/skills/own/** markdown-structure\n',
+    '.agents/skills/new/SKILL.md': '* a\n',
+  });
+  const result = all(repo);
+  assert.deepEqual([result.status, result.stdout, result.stderr], [0, '', '']);
 });

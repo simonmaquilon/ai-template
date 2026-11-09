@@ -13,25 +13,25 @@ const ODD = `a\u007fb\u009bc\u2028d${String.fromCodePoint(0x202e)}${String.fromC
 
 test('markdown manual mode: a file name with a line break cannot split a stdout or stderr report line', { skip: WINDOWS }, (t) => {
   const repo = makeRepo(t);
-  repo.write(NAME, '* a\n* b\n');
+  repo.write(NAME, '# A\n\n* a\n* b\n');
   const warned = lint(repo, NAME);
   assert.deepEqual([warned.status, warned.stdout, warned.stderr],
-    [1, `bad\\nname.md:1 [MD004] ${STAR}\nbad\\nname.md:2 [MD004] ${STAR}\n`, '']);
+    [1, `bad\\nname.md:3 [MD004] ${STAR}\nbad\\nname.md:4 [MD004] ${STAR}\n`, '']);
   const missing = lint(repo, 'gone\nname.md');
   assert.deepEqual([missing.status, missing.stdout, missing.stderr], [2, '', 'gone\\nname.md: not checked; ENOENT\n']);
 });
 
 test('markdown --all: a Git-listed file name with a line break cannot split a stdout report line', { skip: WINDOWS }, (t) => {
   const repo = makeRepo(t);
-  repo.write(NAME, '* a\n');
+  repo.write(NAME, '# A\n\n* a\n');
   const result = lint(repo, '--all');
-  assert.deepEqual([result.status, result.stdout, result.stderr], [1, `bad\\nname.md:1 [MD004] ${STAR}\n`, '']);
+  assert.deepEqual([result.status, result.stdout, result.stderr], [1, `bad\\nname.md:3 [MD004] ${STAR}\n`, '']);
 });
 
 test('markdown check: DEL, C1 controls, line separators and direction controls in a file name are escaped in manual and hook mode', (t) => {
   const repo = makeRepo(t);
-  repo.write(ODD, '* a\n');
-  const line = `a\\u007fb\\u009bc\\u2028d\\u202e\\u2066e.md:1 [MD004] ${STAR}`;
+  repo.write(ODD, '# A\n\n* a\n');
+  const line = `a\\u007fb\\u009bc\\u2028d\\u202e\\u2066e.md:3 [MD004] ${STAR}`;
   const manual = lint(repo, ODD);
   assert.deepEqual([manual.status, manual.stdout, manual.stderr], [1, `${line}\n`, '']);
   const input = JSON.stringify({ cwd: repo.dir, hook_event_name: 'PostToolUse', tool_input: { file_path: ODD } });

@@ -13,9 +13,18 @@ const HOSTILE = {
   'delimiter spaces': `| a |\n|-${' '.repeat(MIB)}x`,
   'heading punctuation': `# a${'!'.repeat(MIB)}b`,
   underscores: `x ${'_'.repeat(MIB)}a`,
+  'heading underscores': `# x ${'_'.repeat(MIB)} \n`,
+  'heading underscores before text': `# x ${'_'.repeat(MIB)}-\n`,
+  'heading underscore runs': `# ${'_ '.repeat(MIB / 2)}\n`,
   'underscored words': 'a_'.repeat(MIB / 2),
   'comment openers beside a heading': `# h\n${'<!--'.repeat(MIB / 4)}`,
   'empty comments beside a heading': `# h\n${'<!---->'.repeat(MIB / 7)}`,
+  'heading images': `# ${'![a]('.repeat(MIB / 5)}`,
+  'heading openers': `# ${'[a'.repeat(MIB / 2)}`,
+  'heading code spans': `# ${'`a` '.repeat(MIB / 4)}`,
+  'link fragments': '[a](#x'.repeat(MIB / 6),
+  'definition fragments': '[a]: #x\n'.repeat(MIB / 8),
+  'html tags': '<a id=x>'.repeat(MIB / 8),
 };
 
 for (const [label, text] of Object.entries(HOSTILE)) {
@@ -25,3 +34,11 @@ for (const [label, text] of Object.entries(HOSTILE)) {
     assert.ok(performance.now() - start < 1000, label);
   });
 }
+
+test('markdown rules: 16000 headings and 16000 unknown links finish in under a second', () => {
+  const headings = Array.from({ length: 16000 }, (_, i) => `## h${i}\n\n`).join('');
+  const links = Array.from({ length: 16000 }, (_, i) => `[a](#nope${i})\n`).join('');
+  const start = performance.now();
+  markdownWarnings(`# T\n\n${headings}${links}`);
+  assert.ok(performance.now() - start < 1000);
+});

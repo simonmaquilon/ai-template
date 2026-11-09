@@ -4,9 +4,10 @@
 // runner built into Node, the prompt-plan skill tests among them as a separate step that a local run skips while
 // the skill, those tests, and the helpers they share have no uncommitted change, the adopted security-audit skill
 // integrity, the documentation link, Markdown structure and instruction-file checks, which fail on any report (the
-// Markdown one runs check-markdown.mjs --all, which lints each whole .md file that Git lists and no attribute marks
-// vendored or generated), the stack document check, which fails when a generated block of .docs/stack.md is out of
-// date, the template manifest check, which fails when .agents/template-manifest.json is out of date, and the
+// Markdown one runs check-markdown.mjs --all, which lints each whole .md file that Git lists and no attribute skips:
+// vendored or generated unless `markdown-structure` is set, or `-markdown-structure`), the stack document check, which
+// fails when a generated block of .docs/stack.md is out of date, the template manifest check, which fails when
+// .agents/template-manifest.json is out of date, and the
 // source-file limit, which receives the arguments given here, such as --base <revision>. Exits with status 1 when any
 // step fails, and with status 3 when the only problem is a step the environment
 // blocked, such as a sandbox that denies writes under .git or .temp, which never
