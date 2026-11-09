@@ -23,6 +23,7 @@ Create the plan directory `<YYYY-MM-DD>-<slug>/`, with an English kebab-case slu
 ## Execution
 
 - Execute no fragment, and run no `record`, `apply`, or `revert` script, until the user asks in a message after the report that delivers the plan; an execution asked for with the invocation is left undone, which that report says in the prompt skill's line for a requested action left undone.
+- When the report that delivers a new plan carries only ✅ and ℹ️ lines, besides the ⏳ lines that only list fragments still to execute, end it by asking the user whether to execute the plan now, as the prompt skill's step 5 asks a question, with executing it as the recommended option and leaving it for later as the other; an answer that chooses to execute it is the user's request after that report. With any ❌ or ⚠️ line, or a ⏳ line for an open decision, a pending datum, or a question, ask nothing, and execute only when the user asks in a later message.
 - Before executing a fragment, recording an answer to an open decision or a pending datum, or changing a plan already created, read [references/execution.md](references/execution.md); its rules govern every step after the plan is created.
 
 ## Report
