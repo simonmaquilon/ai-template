@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { relative } from 'node:path';
 import test from 'node:test';
 import { destructivePush } from '../destructive-push.mjs';
+import { commands } from '../shell-commands.mjs';
 import { makeRepo } from './support.mjs';
 
 const URL = 'https://example.invalid/a.git';
@@ -59,9 +60,9 @@ test('the destructive-push guard reads the configuration where the push runs, fr
   const other = remotes(t);
   other.repo.git('config', 'remote.origin.mirror', 'true');
   assert.equal(reason('git push'), null);
-  assert.match(reason(`git -C ${other.repo.dir} push`), /remote origin/);
+  assert.match(reason(`git -C '${other.repo.dir}' push`), /remote origin/);
   assert.match(reason('git push', other.repo.dir), /remote origin/);
-  assert.equal(reason(`git -C ${repo.dir} push`, other.repo.dir), null);
+  assert.equal(reason(`git -C '${repo.dir}' push`, other.repo.dir), null);
 });
 
 test('the destructive-push guard reads a refspec configured to delete and a mirror written as git reads a true value', (t) => {
@@ -93,14 +94,22 @@ test('the destructive-push guard skips the value of --recurse-submodules and pre
   assert.match(reason('git push --repo=bk origin'), /remote origin/);
 });
 
+// Bash, Claude Code's shell on Windows as well, reads an unquoted backslash as an escape, so a Windows path reaches
+// the guard intact only quoted, or through the PowerShell reading the PowerShell tool gets.
+test('the destructive-push guard reads an unquoted Windows path as bash does, without its backslashes', () => {
+  assert.deepEqual(commands('cd C:\\x\\y').map((c) => c.words), [['cd', 'C:xy']]);
+  assert.deepEqual(commands("cd 'C:\\x\\y'").map((c) => c.words), [['cd', 'C:\\x\\y']]);
+  assert.deepEqual(commands('Set-Location C:\\x\\y', { powershell: true }).map((c) => c.words), [['Set-Location', 'C:\\x\\y']]);
+});
+
 test('the destructive-push guard also reads the configuration of the folders the command changes into', (t) => {
   const { repo, reason } = remotes(t);
   const other = remotes(t);
   other.repo.git('config', 'remote.origin.mirror', 'true');
-  assert.match(reason(`cd ${other.repo.dir} && git push`), /remote origin/);
-  assert.match(reason(`cd ${relative(repo.dir, other.repo.dir)} && git push`), /remote origin/);
-  assert.match(reason(`pushd ${other.repo.dir}; git push`), /remote origin/);
-  assert.match(reason(`(Set-Location ${other.repo.dir}; git push)`), /remote origin/);
-  assert.equal(reason(`cd ${repo.dir} && git push`), null);
-  assert.equal(reason(`cd ${other.repo.dir} && git status`), null);
+  assert.match(reason(`cd '${other.repo.dir}' && git push`), /remote origin/);
+  assert.match(reason(`cd '${relative(repo.dir, other.repo.dir)}' && git push`), /remote origin/);
+  assert.match(reason(`pushd '${other.repo.dir}'; git push`), /remote origin/);
+  assert.match(destructivePush(`(Set-Location ${other.repo.dir}; git push)`, { readings: [true], cwd: repo.dir }), /remote origin/);
+  assert.equal(reason(`cd '${repo.dir}' && git push`), null);
+  assert.equal(reason(`cd '${other.repo.dir}' && git status`), null);
 });
