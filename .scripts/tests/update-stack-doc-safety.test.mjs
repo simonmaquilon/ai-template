@@ -107,6 +107,16 @@ await import('../.scripts/update-stack-doc.mjs');
   assert.equal(existsSync(stack), false);
 });
 
+// The write opens without O_TRUNC and truncates the descriptor, so a document that shrinks keeps no stale tail.
+test('update-stack-doc leaves no bytes of a longer stale document behind', (t) => {
+  const short = fixture(t);
+  const long = fixture(t);
+  long.write('.docs/stack.md', long.stack().replaceAll('\nstale\n', `\n${'stale '.repeat(2000)}\n`));
+  assert.equal(short.sync().status, 0);
+  assert.equal(long.sync().status, 0);
+  assert.equal(long.stack(), short.stack());
+});
+
 test('update-stack-doc parses large workflow files in linear time', (t) => {
   const repo = fixture(t);
   repo.write('.github/workflows/big.yml', '  \n'.repeat(20000) + '\n'.repeat(20000));
