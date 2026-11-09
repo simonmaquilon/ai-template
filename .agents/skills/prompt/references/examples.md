@@ -13,6 +13,7 @@ The illustrative draft asks for a report and names two delivery options without 
 Use this form only after verifying an internal project contradiction that bears on the authorized work. Place it after the improved prompt's fenced block; replace both evidence markers with actual project paths and lines.
 
 > Findings:
+>
 > - `<verified-guide-path>:<line>` prescribes one check, but `<verified-manifest-path>:<line>` defines another; carried in the prompt's validation sentence.
 
 ## Bounded rewrite
