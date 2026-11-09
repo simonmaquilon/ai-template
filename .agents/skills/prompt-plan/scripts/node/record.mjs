@@ -2,8 +2,12 @@
 //   node record.mjs <NN> before    before the fragment starts; lists the untracked files that version control does not
 //                                  ignore, which no patch carries and none can be adopted later
 //   node record.mjs <NN> after [--include <path>]... [--leave <path>]...
-//                                  once its checks pass; writes NN.patch and NN.state, and lists the files that
-//                                  changed between the previous fragment's record and this fragment's before record;
+//                                  once its checks pass; where the plan has check/NN-check.mjs it refuses, before
+//                                  writing anything, unless the newest review/NN-check log stamped after NN.before shows
+//                                  a passing run; writes NN.patch and NN.state, sets the status of the fragment's row in
+//                                  build/00-index.md to done, warning and leaving the index as it is when it cannot, and
+//                                  lists the files that changed between the previous fragment's record and this
+//                                  fragment's before record;
 //                                  each --include adopts a file or link the fragment created, so that this and every
 //                                  later record captures it, never one the working tree held by that name before it;
 //                                  each --leave keeps an untracked file or folder out of the patch on purpose, and every
@@ -25,14 +29,14 @@
 //   until git add tracks it again or, in after, the agent deletes one the fragment removed with git rm that a build or
 //   install wrote again. after and restore also refuse a change to a file the index or the before snapshot holds in two
 //   spellings, the deletion of one included, which no patch can replay.
-import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import {
   NAMES, PARTIAL, PATCH, PartialWrite, adoptedFiles, beforeFile, caseOnlyRenames, fragments, git, gitlinks, ignoresCase, inPlan, inRealFolders,
   loadState, nestedGit, newUntracked, obstructed, onDisk, outsideIndex, ownRepository, patchFile, pathKey, planPath, position, rawChanges, recorded,
   TRACK_AGAIN, TWO_SPELLINGS, refuse, requireCaseConfig, requireIndexed, requireOneSpelling, requireRoot, requireSnapshot, requireVisible, root, selectFragments, snapshotTree, stateFile, storeEnv, untrackedBefore, untrackedFile,
-  untrackedList, untrackedNow, writePatch,
+  planDir, untrackedList, untrackedNow, writePatch,
 } from './common.mjs';
 
 const USAGE = 'Usage: node record.mjs <NN> before|after|restore, where after alone takes --include <path> to adopt a file and --leave <path> to leave a file or folder out, each repeated per path';
@@ -102,6 +106,44 @@ const report = (heading, lines) => {
   if (lines.length) console.log([`Fragment ${number}: ${heading}:`, ...lines].join('\n  '));
 };
 
+// A plan that checks the fragment records it only after a passing run of that check: the newest check log in review/
+// stamped after the before record, ending with the exit status 0 that lib writes when its process exits, and with no
+// failing or skipped line, which lib writes as one "## FAIL" or "## SKIPPED" heading per line. A killed process leaves
+// no exit status, and a log of an all run for a later fragment skips slow lines. A stamp in the future is no evidence.
+function requirePassingCheck() {
+  const script = `check/${number}-check.mjs`;
+  if (!existsSync(join(planDir, script))) return;
+  const since = Math.floor(statSync(before).mtimeMs);
+  const stamp = new RegExp(`^${number}-check-(\\d{4}-\\d{2}-\\d{2})T(\\d{2})-(\\d{2})-(\\d{2})-(\\d{3})Z\\.log$`);
+  const reviewDir = join(planDir, 'review');
+  const stamped = (existsSync(reviewDir) ? readdirSync(reviewDir) : []).flatMap((name) => {
+    const [, day, hour, minute, second, millis] = stamp.exec(name) ?? [];
+    return day ? [{ name, time: Date.parse(`${day}T${hour}:${minute}:${second}.${millis}Z`) }] : [];
+  }).filter(({ time }) => time >= since).sort((a, b) => (a.name < b.name ? -1 : 1));
+  const latest = stamped.at(-1);
+  const log = latest && readFileSync(join(reviewDir, latest.name), 'utf8');
+  if (log?.startsWith(`Fragment ${number} \u00b7 check run`) && log.endsWith('\n## EXIT 0\n') && !/^## (?:FAIL|SKIPPED) /m.test(log) && latest.time <= Date.now() + 5000) return;
+  const shown = inPlan(planPath) ? `${planPath}/${script}` : join(planDir, script);
+  refuse(`Refusing to record fragment ${number}: ${latest ? `its latest check run after the before record, ${latest.name}, does not pass, is not complete, or is stamped in the future` : 'no run of its check after the before record passed'}. Run "node ${shown}" from the project root, fix what it reports, and record again.`);
+}
+
+// Sets the status of the fragment's row in build/00-index.md, the row whose first cell links NN-<slug>.md, to done; with
+// no index, no such row or several, or a last cell that is no status, it warns and leaves the index as it is.
+function markDone() {
+  const index = join(planDir, 'build', '00-index.md');
+  const warn = (why) => console.error(`Warning: ${why}, so set the status of fragment ${number} to done in build/00-index.md by hand.`);
+  if (!existsSync(index)) return warn('build/00-index.md does not exist');
+  const lines = readFileSync(index, 'utf8').split('\n');
+  const link = new RegExp(`^\\s*\\|[^|]*\\]\\((?:\\./)?${number}-[^)/]*\\.md\\)`);
+  const rows = lines.flatMap((line, at) => (link.test(line) ? [at] : []));
+  if (rows.length !== 1) return warn(`build/00-index.md has ${rows.length || 'no'} rows whose first cell links ${number}-<slug>.md`);
+  const status = /^(.*\|[ \t]*`?)(?:pending|failed|blocked|done)(`?[ \t]*\|[ \t\r]*)$/.exec(lines[rows[0]]);
+  if (!status) return warn(`the last cell of the row of fragment ${number} in build/00-index.md is no status (pending, done, failed, or blocked)`);
+  lines[rows[0]] = `${status[1]}done${status[2]}`;
+  writeFileSync(index, lines.join('\n'));
+  console.log(`Fragment ${number}: status set to done in build/00-index.md.`);
+}
+
 // The files that changed between the last earlier record and this fragment's before record: a tracked or adopted file
 // this fragment's work changed before that record shows here although no NN.state lists it.
 function listChanged(from) {
@@ -148,6 +190,7 @@ if (phase === 'before') {
   report('untracked files that version control does not ignore, which no patch carries and which cannot be adopted later', newUntracked((path) => adoptedKeys.has(pathKey(path))));
 } else if (phase === 'after') {
   const { tree: from, untracked } = beforeRecord();
+  requirePassingCheck();
   const twoSpellings = requireOneSpelling(`Refusing to record fragment ${number}`, from, 'its before snapshot');
   requireIndexed(from, `Refusing to record fragment ${number}`, 'its before snapshot',
     `${TRACK_AGAIN}; delete instead each one the fragment removed with git rm, from the index and the disk, that a build or install wrote again, never one taken out of the index alone`);
@@ -260,6 +303,7 @@ if (phase === 'before') {
   rmSync(before);
   rmSync(untrackedFile(number));
   console.log(`Fragment ${number}: ${Object.keys(files).length} file(s) in ${number}.patch and ${number}.state.`);
+  markDone();
   report('nested repositories, whose contents no patch carries, so apply and revert refuse them', gitlinks(files));
   report('nested repositories with uncommitted work of their own, which no patch carries', dirtyNested(to));
   report('renamed only in case, which git does not record on this file system, so no patch carries the new names', caseOnlyRenames(to));

@@ -3,13 +3,13 @@
 // any failure. The kind is check for an NN-check script, measure for an NN-measure script, baseline with
 // --baseline on the tree before the plan's fragments, and dry-run with --dry-run on the current tree before a new plan
 // is delivered or a fragment added later runs. It writes only to review/ and to the plan's .cache/, when a check isolates a
-// tool or an all run shares a command's result.
+// tool or an all run shares a command's result or keeps a pass.
 // runChecks masks values shaped like secrets, through redact, in everything it writes to the review/ log and prints to
 // the console. The result runOnce shares within an all run is temporary, removed by all, and parsed by checks, so it
 // stays whole, as do the evidence files a script writes itself: a script never puts a secret in either.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -127,6 +127,17 @@ export const condition = (id, label, ok, detail = '', options = {}) => ({ id, la
 // script skips the slow work, such as a browser measurement, when skipSlow is true, and marks its lines with slow().
 export const skipSlow = runKind === 'check' && process.env.PROMPT_PLAN_SKIP_SLOW === '1';
 export const slow = (check) => ({ ...check, slow: true });
+
+// Marks a line that reads state outside the tree, which all.mjs never reuses a pass of: a script or a file it imports
+// that calls volatile( has none. The key of a pass covers the files of check/, HEAD, the diff of tracked files, the
+// untracked files that are not ignored, the refs, and the names in review/ other than run logs, and cannot see
+//   - environment variables, tool and runtime versions, or the clock, a running service, or a remote;
+//   - ignored files, or files outside the repository;
+//   - evidence overwritten in place under the same name;
+//   - the contents of review/ files, the NN-measure runs and other run logs a check reads;
+// so a check that reads any of them marks its line. A check that saves new evidence on every run never reuses its pass
+// and changes the key of every later one.
+export const volatile = (check) => ({ ...check, volatile: true });
 
 // A command several checks of one all run need, such as a build: once it succeeds, the later checks of the run reuse
 // its result, which all.mjs removes when the run ends; a failed run of it, or a run outside all, is not reused.
@@ -272,6 +283,15 @@ const SECRET_SHAPES = [
 ];
 export const redact = (text) => SECRET_SHAPES.reduce((masked, shape) => masked.replace(shape, '$1[REDACTED]'), String(text));
 
+// Every log this process wrote ends with the exit status the process leaves, which record.mjs reads: a script that runs
+// runChecks more than once, or throws after a passing group, leaves a failing status in the logs of the passing groups, and a
+// killed process leaves none.
+const logs = [];
+function logExit(file) {
+  if (!logs.length) process.on('exit', (code) => logs.forEach((log) => appendFileSync(log, `## EXIT ${code}\n`)));
+  logs.push(file);
+}
+
 export function runChecks(fragment, checks, extraLines = []) {
   const lines = [`Fragment ${fragment} · ${runKind} run · ${new Date().toISOString()} · ${root}`, ...extraLines];
   let failed = 0;
@@ -286,6 +306,7 @@ export function runChecks(fragment, checks, extraLines = []) {
   mkdirSync(reviewDir, { recursive: true });
   const file = freshPath(() => join(reviewDir, `${fragment}-${runKind}-${utcStamp()}.log`));
   writeFileSync(file, redact(`${lines.join('\n')}\n`));
+  logExit(file);
   console.log(redact(`Fragment ${fragment}: ${failed} failing${skipped ? `, ${skipped} skipped` : ''}. Evidence: ${relative(root, file)}`));
   // A failure stays: a script that runs several groups of checks fails when any of them does.
   if (failed) process.exitCode = 1;
