@@ -4,6 +4,9 @@
 // --baseline on the tree before the plan's fragments, and dry-run with --dry-run on the current tree before a new plan
 // is delivered or a fragment added later runs. It writes only to review/ and to the plan's .cache/, when a check isolates a
 // tool or an all run shares a command's result.
+// runChecks masks values shaped like secrets, through redact, in everything it writes to the review/ log and prints to
+// the console. The result runOnce shares within an all run is temporary, removed by all, and parsed by checks, so it
+// stays whole, as do the evidence files a script writes itself: a script never puts a secret in either.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
@@ -97,8 +100,9 @@ export function latestEvidence(fragment, name, ext) {
 // backslashes doubled, refusing the characters cmd.exe still reads inside quotes.
 function launch(cmd, args) {
   if (!isWindows) return { file: cmd, args, shell: false, line: [cmd, ...args].join(' ') };
-  const line = [cmd, ...args].map((part) => {
-    if (/["%!\r\n]/.test(part)) throw new Error(`cmd.exe cannot pass ", %, !, or a line break literally: ${JSON.stringify(part)}`);
+  // The refusal names the part by its position, never its content, which may be a secret no key precedes.
+  const line = [cmd, ...args].map((part, index) => {
+    if (/["%!\r\n]/.test(part)) throw new Error(`cmd.exe cannot pass ", %, !, or a line break literally: ${index ? `argument ${index}` : 'the command'}`);
     return `"${part.replace(/\\+$/, '$&$&')}"`;
   }).join(' ');
   return { file: line, args: [], shell: true, line };
@@ -253,6 +257,21 @@ export async function withServer(cmd, args, url, fn, options = {}) {
   }
 }
 
+// Masks values shaped like secrets with [REDACTED], keeping the key or prefix: key/value pairs such as Password=x,
+// "api_key": "x", or --password=x, a flag followed by its value, the password of a URL, and authorization credentials.
+// A key starts after anything but a letter or digit, so DB_PASSWORD and User Password match and PASSWORD_HASH_ALGO and
+// secretary do not. Every repeat is bounded or stops at a character the next part never matches, so each runs in linear time.
+const KEY = '(?:password|passwd|pwd|secret|token|(?:api|access|private|secret)[_-]?key)';
+const VALUE = String.raw`(?:"(?:[^"\\\r\n]|\\.)*"?|'(?:[^'\\\r\n]|\\.)*'?|[^\s;,&"']+)`;
+const SECRET_SHAPES = [
+  new RegExp(String.raw`(?<![a-z0-9])(${KEY}["']?[ \t]*[=:][ \t]*)${VALUE}`, 'gi'),
+  new RegExp(String.raw`(?<![a-z0-9])(--(?:[a-z0-9]{1,20}[_.-]){0,2}${KEY}["']?[ \t]+)${VALUE}`, 'gi'),
+  /([a-z][a-z0-9+.-]{0,31}:\/\/[^\s/@:"']*:)[^\s/"']+(?=@)/gi,
+  /(?<![a-z0-9])(Authorization["']?[ \t]*[:=][ \t]*["']?Basic[ \t]+)[^\s"']+/gi,
+  /(?<![a-z0-9])(Bearer[ \t]+)[a-z0-9._~+/=-]+/gi,
+];
+export const redact = (text) => SECRET_SHAPES.reduce((masked, shape) => masked.replace(shape, '$1[REDACTED]'), String(text));
+
 export function runChecks(fragment, checks, extraLines = []) {
   const lines = [`Fragment ${fragment} · ${runKind} run · ${new Date().toISOString()} · ${root}`, ...extraLines];
   let failed = 0;
@@ -262,12 +281,12 @@ export function runChecks(fragment, checks, extraLines = []) {
     if (status === 'FAIL') failed += 1;
     if (status === 'SKIPPED') skipped += 1;
     lines.push('', `## ${status} ${check.id}: ${check.label}`, String(output).trimEnd());
-    console.log(`${status.padEnd(7)} ${check.id}: ${check.label}`);
+    console.log(redact(`${status.padEnd(7)} ${check.id}: ${check.label}`));
   }
   mkdirSync(reviewDir, { recursive: true });
   const file = freshPath(() => join(reviewDir, `${fragment}-${runKind}-${utcStamp()}.log`));
-  writeFileSync(file, `${lines.join('\n')}\n`);
-  console.log(`Fragment ${fragment}: ${failed} failing${skipped ? `, ${skipped} skipped` : ''}. Evidence: ${relative(root, file)}`);
+  writeFileSync(file, redact(`${lines.join('\n')}\n`));
+  console.log(redact(`Fragment ${fragment}: ${failed} failing${skipped ? `, ${skipped} skipped` : ''}. Evidence: ${relative(root, file)}`));
   // A failure stays: a script that runs several groups of checks fails when any of them does.
   if (failed) process.exitCode = 1;
 }
