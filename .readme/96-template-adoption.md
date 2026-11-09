@@ -44,6 +44,16 @@ Un proyecto que ya existe, con o sin código, adopta la plantilla extrayendo sus
    Con el sandbox de Claude Code activo, la extracción escribe rutas que ese sandbox protege por omisión, como `.claude/settings.json`, `.claude/agents/`, `.claude/skills` y `.mcp.json`, y también `.scripts/`, `.codex/` y `.agents/skills/` si el proyecto ya declara la protección de la plantilla, y falla en ellas: ejecuta esta extracción, y las restauraciones que escriban esas rutas, fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md).
 
    Comprueba después que `.claude/skills` es un enlace con `test -L .claude/skills`; si no lo es, bórralo, recupéralo con `git -c core.symlinks=true checkout <ref> -- .claude/skills` seguido de `git reset -q -- .claude/skills` y repite la comprobación.
+
+   Quita después de `.claude/settings.json` toda entrada de `sandbox.excludedCommands` y de `permissions.allow` que nombre uno de esos archivos: hoy, las cinco de `run-checks.mjs`, que son estas:
+
+   ```text
+   sandbox.excludedCommands: node .scripts/run-checks.mjs*
+   permissions.allow: Bash(node .scripts/run-checks.mjs), Bash(node .scripts/run-checks.mjs *),
+     y las dos reglas PowerShell(...) con los mismos comandos
+   ```
+
+   Deja las demás entradas como están. Esa ruta está protegida por el sandbox: edítala fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md).
 5. Añade al `.gitignore` del proyecto, o créalo, las reglas de `git show <ref>:.gitignore` que le falten; se excluye de la extracción para unirlo, no porque solo valide la plantilla. Después, `git ls-tree -r --name-only <ref> | git check-ignore -v --stdin` lista las rutas de la plantilla que el proyecto ignora y la regla que lo hace, también en `.git/info/exclude` o en las exclusiones globales de Git: quita o acota esas reglas, salvo en las rutas que la propia plantilla ignora y versiona, como `.temp/.gitignore`, que se añaden con `git add -f`.
 6. Con `git status` y `git diff`, une lo que la extracción sustituyó. Ningún secreto pasa a un archivo versionado (`AGENTS.md`): los tokens y claves de las copias del paso 3 van a la configuración del usuario, como su `.npmrc` personal, o a variables de entorno que el archivo nombra.
    - En los esqueletos de las referencias primarias y de `README.md`, conserva el de la plantilla y lleva el contenido del proyecto a sus secciones.
@@ -68,6 +78,8 @@ Son de la plantilla los archivos que registra `.agents/template-manifest.json`, 
 - las reglas de la plantilla en `.gitignore`, `.gitattributes` y `.temp/.gitignore`.
 
 Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. La lista exacta está en `.scripts/template-manifest.mjs`. Nunca se adoptan, no entran en el manifiesto y no cambian la versión. Un proyecto creado como copia de la plantilla los borra, cosa que hace la skill `start` al prepararlo (si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla), y un proyecto existente no los extrae al adoptarla.
+
+Con esos archivos se van las entradas de `.claude/settings.json` que los nombran, la exención de `sandbox.excludedCommands` y las reglas de `permissions.allow` de `run-checks.mjs`: un proyecto derivado las quita, y la plantilla las conserva porque sus mantenedores las necesitan.
 
 Lo demás es del proyecto: el código, lo que añadió en archivos de la plantilla porque esta lo pide, el contenido con que rellenó las referencias primarias, incluida la sección Project Tooling de `.docs/stack.md`, las skills del catálogo opcional que instaló, sus documentos de `.readme/` por debajo de 90 y sus políticas propias, enrutadas y registradas como desviaciones en `AGENTS.md`.
 
@@ -116,6 +128,15 @@ Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión
 
 - `take`, `add` y `delete`: el proyecto no las tocó, así que toma la versión nueva con `git restore --source=refs/plantilla/<versión-nueva> -- <ruta>`, que también borra el archivo si la versión nueva lo retiró. Con el sandbox de Claude Code activo, `git restore` no puede escribir las rutas que ese sandbox protege, como `.claude/settings.json`, `.claude/agents/`, `.agents/skills/`, `.mcp.json`, `.scripts/` y `.codex/`, y falla en ellas con `Operation not permitted`; con varias rutas en un mismo comando restaura las demás y deja esas como estaban, así que el paso queda a medias sin que se note. Restaura esas rutas en un comando aparte, fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md).
 - `merge` y `review`: el proyecto las modificó, por una desviación registrada en `AGENTS.md` o porque la propia plantilla pide adaptarlo, como las concesiones del catálogo de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md), las exenciones de sandbox de [Sandbox de agentes](91-agent-sandbox.md), los hooks propios registrados en [Hooks de agentes](92-agent-hooks.md) o sus reglas de `.gitignore` y `.gitattributes` y su `.npmrc`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
+- Si el proyecto aún conserva en `.claude/settings.json` las entradas de `sandbox.excludedCommands` y de `permissions.allow` que nombran archivos que solo validan la plantilla, hoy las cinco de `run-checks.mjs`, que muestra el bloque siguiente, quítalas como en «Adoptar la plantilla en un proyecto existente» y deja las demás como están.
+
+  ```text
+  sandbox.excludedCommands: node .scripts/run-checks.mjs*
+  permissions.allow: Bash(node .scripts/run-checks.mjs), Bash(node .scripts/run-checks.mjs *),
+    y las dos reglas PowerShell(...) con los mismos comandos
+  ```
+
+- Una vez que el proyecto quitó esas entradas, `.claude/settings.json` cuenta como modificado por el proyecto: las versiones posteriores que cambien `.claude/settings.json` llegan como `merge`, y el proyecto las mantiene fuera al aplicar el cambio de la plantilla.
 - En las referencias primarias ya rellenadas, nunca tomes el esqueleto nuevo. Traslada solo los cambios de estructura: secciones o columnas nuevas, renombradas o retiradas, marcadores y textos de guía. Mueve el contenido existente a su nuevo sitio, también cuando pasa de una referencia primaria a otra, y deja con `TODO` lo que falte por decidir.
 - En `.docs/stack.md`, toma entera la sección Template Tooling de la versión nueva y trata el resto, incluida Project Tooling, como una referencia primaria rellenada. Los bloques entre marcas `stack:generated` no se fusionan a mano: conserva sus marcas y sus notas, y el hook de `.docs/stack.md` los regenera en el siguiente turno de un agente, o `node .scripts/update-stack-doc.mjs` si lo ejecutas tú.
 - De las skills, trae solo las carpetas de `.agents/skills/` que cambió la plantilla y sus entradas de `skills-lock.json`, copiadas tal como están en la versión nueva, sin recalcular ni editar hashes (`03-code-authoring.md`); conserva las skills que añadió el proyecto, no restaures las que retiró y revisa los permisos y hooks que se conceden las que cambian, como pide [Skills de agentes](90-agent-skills.md).
