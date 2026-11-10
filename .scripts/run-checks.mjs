@@ -58,6 +58,7 @@ const steps = [
   ['prompt-plan skill tests', ['--test', ...inTests(planNames)], (run) => run.status === 0, planSkip, gitBlock],
   ['security-audit skill integrity', [join('.scripts', 'check-security-skill.mjs')], (run) => run.status === 0],
   ['documentation links', [join('.scripts', 'check-doc-links.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
+  ['bug register', [join('.scripts', 'check-bugs.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['markdown structure', [join('.scripts', 'check-markdown.mjs'), '--all'], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['instruction files', [join('.scripts', 'check-instructions.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['stack document', [join('.scripts', 'update-stack-doc.mjs'), '--check'], (run) => run.status === 0],

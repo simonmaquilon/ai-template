@@ -63,6 +63,12 @@
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/remind-instructions.mjs\" ] || exit 0; node \"$r/.scripts/remind-instructions.mjs\"",
             "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','remind-instructions.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\"",
             "statusMessage": "Reminding instruction routing"
+          },
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-bugs.mjs\" ] || exit 0; node \"$r/.scripts/check-bugs.mjs\"",
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-bugs.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\"",
+            "statusMessage": "Checking bug register"
           }
         ]
       }
