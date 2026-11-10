@@ -34,6 +34,6 @@ En un repositorio privado, cada ejecución consume los minutos de Actions inclui
 
 ## En el repositorio de la plantilla
 
-En el repositorio de la plantilla el workflow está desactivado en GitHub; los push, pull requests y ejecuciones manuales no lo disparan. La validación local sigue disponible con `node .scripts/run-checks.mjs`.
+En el repositorio de la plantilla el workflow está activo en GitHub; los push a `main` y los pull requests contra `main` lo disparan, y `gh workflow run template-checks.yml --ref main` permite lanzarlo a mano. La validación local sigue disponible con `node .scripts/run-checks.mjs`.
 
 `gh workflow disable template-checks.yml` desactiva el workflow y `gh workflow enable template-checks.yml` lo reactiva. Es un ajuste de GitHub, no un cambio al archivo del workflow.
