@@ -50,19 +50,19 @@ Before the first edit, state the change's level in one line.
 - Never open, display, copy, log, or commit secret values; use the configured secret mechanism, and example files for names and placeholders.
 - Treat edit-hook warnings as leads to verify, never as confirmed findings or license to change unrelated code.
 - Keep temporary and ad-hoc artifacts in `.temp/`, removing task-specific ones before closing except change plans under `.temp/plans/`.
-- Before recommending a command for the user to run, point to the repository script, hook, or documented command that covers it; when none does and the task repeats, offer a `.scripts/` helper.
+- Before recommending a command, point to the repository script, hook, or documented command that covers it; when none does and the task repeats, offer a `.scripts/` helper.
 
 ### Language and responses
 
 - Write code, identifiers, filenames, comments, operational messages, commits, this file, the instruction modules, `.docs/stack.md`, and `.docs/security.md` in English, and the rest of `.docs/`, `README.md`, and `.readme/` in Spanish.
-- Answer in the language of the user's latest own words, using `.docs/product.md` domain terminology without synonyms.
-- Lead with the answer, code, or command, as short as a technical reader needs, without preambles, recaps, or unasked offers or next steps unless the work is blocked or scope was left out.
+- Write everything else the user sees, subagent briefs included, in the language of the user's latest own words, using `.docs/product.md` domain terminology without synonyms.
+- Lead with the answer, code, or command, as short as a technical reader needs, without preambles, recaps, or unasked offers or next steps unless blocked or scope was left out.
 - Keep code blocks copy-paste ready and link files with workspace-relative clickable links.
-- For a change, report the outcome, its cause when established, the changed areas, the validation actually run with its result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with ✅ done, ❌ failed, ⚠️ open risk or gap, ⏳ pending, or ℹ️ stateless note, grouping lines in that order, and use those markers nowhere else.
+- For a change, report the outcome, its cause when established, the changed areas, the validation run with its result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with ✅ done, ❌ failed, ⚠️ open risk or gap, ⏳ pending, or ℹ️ stateless note, grouping lines in that order, and use those markers nowhere else.
 
 ## Instruction routing
 
-Modules live in `.agents/instructions/`. Before acting, load each module whose condition matches the request, and only those.
+Before acting, load each module in `.agents/instructions/` whose condition matches the request, and only those.
 
 - `01-meta-guidelines.md`: before editing `AGENTS.md`, an instruction module, a primary-reference or root `README.md` skeleton, template-owned `.readme/` documents, or `.agents/template-version`.
 - `02-change-workflow.md`: before planning or editing a normal or risk change, and whenever its criteria, contracts, or scope must change.
