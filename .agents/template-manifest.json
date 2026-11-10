@@ -139,7 +139,7 @@
     ".scripts/turn-marker.mjs": "4fc86fef30fa99c7adb884fb4745be6e532d2224",
     ".scripts/update-stack-doc.mjs": "f3af8d83eb271f0fe525ca96c6490ca0c85ef101",
     ".temp/.gitignore": "d6b7ef32c8478a48c3994dcadc86837f4371184d",
-    "AGENTS.md": "e865407ce1fcd76d274911d85a2be2c9600532f8",
+    "AGENTS.md": "6efd350c3099a52e4ca9abd58c4c388c7ad5df0b",
     "README.md": "ea24df449320b69b231e7d6bf7450972436590be",
     "skills-lock.json": "3fa7efe08f92443265d91e28b31b4df218cd1265"
   }
