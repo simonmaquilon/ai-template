@@ -1,6 +1,7 @@
 ---
 name: prompt
 description: Improve a draft prompt before it is used. Use when the user asks to rewrite, clarify, structure, strengthen, or optimize a prompt for an AI model, agent, tool, or workflow while preserving the original intent and constraints. When the prompt targets a project, it inspects that project and runs checks and tests that leave its tracked files unchanged before returning the prompt.
+disable-model-invocation: true
 ---
 
 # Prompt improvement
