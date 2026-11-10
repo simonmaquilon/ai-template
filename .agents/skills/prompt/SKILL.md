@@ -81,7 +81,7 @@ In these rules, to clarify an element is to state it in the prompt when the draf
 - For creative prompts, preserve the desired style and subject while clarifying composition, audience, format, and exclusions.
 - For high-stakes prompts, require verification, uncertainty reporting, and appropriate professional review.
 - For prompts involving private, destructive, or external actions, preserve explicit approval boundaries and require confirmation before irreversible actions, including those the user chose to keep when the prompt was prepared.
-- Write the improved prompt in the language of the draft. When the draft mixes languages or its language is unclear, use the user's. An explicit request for another language overrides both. Questions and clarification turns use the language the user writes in the conversation, whatever the draft's language.
+- Write the improved prompt in the language of the draft. When the draft mixes languages or its language is unclear, use the user's. An explicit request for another language overrides both. Questions and clarification turns use the language the user writes in the conversation, whatever the draft's language. Every other message to the user, such as a progress note or the answer that follows a tool result, a subagent's report, or a background notice, uses the language of the user's latest own words, even when that input is in another language.
 
 ## Implementation prompts
 
