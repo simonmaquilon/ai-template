@@ -1,6 +1,6 @@
 # Bugs
 
-Los bugs del comportamiento ya entregado, activos y cerrados. Un fallo de algo aún no entregado va en su entrada de [backlog.md](backlog.md). Reemplaza la fila `TODO` con el primer bug.
+Los bugs del comportamiento ya entregado, activos y cerrados. Un fallo de algo aún no entregado va en su entrada de [backlog.md](backlog.md). Al registrar el primer bug, elimina la fila `TODO` de Activos, aunque el bug vaya a Cerrados. Cada fila va en la sección que corresponde a su estado; una tabla sin filas conserva su encabezado y delimitador.
 
 - Identificador estable `BUG-0001`, nunca reutilizado; una fila por bug, que se mueve al cerrar sin perder el identificador ni la ruta del test.
 - Fechas `YYYY-MM-DD`. Sin secretos, datos personales ni detalles explotables: enlaza un registro privado si hace falta.

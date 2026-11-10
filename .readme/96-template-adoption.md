@@ -138,11 +138,13 @@ Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión
 
 - Una vez que el proyecto quitó esas entradas, `.claude/settings.json` cuenta como modificado por el proyecto: las versiones posteriores que cambien `.claude/settings.json` llegan como `merge`, y el proyecto las mantiene fuera al aplicar el cambio de la plantilla.
 - En las referencias primarias ya rellenadas, nunca tomes el esqueleto nuevo. Traslada solo los cambios de estructura: secciones o columnas nuevas, renombradas o retiradas, marcadores y textos de guía. Mueve el contenido existente a su nuevo sitio, también cuando pasa de una referencia primaria a otra, y deja con `TODO` lo que falte por decidir.
-- For a populated `.docs/bugs.md`, create the Activos and Cerrados tables with the same columns.
-- Move complete rows with states `new`, `confirmed`, `in_progress`, or `blocked` to Activos and rows with states `resolved` or `closed` to Cerrados.
-- Preserve every ID and regression test path.
-- Compact old closed evidence optionally when its row is edited again; moving rows during migration does not require it.
-- Do not restore the `TODO` row over project content.
+- Si `.docs/bugs.md` tiene contenido, crea las tablas Activos y Cerrados con las mismas columnas.
+- Mueve las filas completas con estado `new`, `confirmed`, `in_progress` o `blocked` a Activos y las de estado `resolved` o `closed` a Cerrados.
+- Conserva cada ID y ruta de test de regresión.
+- Compacta opcionalmente la evidencia antigua de un bug cerrado cuando vuelvas a editar su fila; mover filas durante la migración no lo exige.
+- No restaures la fila `TODO` sobre el contenido del proyecto.
+- Elimina la fila `TODO` de Activos al registrar el primer bug, aunque el bug vaya a Cerrados.
+- Conserva el encabezado y delimitador de una tabla sin filas.
 - En `.docs/stack.md`, toma entera la sección Template Tooling de la versión nueva y trata el resto, incluida Project Tooling, como una referencia primaria rellenada. Los bloques entre marcas `stack:generated` no se fusionan a mano: conserva sus marcas y sus notas, y el hook de `.docs/stack.md` los regenera en el siguiente turno de un agente, o `node .scripts/update-stack-doc.mjs` si lo ejecutas tú.
 - De las skills, trae solo las carpetas de `.agents/skills/` que cambió la plantilla y sus entradas de `skills-lock.json`, copiadas tal como están en la versión nueva, sin recalcular ni editar hashes (`03-code-authoring.md`); conserva las skills que añadió el proyecto, no restaures las que retiró y revisa los permisos y hooks que se conceden las que cambian, como pide [Skills de agentes](90-agent-skills.md).
 - Si la versión nueva retira una instrucción, bórrala junto con su entrada de enrutado, sin reutilizar su prefijo (`01-meta-guidelines.md`).

@@ -10,6 +10,8 @@ Read before editing `README.md`, a primary reference, or `.readme/`, and before 
 - Keep `.docs/coverage.md` to the last complete verified run, the coverage threshold's source, coverage per requirement or journey, and completed manual or agent-operated verifications, never individual tests; update it when a change affects a requirement or journey.
 - Record or update a confirmed defect in delivered behavior found during an authorized change in `.docs/bugs.md`; for a diagnosis-only request, report the update instead.
 - Place each bug row in the section matching its state, moving the complete row when it closes and preserving its stable ID and regression test path.
+- Remove the Activos `TODO` row when recording the first bug, even if it belongs in Cerrados.
+- Preserve the header and delimiter of a bug table with no rows.
 - Link each bug and its regression test both ways.
 - Keep each bug's security impact in its row and the vulnerability's state in the linked `.docs/security.md` entry.
 - Keep bug evidence to one sentence for cause, one for the fix, the regression test path, and the fix commit or version, without inventing pending or nonexistent evidence.

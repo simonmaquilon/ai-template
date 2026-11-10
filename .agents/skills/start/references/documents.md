@@ -52,6 +52,9 @@ Spanish, decision level only: no reproduced identifiers, routes, or versions, an
 
 - Setup does not fill the coverage.md or bugs.md registers.
 - Preserve the Activos and Cerrados sections and their columns, stable IDs, and regression test paths.
+- Place each bug row in the section matching its state.
+- Remove the Activos `TODO` row when recording the first bug, even if it belongs in Cerrados.
+- Preserve the header and delimiter of a bug table with no rows.
 - Keep evidence as the bugs.md schema specifies.
 - Change AGENTS.md only to record a deviation.
 

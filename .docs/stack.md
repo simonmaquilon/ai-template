@@ -74,6 +74,12 @@ The tooling that the template's agent configuration runs. The commands in `.read
 
 The rest of the agent tooling is pinned by its own configuration and listed under Agent and Automation Inventory.
 
+### Client Requirements
+
+| Client | Minimum version | Requirement | Source |
+| --- | --- | --- | --- |
+| Claude Code | 2.1.233 | Task tracking in all models via `env.CLAUDE_CODE_ENABLE_TODO_TOOLS` in `.claude/settings.json` | [Environment variables](https://code.claude.com/docs/en/env-vars) |
+
 ## Project Tooling
 
 Tooling that the project adds to the agent configuration, such as the binary of another language server, with the same columns as Template Tooling; adopting a newer template version never changes it.
