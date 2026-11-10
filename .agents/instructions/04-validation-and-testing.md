@@ -4,6 +4,7 @@ Read before validating or testing a normal or risk change, before debugging or r
 
 - Verify every acceptance criterion through the check its specification names, with evidence observed after the last relevant edit; a criterion without passing evidence is unmet.
 - Run the smallest set of checks covering the changed behavior, file types, and preservation criteria, plus every check the project requires for that scope; an interrupted run or one whose final summary was not observed has no result, and a later relevant edit supersedes earlier passes.
+- Run checks and long commands so that only their outcome enters the context: keep their full output in a file under `.temp/` or in the log a repository script writes, read its summary and the failing part, and prefer a repository script or a check that prints one line per result.
 - Before validating against a local environment, confirm that the state it depends on matches what the repository declares: applied schema changes, configuration key names, generated artifacts, and provisioned resources.
 - When no supported check covers a change, perform the closest runtime or manual verification and report it as such.
 - Validate documentation and instructions with the repository's link, cited-path, structure, and syntax checks.

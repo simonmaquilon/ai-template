@@ -17,6 +17,7 @@ Read before writing or modifying code, placing new files, or running repository 
 - Create a directory together with its first file, and remove it when its last file leaves, except the fixed template directories.
 - Reserve `.scripts/` for repository-owned developer and operational tasks, outside application runtime dependencies, runnable on every supported operating system without a particular shell, and free of workflow definitions, long-running processes, and required application code.
 - Discover commands from repository instructions, `.readme/`, manifests, task runners, and CI; prefer repository scripts over direct tool invocations, use the package manager `.docs/stack.md` names, and never invent aliases, environment names, or flags.
+- Locate code with a search and read only the lines a task needs instead of whole files, unless the task depends on the whole file, such as a review of it.
 - Derive the local application URL from configuration or startup output, and never switch host or port to work around a conflict.
 - Confirm a service failure with logs or health checks; before stopping a process, identify the exact listening process and verify it belongs to this repository, then stop it gracefully, restart it with the repository's dev command, and wait for readiness.
 - Treat `.temp/` as outside the repository's truth: never cite it as evidence, count it in usage sweeps, or update it to match a change, and keep there the ignored tool caches and hook state the repository configures.
