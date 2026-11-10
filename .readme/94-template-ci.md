@@ -34,6 +34,6 @@ En un repositorio privado, cada ejecución consume los minutos de Actions inclui
 
 ## En el repositorio de la plantilla
 
-En el repositorio de la plantilla el workflow está activo en GitHub, así que cada push a `main` y cada pull request contra `main` lo lanzan. Como el repositorio es público y el workflow solo usa runners estándar, sus ejecuciones no consumen minutos de Actions. `gh workflow run template-checks.yml --ref main` lo lanza a mano y `gh run watch` sigue el run.
+En el repositorio de la plantilla el workflow está desactivado en GitHub; los push, pull requests y ejecuciones manuales no lo disparan. La validación local sigue disponible con `node .scripts/run-checks.mjs`.
 
-Si el repositorio pasara a ser privado, `gh workflow disable template-checks.yml` lo desactiva y `gh workflow enable template-checks.yml` lo vuelve a activar. Activarlo o desactivarlo es un ajuste de GitHub, no del repositorio.
+`gh workflow disable template-checks.yml` desactiva el workflow y `gh workflow enable template-checks.yml` lo reactiva. Es un ajuste de GitHub, no un cambio al archivo del workflow.
