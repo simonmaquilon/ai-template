@@ -50,7 +50,10 @@ Spanish, decision level only: no reproduced identifiers, routes, or versions, an
 
 ## Not touched
 
-coverage.md and bugs.md are registers filled by later work. AGENTS.md changes only to record a deviation.
+- Setup does not fill the coverage.md or bugs.md registers.
+- Preserve the Activos and Cerrados sections and their columns, stable IDs, and regression test paths.
+- Keep evidence as the bugs.md schema specifies.
+- Change AGENTS.md only to record a deviation.
 
 ## backlog.md
 

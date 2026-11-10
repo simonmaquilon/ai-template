@@ -11,7 +11,9 @@ Read before planning or editing a normal or risk change, and whenever its criter
 - State each criterion as an observable outcome of a given input or state, never as an implementation step or an unverifiable quality, and name the check that proves it: an automated test, a command, or a runtime observation with its route, state, and viewport.
 - Derive criteria from the request and, where the change touches them, from `.docs/product.md`, the observable criteria of `.docs/design.md`, and the `.docs/backlog.md` entry being delivered; a criterion that contradicts them is an open decision.
 - Name the `.docs/coverage.md` requirement or journey each criterion covers when the register records one.
-- Risk: also state as preservation criteria, each with its check, the working behavior the change can affect, including the callers found in discovery and the fixes `.docs/bugs.md` records for the area; when the change extends or reorders that behavior, state the expected result after the change.
+- Read active entries in `.docs/bugs.md` first, and consult closed entries only for a known ID or a relevant regression.
+- When reserving a new bug ID, check identifiers in both sections to avoid reuse without reading closed evidence.
+- Risk: also state as preservation criteria, each with its check, the working behavior the change can affect, including the callers found in discovery and relevant fixes `.docs/bugs.md` records for the area, including closed fixes; when the change extends or reorders that behavior, state the expected result after the change.
 - Risk: record the task's base revision and authorized paths in the specification.
 - Do not edit until every criterion names its check, no material decision is open, and the specification contradicts none of its sources.
 - Keep the specification in the conversation; write a separate plan only when the user asks for one, under `.temp/plans/`.
