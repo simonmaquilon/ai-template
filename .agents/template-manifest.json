@@ -1,8 +1,8 @@
 {
-  "version": "2.13.0",
+  "version": "3.0.0",
   "files": {
     ".agents/instructions/01-meta-guidelines.md": "032f2a73fc462b4b507990a214870fc1b00c2134",
-    ".agents/instructions/02-change-workflow.md": "20db0ed239bc3299414c58bb196b79aea48261e6",
+    ".agents/instructions/02-change-workflow.md": "c70684d33b69bfa2a3d19b6c85bbf3bc3455c9a0",
     ".agents/instructions/03-code-authoring.md": "40cfe92585e91fac8f4b4d9c793faab985bad19b",
     ".agents/instructions/04-validation-and-testing.md": "85ced66e3d172c922dfd5be6ce97f85516b2cd9a",
     ".agents/instructions/05-independent-verification.md": "d805d9e317cd86cfd915683916da53eb366934d0",
@@ -66,7 +66,7 @@
     ".agents/skills/start/agents/openai.yaml": "5b1f887a9138416870f64ba2fe21602e4a59cfa7",
     ".agents/skills/start/references/documents.md": "6db869b16e49a7d338bdc932bfe1d72d08c7e950",
     ".agents/skills/start/references/tooling.md": "b2232224702b2b7e0cbc091c882122fe9b1492c4",
-    ".agents/template-version": "fb2c0766b7cc222e3f7c0296bcd6cbf144995f36",
+    ".agents/template-version": "4a36342fcab700951adb18ae7adc930997f6c3f4",
     ".claude/agents/copilot-haiku.md": "77304cdb221bd1ef41a4a98404fe0ff99b8756d8",
     ".claude/agents/copilot-opus.md": "3215b4e4c39daeb6b7e155c48b637d26c8ea430e",
     ".claude/agents/copilot-sonnet.md": "b32ed112244c9116b2a6ea777af84a200e0f7738",

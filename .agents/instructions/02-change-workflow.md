@@ -15,4 +15,5 @@ Read before planning or editing a normal or risk change, and whenever its criter
 - Risk: record the task's base revision and authorized paths in the specification.
 - Do not edit until every criterion names its check, no material decision is open, and the specification contradicts none of its sources.
 - Keep the specification in the conversation; write a separate plan only when the user asks for one, under `.temp/plans/`.
+- In Codex, use the client's native plan tool when available for multi-step tasks and keep it up to date; simple tasks need no plan, and when the tool is unavailable continue normally without blocking or claiming to have used it.
 - When implementation or verification shows that a criterion, a contract, or the scope must change, stop editing that behavior and revise the specification; ask before a revision that drops or weakens a criterion the user stated, widens the scope, or changes an external contract, and state every other revision.
