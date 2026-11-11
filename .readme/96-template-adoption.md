@@ -139,7 +139,8 @@ Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión
 - Una vez que el proyecto quitó esas entradas, `.claude/settings.json` cuenta como modificado por el proyecto: las versiones posteriores que cambien `.claude/settings.json` llegan como `merge`, y el proyecto las mantiene fuera al aplicar el cambio de la plantilla.
 - En las referencias primarias ya rellenadas, nunca tomes el esqueleto nuevo. Traslada solo los cambios de estructura: secciones o columnas nuevas, renombradas o retiradas, marcadores y textos de guía. Mueve el contenido existente a su nuevo sitio, también cuando pasa de una referencia primaria a otra, y deja con `TODO` lo que falte por decidir.
 - Si `.docs/bugs.md` tiene contenido, crea las tablas Activos y Cerrados con las mismas columnas.
-- Mueve las filas completas con estado `new`, `confirmed`, `in_progress` o `blocked` a Activos y las de estado `resolved` o `closed` a Cerrados.
+- Mueve las filas completas con estado `nuevo`, `reproducido`, `en_curso` o `bloqueado` a Activos y las de estado `resuelto` o `descartado` a Cerrados.
+- Si el registro usa los estados en inglés de versiones anteriores, tradúcelos en cada fila: `new` a `nuevo`, `confirmed` a `reproducido`, `in_progress` a `en_curso`, `blocked` a `bloqueado`, `resolved` a `resuelto` y `closed` a `descartado`; en «Corregido en», `pending` pasa a `pendiente` y `none` a `sin corrección`. La severidad y el impacto de seguridad no cambian.
 - Conserva cada ID y ruta de test de regresión.
 - Compacta opcionalmente la evidencia antigua de un bug cerrado cuando vuelvas a editar su fila; mover filas durante la migración no lo exige.
 - No restaures la fila `TODO` sobre el contenido del proyecto.

@@ -9,11 +9,11 @@ Los bugs del comportamiento ya entregado, activos y cerrados. Un fallo de algo a
 - Las medidas, la reproducción y el diagnóstico extenso van en el commit, el test o un registro privado enlazado, nunca en la fila.
 - La evidencia antigua de un bug cerrado puede compactarse al volver a editar su fila; moverla durante una migración no obliga a compactarla.
 
-Severidad: `low`, `medium`, `high`, `critical`. Impacto de seguridad: `none`, `possible`, `confirmed`. Corregido en: versión o commit; `pending` mientras siga activo y `none` si se cerró sin corrección. No inventes evidencia pendiente ni de una corrección inexistente.
+Severidad: `low`, `medium`, `high`, `critical`. Impacto de seguridad: `none`, `possible`, `confirmed`. Corregido en: versión o commit de la corrección; `pendiente` mientras siga activo y `sin corrección` si se cerró sin corregirlo. No inventes evidencia pendiente ni de una corrección inexistente.
 
 ## Activos
 
-Estados: `new`, `confirmed`, `in_progress`, `blocked`.
+Estados: `nuevo` (reportado, aún sin reproducir), `reproducido` (el defecto existe y no está corregido), `en_curso` (se está corrigiendo) y `bloqueado` (la corrección espera algo externo).
 
 | ID | Reportado | Componente | Versión afectada | Severidad | Impacto de seguridad | Estado | Corregido en | Evidencia |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Estados: `new`, `confirmed`, `in_progress`, `blocked`.
 
 ## Cerrados
 
-Estados: `resolved`, `closed`.
+Estados: `resuelto` (corregido, con su commit o versión) y `descartado` (cerrado sin corrección, por ejemplo duplicado o no reproducible).
 
 | ID | Reportado | Componente | Versión afectada | Severidad | Impacto de seguridad | Estado | Corregido en | Evidencia |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

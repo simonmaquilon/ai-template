@@ -27,8 +27,8 @@ try {
 }
 
 const blocks = readBlocks(text);
-const allowed = { Activos: new Set(['new', 'confirmed', 'in_progress', 'blocked']),
-  Cerrados: new Set(['resolved', 'closed']) };
+const allowed = { Activos: new Set(['nuevo', 'reproducido', 'en_curso', 'bloqueado']),
+  Cerrados: new Set(['resuelto', 'descartado']) };
 const value = (cell) => splitCode(cell.trim(), (content) => content.trim()).trim();
 // The level 1 and 2 headings outside quotes, in document order, each naming its section or none.
 const sections = blocks.headings.filter((heading) => heading.level <= 2 && blocks.quotes[heading.start] === '')
