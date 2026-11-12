@@ -25,6 +25,11 @@ The rest of the Execution rules of [SKILL.md](../SKILL.md), whose first rule hol
 - When only passed-over fragments remain before the one that holds the final run and the closure audit, that one runs, unless it is `blocked` itself, and its closing report carries each open decision, with the criteria that wait on it, as ⏳ pending, as the prompt's rule on open decisions lets the rest of the work proceed.
 - A passed-over fragment runs once the user resolves what it waits on: in place while no later fragment has a record, and otherwise under the next free number, followed, when the fragment holding the final run and the closure audit already ran, by a new fragment that repeats them. While a fragment that stops the execution stays `blocked`, the ⏳ report, which names each open decision, stands in for the closing report.
 
+## Times
+
+- Take the execution's times from `check/time.mjs`, never from memory or an estimate, copying it unchanged from this skill's bundled `check-time` into a plan whose `check/` lacks it, whose times then start at its first line. Run `node check/time.mjs NN` when work on fragment NN starts, its dry runs and baseline included, and when it resumes after a pause, and `node check/time.mjs wait "<reason>"` right before each pause, such as a question to the user, a stop these rules make, or a wait on another session or a contended resource, and at the end of every execution, with a reason in the user's language that names what it waits on.
+- Each line closes the segment the line before it opened, whatever runs meanwhile, subagents included, so rows follow one another with no gap, a pause never counts as a fragment's work, and a fragment a pause interrupts takes one row per part.
+
 ## Running a fragment
 
 - After any dry run or `--baseline` run that the dry-run rule or `check/` requires before it, first run `record NN before` when the plan has `patch/` and the fragment has none yet, before writing any of its tests or changes to project files, so its patch captures them; a fragment resumed after `blocked` or retried after `failed` keeps the one it already ran.
