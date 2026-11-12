@@ -20,4 +20,6 @@ Read before writing or modifying code, placing new files, or running repository 
 - Locate code with a search and read only the lines a task needs instead of whole files, unless the task depends on the whole file, such as a review of it.
 - Derive the local application URL from configuration or startup output, and never switch host or port to work around a conflict.
 - Confirm a service failure with logs or health checks; before stopping a process, identify the exact listening process and verify it belongs to this repository, then stop it gracefully, restart it with the repository's dev command, and wait for readiness.
+- Start a background process, such as a server, a log follower like `tail -f`, a watcher, or a wait loop, only with a timeout or a stop the task controls, and bound every wait with a time limit.
+- Before reporting, stop every background process you started, above all any that cannot end on its own.
 - Treat `.temp/` as outside the repository's truth: never cite it as evidence, count it in usage sweeps, or update it to match a change, and keep there the ignored tool caches and hook state the repository configures.
