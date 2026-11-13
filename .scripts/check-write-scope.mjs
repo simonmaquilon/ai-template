@@ -14,14 +14,15 @@
 // Code and Codex read. Whatever the hook cannot read or resolve for a file tool, its own errors included, asks instead
 // of allowing or failing. Codex cannot ask, so its hooks pass --no-ask, which turns every other ask into silence and
 // leaves the write to Codex's own sandbox and approvals; with --powershell, which the Codex hook passes on Windows, a
-// command is read both ways.
+// command is read both ways. Without it, a Bash command on Windows is read as Git Bash runs it for Claude Code, with
+// the temporary folder at /tmp and each drive at /<letter>.
 
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readHookInput, toPosix } from './hook-support.mjs';
 import { sealGuard } from './template-seal.mjs';
 import { realTarget, within, writeScope } from './write-scope.mjs';
-import { shellTempWrite, shellWrites } from './write-scope-shell.mjs';
+import { fromGitBash, shellTempWrite, shellWrites } from './write-scope-shell.mjs';
 
 const RULE = '03-code-authoring.md';
 const SEAL_RULE = '01-meta-guidelines.md';
@@ -75,13 +76,15 @@ function decide(name, tool) {
   if (SHELLS.has(name)) {
     if (typeof tool?.command !== 'string' && !Array.isArray(tool?.command)) return null;
     const readings = name === 'PowerShell' ? [true] : process.argv.includes('--powershell') ? [true, false] : [false];
+    const gitBash = process.platform === 'win32' && readings.length === 1 && !readings[0];
     let judge;
     // Its own error says nothing about where a command writes, which the sandbox confines anyway, so it stays silent.
     try {
-      const found = shellTempWrite(tool.command, { readings, cwd, isTemp: (path) => (judge ??= scope())(path) === 'temp' });
+      const isTemp = (path) => (judge ??= scope())(path) === 'temp';
+      const found = shellTempWrite(tool.command, { readings, cwd, isTemp, gitBash });
       if (found) return ['deny', `this command writes into a system temporary folder (${shown(found)}); ${ADVICE}`];
       const named = shellWrites(tool.command, { readings }).filter((word) => word && !/[$%]/.test(word))
-        .map((word) => (isAbsolute(word) ? word : `${cwd}${sep}${word}`));
+        .map((word) => (gitBash ? fromGitBash(word) : word)).map((word) => (isAbsolute(word) ? word : `${cwd}${sep}${word}`));
       const [guarded, kind] = named.length > 0 ? sealGuarded(named) ?? [] : [];
       return kind?.startsWith('control') ? control(guarded, kind) : null;
     } catch {
