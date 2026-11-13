@@ -126,6 +126,8 @@ Además de los ajustes de presentación de la sección siguiente, dos ajustes de
 
 El bloque `env` de `.claude/settings.json` fija `CLAUDE_CODE_ENABLE_TODO_TOOLS` a `"1"` para habilitar herramientas de seguimiento de tareas en todos los modelos. Se distribuye con la plantilla y no requiere configuración global ni extensión VS Code; el [requisito del cliente](../.docs/stack.md#client-requirements) recoge la versión mínima y su fuente.
 
+El mismo bloque fija `CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR` a `"1"`: después de cada orden de Bash o PowerShell de la sesión principal, Claude Code vuelve al directorio del proyecto, de modo que un `cd` dentro de una orden no deja la sesión trabajando en otra carpeta. La [referencia de variables de entorno](https://code.claude.com/docs/en/env-vars) de Claude Code la describe solo para la sesión principal, no para los subagentes. La referencia de configuración de Codex no lista un ajuste equivalente.
+
 ## Ajustes de presentación y búsqueda
 
 El repositorio fija también cómo se presentan las respuestas, la status line de Claude Code y si Codex busca en la web. Los heredan los proyectos derivados; en Claude Code, cada persona puede cambiarlos solo en su máquina con `.claude/settings.local.json`, y Codex solo carga `.codex/config.toml` cuando la persona confía en el proyecto.
