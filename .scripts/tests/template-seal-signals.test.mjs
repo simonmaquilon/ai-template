@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { lstatSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { WINDOWS } from './support.mjs';
 import { commit } from './template-manifest-fixture.mjs';
 import { EXCEPTIONS, FILES, MARKER, derived, exists, guard, read, seal } from './template-seal-fixture.mjs';
 
@@ -94,6 +95,12 @@ test('shell redirections and tee into the marker or the exceptions list ask in C
   for (const command of ['echo {} > .agents/template-exceptions.json', 'date | tee .temp/template-adoption']) {
     assert.equal(guard(repo, 'claude', bash(command))?.[0], 'ask', command);
     assert.equal(guard(repo, 'codex', bash(command))?.[0], 'deny', command);
+  }
+  // Git Bash, which runs the Bash commands of Claude Code on Windows, names a drive as /<letter>.
+  if (WINDOWS) {
+    const list = join(repo.dir, EXCEPTIONS);
+    const mounted = `/${list[0].toLowerCase()}${list.slice(2).replaceAll('\\', '/')}`;
+    assert.equal(guard(repo, 'claude', bash(`echo {} > ${mounted}`))?.[0], 'ask', mounted);
   }
   for (const command of ['touch .temp/template-adoption', 'echo hi > .temp/notes.txt']) assert.equal(guard(repo, 'claude', bash(command)), null, command);
   assert.equal(exists(repo, MARKER), false);

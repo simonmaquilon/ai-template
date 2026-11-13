@@ -146,7 +146,7 @@
     ".scripts/template-seal.mjs": "f5c704be33b19b94b0bac2f559c29fa13324495c",
     ".scripts/turn-marker.mjs": "4fc86fef30fa99c7adb884fb4745be6e532d2224",
     ".scripts/update-stack-doc.mjs": "f3af8d83eb271f0fe525ca96c6490ca0c85ef101",
-    ".scripts/write-scope-shell.mjs": "d9a84f613b46ada873963f1a169f579894f863c7",
+    ".scripts/write-scope-shell.mjs": "ea13c6e42fb3424fde740dc8e3c7d7148fdaf6c8",
     ".scripts/write-scope.mjs": "1528658695dfae0220afda28ca43618068fc2295",
     ".temp/.gitignore": "d6b7ef32c8478a48c3994dcadc86837f4371184d",
     "AGENTS.md": "6efd350c3099a52e4ca9abd58c4c388c7ad5df0b",

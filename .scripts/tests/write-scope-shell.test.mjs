@@ -26,7 +26,8 @@ test('a word of a Git Bash command is read as the Windows path its /tmp and driv
   assert.equal(fromGitBash('/tmp/a/x.txt', temp), `${temp}/a/x.txt`);
   assert.equal(fromGitBash('/c/Users/me/x.txt', temp), 'c:/Users/me/x.txt');
   assert.equal(fromGitBash('/D', temp), 'D:/');
-  for (const word of ['/tmpx/a', '/usr/bin/env', 'notes/tmp/x', 'C:/x.txt', '.temp/x.txt', '']) assert.equal(fromGitBash(word, temp), word);
+  for (const word of ['/TMP/x.txt', '/./tmp/x.txt', '///tmp/x.txt', '/c/../tmp/x.txt']) assert.equal(fromGitBash(word, temp), `${temp}/x.txt`, word);
+  for (const word of ['/tmpx/a', '/usr/bin/env', 'notes/tmp/x', 'C:/x.txt', '.temp/x.txt', '//tmp/x.txt', '']) assert.equal(fromGitBash(word, temp), word);
 });
 
 for (const client of ['claude', 'codex']) {
@@ -38,7 +39,8 @@ for (const client of ['claude', 'codex']) {
     if (!WINDOWS) denied.push('echo hi > /tmp/write-scope-probe.txt', 'mktemp /var/tmp/x.XXXX');
     // Claude Code runs Bash commands in Git Bash on Windows, which mounts the temporary folder at /tmp and each drive.
     if (WINDOWS && client === 'claude') {
-      denied.push('echo hi > /tmp/write-scope-probe.txt', 'mktemp /tmp/x.XXXX', `printf x > ${gitBash(tmp)}/x.txt`);
+      denied.push('echo hi > /tmp/write-scope-probe.txt', 'mktemp /tmp/x.XXXX', `printf x > ${gitBash(tmp)}/x.txt`, 'echo hi > /TMP/x.txt',
+        'echo a > /q/no-such-drive.txt; echo b > /tmp/x.txt');
     }
     for (const command of denied) assertDenied(fire(client, MATCHERS[client], bash(command)), command);
   });

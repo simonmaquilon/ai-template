@@ -6,7 +6,7 @@
 // only the command's text, not the scripts or programs it runs; the sandbox confines the rest.
 
 import { tmpdir } from 'node:os';
-import { isAbsolute, sep } from 'node:path';
+import { isAbsolute, posix, sep } from 'node:path';
 import { commands } from './shell-commands.mjs';
 
 const TEMP_VARIABLE = /^(?:\$\{?(?:TMPDIR|TMP|TEMP)\}?|\$env:(?:TMPDIR|TMP|TEMP)|%(?:TMPDIR|TMP|TEMP)%)(?:[\\/]|$)/i;
@@ -15,10 +15,13 @@ const TEE = /^(?:.*[\\/])?(?:tee|Tee-Object)(?:\.exe)?$/i;
 const MKTEMP = /^(?:.*[\\/])?mktemp(?:\.exe)?$/i;
 
 // The Windows path a word of a Git Bash command names, or the word itself: Git Bash mounts the user's temporary
-// folder at /tmp and each drive at /<letter>.
+// folder at /tmp and each drive at /<letter>. It finds the mount after normalizing the path and whatever the letter
+// case; two leading slashes, and no more, start a network path instead.
 export function fromGitBash(word, temp = tmpdir()) {
-  if (/^\/tmp(?:\/|$)/.test(word)) return `${temp}${word.slice(4)}`;
-  return word.replace(/^\/([A-Za-z])(?:\/|$)/, '$1:/');
+  if (!word.startsWith('/') || /^\/\/(?!\/)/.test(word)) return word;
+  const path = posix.normalize(word.replace(/^\/+/, '/'));
+  if (/^\/tmp(?:\/|$)/i.test(path)) return `${temp}${path.slice(4)}`;
+  return /^\/[A-Za-z](?:\/|$)/.test(path) ? `${path[1]}:/${path.slice(3)}` : word;
 }
 
 // Where mktemp creates its file or folder: the -p or --tmpdir folder, the folder of TMPDIR with -t or without a
@@ -75,7 +78,12 @@ export function shellTempWrite(script, { readings, cwd, isTemp, gitBash = false 
     if (TEMP_VARIABLE.test(word)) return true;
     if (/[$%]/.test(word) || word === '') return false;
     const path = gitBash && !powershell ? fromGitBash(word) : word;
-    return isTemp(isAbsolute(path) ? path : `${cwd}${sep}${path}`);
+    // A word that cannot be resolved, as on a drive that does not exist, is no evident write; the rest are still judged.
+    try {
+      return isTemp(isAbsolute(path) ? path : `${cwd}${sep}${path}`);
+    } catch {
+      return false;
+    }
   };
   for (const powershell of readings) {
     const temp = judge(powershell);

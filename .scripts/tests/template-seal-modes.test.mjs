@@ -108,7 +108,7 @@ test('file tools may not edit a sealed file; project files, exceptions, the temp
   assert.match(reason, /^01-meta-guidelines\.md: "AGENTS\.md" is a sealed template file/);
   assert.match(reason, /template repository/);
   assert.match(reason, /\.agents\/template-exceptions\.json/);
-  // The fixture links .claude/skills to the sealed skills only where it can create a symbolic link.
+  // The fixture links .claude/skills to the sealed skills except on Windows.
   if (!WINDOWS) {
     assert.equal(guard(repo, 'claude', { tool_name: 'Edit', tool_input: { file_path: join(repo.dir, '.claude/skills/start/SKILL.md'), old_string: 'a', new_string: 'b' } })?.[0], 'deny');
   }
