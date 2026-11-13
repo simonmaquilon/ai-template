@@ -41,6 +41,9 @@ test('--compare classifies each path against the manifest of the new release and
   assert.match(result.stdout, /^adopted version: 1\.0\.0$/m);
   assert.match(result.stdout, /^new version: 1\.1\.0$/m);
   assert.match(result.stdout, /^no action: \d+ identical to the new release, 1 changed only in this project$/m);
+  assert.deepEqual([...result.stdout.matchAll(/^local (.+)$/gm)].map(([, path]) => path), ['local.txt'],
+    'the paths changed only in this project, listed for review');
+  assert.ok(result.stdout.indexOf('local local.txt') > result.stdout.indexOf('review lost.txt'), 'listed after the actions');
 });
 
 test('--compare exits 1 for a release or an adopted manifest it cannot read', (t) => {

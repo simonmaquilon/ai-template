@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { MANIFEST, ONLY, cli, readOnly, template } from './template-manifest-fixture.mjs';
+import { MANIFEST, ONLY, cli, commit, readOnly, template } from './template-manifest-fixture.mjs';
 import { WINDOWS, run } from './support.mjs';
 
 const manifest = (repo) => JSON.parse(readFileSync(join(repo.dir, MANIFEST), 'utf8'));
@@ -71,6 +71,18 @@ test('--check passes when current and names the path that changed, was added or 
   assert.match(readOnly(repo, '--check').stdout, /^version: the manifest says 1\.0\.0, .* says 2\.0\.0$/m);
   rmSync(join(repo.dir, MANIFEST));
   assert.equal(readOnly(repo, '--check').status, 1);
+});
+
+test('--check is refused in a derived project, which deleted the template CI files, and writes nothing', (t) => {
+  const repo = template(t);
+  cli(repo, '--write');
+  repo.git('rm', '-q', '--', '.github/workflows/template-checks.yml', '.readme/94-template-ci.md');
+  commit(repo);
+  repo.write('a.txt', 'adapted by the project\n');
+  const refused = readOnly(repo, '--check');
+  assert.equal(refused.status, 1);
+  assert.equal(refused.stdout, '');
+  assert.match(refused.stderr, /--check runs only in a checkout of the template.*--compare/s);
 });
 
 test('misuse exits 2', (t) => {

@@ -8,16 +8,18 @@
 //
 //   node .scripts/template-manifest.mjs --write          regenerate .agents/template-manifest.json, only in the
 //                                                        maintained template that the adoption guide names
-//   node .scripts/template-manifest.mjs --check          exit 1 when the manifest is not what --write would give
+//   node .scripts/template-manifest.mjs --check          exit 1 when the manifest is not what --write would give; only
+//                                                        in a checkout of the template, refused in a derived project
 //   node .scripts/template-manifest.mjs --compare <ref>  in a derived project, classify each file against the new
 //                                                        release's manifest at <ref> as take, merge, add, delete or
-//                                                        review; --check and --compare only read
+//                                                        review, then list as local the files changed only here;
+//                                                        --check and --compare only read
 
 import { lstatSync, readlinkSync, realpathSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { enterRepositoryRoot, git, toPosix } from './hook-support.mjs';
-import { ADOPTION, MANIFEST, TEMPLATE_ONLY, VERSION_FILE, listed, maintainedTemplate, parseManifest as parse,
-  readText as read } from './template-files.mjs';
+import { ADOPTION, MANIFEST, TEMPLATE_ONLY, VERSION_FILE, isTemplateCheckout, listed, maintainedTemplate,
+  parseManifest as parse, readText as read } from './template-files.mjs';
 
 export { TEMPLATE_ONLY };
 
@@ -72,6 +74,11 @@ function write() {
 }
 
 function check() {
+  if (!isTemplateCheckout()) {
+    fail('--check runs only in a checkout of the template, which holds .github/workflows/template-checks.yml or ' +
+      '.readme/94-template-ci.md; this is a derived project, whose own changes to template files are expected, so use ' +
+      '--compare <ref> to adopt a release');
+  }
   const text = read(MANIFEST);
   const recorded = parse(text);
   if (!recorded) fail(`${MANIFEST} is missing or unreadable; regenerate it with node .scripts/template-manifest.mjs --write`);
@@ -107,7 +114,7 @@ function compare(ref) {
   const groups = { take: [], merge: [], add: [], delete: [], review: [], identical: [], local: [] };
   for (const path of paths) groups[classify(adopted.files.get(path) ?? null, upstream.files.get(path) ?? null, local.get(path))].push(path);
   console.log(`adopted version: ${adopted.version}\nnew version: ${upstream.version}`);
-  for (const action of ['take', 'merge', 'add', 'delete', 'review']) for (const path of groups[action]) console.log(`${action} ${path}`);
+  for (const action of ['take', 'merge', 'add', 'delete', 'review', 'local']) for (const path of groups[action]) console.log(`${action} ${path}`);
   console.log(`no action: ${groups.identical.length} identical to the new release, ${groups.local.length} changed only in this project`);
 }
 

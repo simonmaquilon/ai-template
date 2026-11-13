@@ -30,7 +30,7 @@ mkdir -p .temp && date -u +%Y-%m-%dT%H:%M:%SZ > .temp/template-adoption
    - si `.agents/skills` es un enlace, copia su contenido y borra solo el enlace (`rm .agents/skills`, sin barra final), y crea en su lugar una carpeta con esa copia;
    - si `.claude/skills` es una carpeta o un enlace a otra ruta, lleva sus skills a `.agents/skills/`, borra los enlaces de cada skill que ya apuntan allí y quita `.claude/skills`;
    - si una skill del proyecto se llama como una de la plantilla y es la misma skill de origen sin cambios locales, borra la del proyecto y quédate con la de la plantilla; si no, renómbrala, carpeta y nombre, para que la extracción no mezcle sus archivos: queda como skill propia del proyecto, sin entrada en `skills-lock.json`.
-3. Guarda fuera del proyecto una copia de los archivos que ocupan una ruta de la plantilla y que Git no puede recuperar porque están ignorados o sin seguimiento, como `.npmrc` o `.mcp.json`. Este comando los lista:
+3. Guarda fuera del proyecto una copia de los archivos que ocupan una ruta de la plantilla y que Git no puede recuperar porque están ignorados o sin seguimiento, como `.npmrc` o `.mcp.json`. Este comando los lista; usa `read -d ''` y la sustitución de procesos `<(...)`, así que requiere bash o zsh, como Git Bash en Windows, y no funciona en `sh` ni en PowerShell:
 
    ```bash
    git ls-tree -r -z --name-only <ref> | while IFS= read -r -d '' f; do
@@ -69,7 +69,7 @@ mkdir -p .temp && date -u +%Y-%m-%dT%H:%M:%SZ > .temp/template-adoption
    - En los demás archivos, incluidas las copias del paso 3, une las reglas de ambos.
 7. Deja `.agents/template-version` y `.agents/template-manifest.json` como los trae la extracción: son la versión adoptada y el registro de sus archivos.
 8. Comprueba que `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada: corrige o informa de lo que ya fallaba antes de adoptar, y pasa los documentos del proyecto en `.readme/` con prefijo 90 o superior a uno libre por debajo de 90 (`01-meta-guidelines.md`). Luego invoca `/start` o `$start`, que completa las referencias primarias y adapta las herramientas al stack instalado o al que se elija.
-9. Después del commit de la adopción, ciérrala con `node .scripts/check-template-seal.mjs --adoption-end`. Se niega, sin quitar la marca, y nombra lo pendiente mientras el manifiesto no esté commiteado tal como está o un archivo sellado difiera de él: tómalo de la plantilla o regístralo en la lista de excepciones, y repítelo.
+9. Haz el commit de la adopción, con los archivos adoptados, `.agents/template-version` y `.agents/template-manifest.json` en ese mismo commit, y solo después ciérrala con `node .scripts/check-template-seal.mjs --adoption-end`, que exige ese commit previo. Se niega, sin quitar la marca, y nombra lo pendiente mientras el manifiesto no esté commiteado tal como está, un archivo sellado difiera de él o, sin `refs/plantilla/<versión>` en el git local, no esté en el mismo commit que el manifiesto: tómalo de la plantilla o regístralo en la lista de excepciones, corrige el commit y repítelo.
 
 ## Qué pertenece a la plantilla
 
@@ -109,7 +109,7 @@ Una desviación deliberada se registra en la lista de excepciones, el archivo `t
 - Si el archivo no es un objeto así, el sello se detiene, no restaura nada y lo avisa en cada mensaje hasta que se corrija.
 - Un proyecto que enruta instrucciones propias registra `AGENTS.md`, porque su tabla de enrutado vive ahí, y uno que quita a propósito un hook de la plantilla de `.claude/settings.json` registra el script de ese hook.
 - El agente no edita la lista sin el usuario, ni con sus herramientas de archivo ni con una redirección o `tee`: Claude Code pide confirmación y Codex lo deniega, salvo durante una adopción, cuyo procedimiento registra ahí las desviaciones, porque cada entrada saca un archivo del sello.
-- Las rutas de la lista son archivos que el proyecto cambió, así que, en la adopción siguiente, `--compare` las muestra como `merge` o `review` si la versión nueva también los cambia.
+- Las rutas de la lista son archivos que el proyecto cambió, así que, en la adopción siguiente, `--compare` las muestra como `merge` o `review` si la versión nueva también los cambia, y como `local` si no.
 
 El sello no actúa en una copia de la plantilla, que tiene en su último commit y en disco su workflow o su documento de CI (crear uno de ellos en un derivado pide confirmación en Claude Code y se deniega en Codex), sin manifiesto commiteado, ni mientras exista `.temp/template-adoption`, la marca de adopción en curso: un archivo ignorado, propio de cada copia local, que se crea a mano al empezar una adopción, como el usuario y no el agente, cuyas herramientas de archivo, redirecciones y `tee` piden confirmación en Claude Code o se deniegan en Codex al escribirla, y se quita con `node .scripts/check-template-seal.mjs --adoption-end` al terminarla. Mientras existe, cada mensaje al agente recuerda que la adopción sigue en curso, así que no se queda puesta sin que se note. `--adoption-end` se niega, sin quitarla, mientras el manifiesto no esté commiteado tal como está, no nombre la versión de `.agents/template-version`, la lista de excepciones no sea válida, algún archivo sellado difiera del manifiesto adoptado o no esté commiteado en el mismo commit que el manifiesto, y nombra lo que falta. Sin la marca, un manifiesto de otra versión que el commiteado detiene el sello en lugar de devolver los archivos a la versión anterior.
 
@@ -154,10 +154,21 @@ Antes de restaurar nada, marca la adopción en curso con el comando de «Adoptar
 node .scripts/template-manifest.mjs --compare refs/plantilla/<versión-nueva>
 ```
 
-Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión nueva, sin escribir nada, y agrupa las rutas por acción:
+Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión nueva, sin escribir nada, y agrupa las rutas por acción; al final lista como `local` las que solo cambió el proyecto, que no piden acción, y da el recuento de las que no la piden:
 
-- `take`, `add` y `delete`: el proyecto no las tocó, así que toma la versión nueva con `git restore --source=refs/plantilla/<versión-nueva> -- <ruta>`, que también borra el archivo si la versión nueva lo retiró. Con el sandbox de Claude Code activo, `git restore` no puede escribir las rutas que ese sandbox protege, como `.claude/settings.json`, `.claude/agents/`, `.agents/skills/`, `.mcp.json`, `.scripts/` y `.codex/`, y falla en ellas con `Operation not permitted`; con varias rutas en un mismo comando restaura las demás y deja esas como estaban, así que el paso queda a medias sin que se note. Restaura esas rutas en un comando aparte, fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md).
-- `merge` y `review`: el proyecto las modificó, por una desviación registrada en la lista de excepciones o porque la propia plantilla pide adaptarlo, como las concesiones del catálogo de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md), las exenciones de sandbox de [Sandbox de agentes](91-agent-sandbox.md), los hooks propios registrados en [Hooks de agentes](92-agent-hooks.md), sus reglas de `.gitignore` y `.gitattributes`, o un archivo sellado que adaptó con una entrada de esa lista, como su `.npmrc`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
+- `take`, `add` y `delete`: el proyecto no las tocó, así que toma la versión nueva con `git restore --source=refs/plantilla/<versión-nueva> -- <ruta>`, que también borra el archivo si la versión nueva lo retiró.
+- `merge` y `review`: el proyecto las modificó, por una desviación registrada en la lista de excepciones o porque la propia plantilla pide adaptarlo, como las concesiones del catálogo de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md), las exenciones de sandbox de [Sandbox de agentes](91-agent-sandbox.md), los hooks propios registrados en [Hooks de agentes](92-agent-hooks.md), sus reglas de `.gitignore` y `.gitattributes`, o un archivo sellado que adaptó con una entrada de esa lista, como su `.npmrc`. Aplica el cambio de la plantilla y conserva lo del proyecto con una fusión de tres vías, que toma como base la versión que adoptaste; necesita también `refs/plantilla/<versión-actual>`, que trae «Localizar las versiones»:
+
+  ```bash
+  mkdir -p .temp/merge
+  git show refs/plantilla/<versión-actual>:<ruta> > .temp/merge/base
+  git show refs/plantilla/<versión-nueva>:<ruta> > .temp/merge/theirs
+  git merge-file -p <ruta> .temp/merge/base .temp/merge/theirs > .temp/merge/merged
+  ```
+
+  `git merge-file -p` escribe el resultado en su salida, sin tocar `<ruta>`, y termina con el número de conflictos como código de salida. Revisa `.temp/merge/merged`, resuelve los bloques entre `<<<<<<<` y `>>>>>>>` si los hay, cópialo sobre `<ruta>` y borra `.temp/merge`. Una ruta `review`, que una de las partes borró, no se fusiona: decide a mano si se queda o se va.
+- `local`: el proyecto las cambió y la versión nueva no; no piden acción, pero revisa si alguna es una desviación que aún no figura en la lista de excepciones.
+- Con el sandbox de Claude Code activo, un comando de shell que corre dentro de él no puede escribir las rutas que niega: siempre las que Claude Code protege por omisión, como `.claude/settings.json`, `.claude/settings.local.json`, `.claude/skills`, `.claude/agents` y `.mcp.json`, y además las de `sandbox.filesystem.denyWrite` del `.claude/settings.json` del proyecto, que en la plantilla son `.scripts`, `.codex`, `.agents/skills` y `.temp/playwright-cli`. Un proyecto que adopta desde una versión sin esa protección aún no las declara, así que en él `git restore` y `cp` sobre `.scripts/`, `.codex/` y `.agents/skills/` funcionan dentro del sandbox; una vez fusionado el `.claude/settings.json` nuevo, dejan de funcionar. `node -e "console.log(require('./.claude/settings.json').sandbox?.filesystem?.denyWrite ?? [])"` muestra cuáles declara. En una ruta negada, el comando falla con `Operation not permitted` y, con varias rutas en un mismo comando, restaura las demás y deja esa como estaba, así que el paso queda a medias sin que se note: restáurala en un comando aparte, fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md). No afecta a lo que ejecutas en tu propia terminal ni a las herramientas Edit y Write, que se rigen por las reglas de permisos.
 - Si `AGENTS.md` aún tiene la sección Deviations de versiones anteriores, pásala a la lista de excepciones antes de cerrar la adopción: por cada desviación, una entrada con la ruta sellada que el proyecto conserva cambiada, como el módulo de `.agents/instructions/` que modificó, o `AGENTS.md` si la desviación enruta un módulo propio, y como valor el texto de la desviación con su enlace. Después toma el `AGENTS.md` de la versión nueva, que ya no tiene esa sección; si `AGENTS.md` quedó en la lista, aplica a mano el cambio de la plantilla y quita igualmente la sección, porque el registro vive ya en la lista.
 - Si el proyecto aún conserva en `.claude/settings.json` las entradas de `sandbox.excludedCommands` y de `permissions.allow` que nombran archivos que solo validan la plantilla, hoy las cinco de `run-checks.mjs`, que muestra el bloque siguiente, quítalas como en «Adoptar la plantilla en un proyecto existente» y deja las demás como están.
 
@@ -183,13 +194,30 @@ Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión
 - Si una instrucción nueva de la plantilla usa el prefijo de una instrucción propia del proyecto, `.scripts/check-instructions.mjs` lo avisa: la de la plantilla conserva su prefijo, y la del proyecto pasa a uno libre, con su entrada de enrutado y todas sus citas actualizadas.
 - Si fusionaste a mano `.claude/settings.json` o `.codex/hooks.json`, comprueba que existe cada script de `.scripts/` que nombran sus hooks. Si la versión nueva renombra o retira uno y el archivo fusionado sigue nombrando el anterior, ese hook deja de actuar sin avisar: Claude Code lo trata como un error que no bloquea y Codex termina sin hacer nada.
 
-Al terminar, y antes de tomar el manifiesto nuevo, comprueba que todas las rutas `take`, `add` y `delete` quedaron idénticas a la versión nueva: repite el `--compare`, y ninguna ruta debe seguir en esos grupos; una que siga ahí no se restauró. Con el manifiesto nuevo ya tomado, esa ruta saldría como cambiada solo en el proyecto.
+Cierra la adopción en este orden:
 
-En el mismo cambio, fija en `.agents/template-version` la versión adoptada, toma su manifiesto con `git show refs/plantilla/<versión-nueva>:.agents/template-manifest.json > .agents/template-manifest.json` y registra en la lista de excepciones cada desviación deliberada que conserves, con el enlace a la política del proyecto que la sustituye. Después del commit de la adopción, ciérrala con `node .scripts/check-template-seal.mjs --adoption-end`, que se niega y nombra lo pendiente mientras el manifiesto no esté commiteado tal como está o un archivo sellado difiera de él: tómalo de la versión nueva o regístralo en la lista, y repítelo.
+1. Toma las rutas `take`, `add` y `delete` y fusiona las `merge` y `review`, como explica la lista anterior.
+2. Repite el `--compare` hasta que ninguna ruta siga en `take`, `add` ni `delete`; una que siga ahí no se restauró. Hazlo antes de tomar el manifiesto nuevo: con él ya tomado, esa ruta saldría como `local`.
+3. Comprueba que `.agents/template-version` tiene la versión adoptada, que llega como `take`; toma su manifiesto con `git show refs/plantilla/<versión-nueva>:.agents/template-manifest.json > .agents/template-manifest.json`, y registra en la lista de excepciones cada desviación deliberada que conserves, con el enlace a la política del proyecto que la sustituye.
+4. Haz el commit de la adopción con todo lo anterior. Sin `refs/plantilla/<versión-nueva>` en el git local, los archivos adoptados, la versión y el manifiesto van en el mismo commit, porque el sello solo respalda lo que guarda el commit que registró el manifiesto, como explica «Archivos sellados».
+5. Cierra la adopción con `node .scripts/check-template-seal.mjs --adoption-end`, que exige ese commit: se niega y nombra lo pendiente mientras el manifiesto no esté commiteado tal como está, un archivo sellado difiera de él o le falte ese respaldo. Tómalo de la versión nueva o regístralo en la lista, corrige el commit, por ejemplo con `git commit --amend`, y repítelo.
 
 ## Después de adoptar
 
 - `.temp/template-adoption` ya no existe, y el sello vuelve a restaurar los archivos sellados en cada mensaje.
+- Un derivado no tiene `run-checks.mjs`, que solo valida la plantilla. Las comprobaciones que viajan con la plantilla, registradas en `.agents/template-manifest.json`, y que solo necesitan `git` y `node`, se ejecutan a mano desde la raíz y no imprimen nada cuando todo está bien:
+
+  ```bash
+  node .scripts/check-doc-links.mjs
+  node .scripts/check-instructions.mjs
+  node .scripts/check-bugs.mjs
+  node .scripts/check-markdown.mjs --all
+  node .scripts/check-symlinks.mjs
+  node .scripts/update-stack-doc.mjs --check
+  node .scripts/check-file-length.mjs --base <commit anterior a la adopción>
+  ```
+
+  Los demás `check-*.mjs` que trae la plantilla son hooks que leen la entrada de su cliente o que escriben, como el del sello o el de directorios vacíos, y no se ejecutan como comprobación; `template-manifest.mjs --check` solo vale en la plantilla y se niega en un derivado.
 - `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada. El segundo no cuenta como retirados los archivos de instrucciones ni los documentos de `.readme/` que el proyecto borró hasta el commit que añadió por primera vez `.agents/template-version`, ese incluido: eran del conjunto que la plantilla sustituyó, así que sus prefijos quedan libres.
 - Codex vuelve a pedir la aprobación de los hooks que cambiaron, como explica [Hooks de agentes](92-agent-hooks.md).
 - Los binarios de los servidores de lenguaje siguen instalados en la versión que fija [stack.md](../.docs/stack.md); si cambió, se reinstalan como explica [Servidores de lenguaje de agentes](93-agent-language-servers.md).
