@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { WINDOWS } from './support.mjs';
 import { URL, commit } from './template-manifest-fixture.mjs';
 import { EXCEPTIONS, FILES, MARKER, copies, derived, exists, guard, read, seal } from './template-seal-fixture.mjs';
 
@@ -107,7 +108,10 @@ test('file tools may not edit a sealed file; project files, exceptions, the temp
   assert.match(reason, /^01-meta-guidelines\.md: "AGENTS\.md" is a sealed template file/);
   assert.match(reason, /template repository/);
   assert.match(reason, /\.agents\/template-exceptions\.json/);
-  assert.equal(guard(repo, 'claude', { tool_name: 'Edit', tool_input: { file_path: join(repo.dir, '.claude/skills/start/SKILL.md'), old_string: 'a', new_string: 'b' } })?.[0], 'deny');
+  // The fixture links .claude/skills to the sealed skills only where it can create a symbolic link.
+  if (!WINDOWS) {
+    assert.equal(guard(repo, 'claude', { tool_name: 'Edit', tool_input: { file_path: join(repo.dir, '.claude/skills/start/SKILL.md'), old_string: 'a', new_string: 'b' } })?.[0], 'deny');
+  }
   assert.equal(guard(repo, 'claude', write(repo, MANIFEST))?.[0], 'deny');
   assert.equal(guard(repo, 'codex', patch('.agents/instructions/01-meta-guidelines.md'))?.[0], 'deny');
   for (const path of ['.docs/plan.md', 'README.md', '.claude/settings.json', '.scripts/own-task.mjs']) {
