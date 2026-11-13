@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Records the content hash of every file the template owns, so a project derived from it can tell, per file,
 // whether it modified what it adopted. The template owns every tracked file except those that only validate it
-// (TEMPLATE_ONLY) and the manifest itself. A hash is the git blob id of the working-tree content, as
+// (TEMPLATE_ONLY, in template-files.mjs) and the manifest itself. A hash is the git blob id of the working-tree content, as
 // `git hash-object` gives it, so .gitattributes normalization applies; a symlink hashes its target text. Runs from
 // any directory of the repository. Exit status: 0 on success, 1 on a failed check, a refused mode, or a missing or
 // unreadable manifest, 2 on misuse.
@@ -13,41 +13,20 @@
 //                                                        release's manifest at <ref> as take, merge, add, delete or
 //                                                        review; --check and --compare only read
 
-import { lstatSync, readFileSync, readlinkSync, realpathSync, writeFileSync } from 'node:fs';
+import { lstatSync, readlinkSync, realpathSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { enterRepositoryRoot, git, toPosix } from './hook-support.mjs';
+import { ADOPTION, MANIFEST, TEMPLATE_ONLY, VERSION_FILE, listed, maintainedTemplate, parseManifest as parse,
+  readText as read } from './template-files.mjs';
 
-// Files that only validate the template, never adopted; an entry ending in / is a directory.
-export const TEMPLATE_ONLY = [
-  '.github/workflows/template-checks.yml',
-  '.scripts/run-checks.mjs',
-  '.scripts/tests/',
-  '.scripts/check-security-skill.mjs',
-  '.scripts/security-skill-hash.mjs',
-  '.readme/94-template-ci.md',
-];
-const MANIFEST = '.agents/template-manifest.json';
-const VERSION_FILE = '.agents/template-version';
-const ADOPTION = '.readme/96-template-adoption.md';
+export { TEMPLATE_ONLY };
 
 function fail(message, status = 1) {
   console.error(message);
   process.exit(status);
 }
 
-const read = (path) => { try { return readFileSync(path, 'utf8'); } catch { return null; } };
 const render = ({ version, files }) => `${JSON.stringify({ version, files: Object.fromEntries(files) }, null, 2)}\n`;
-
-// A manifest read from text, or null unless it holds a version and blob ids by relative path. A release's manifest is
-// untrusted, so a path leaving the repository, reaching .git, or holding a control character makes it unreadable.
-function parse(text) {
-  try {
-    const { version, files } = JSON.parse(text);
-    const entries = Object.entries(files);
-    const safe = ([path, id]) => typeof id === 'string' && !/^[/\\]|^[a-z]:|(^|[/\\])(\.\.|\.git)([/\\]|$)|[\0-\x1f\x7f]/i.test(path);
-    return typeof version === 'string' && !Array.isArray(files) && entries.every(safe) ? { version, files: new Map(entries) } : null;
-  } catch { return null; }
-}
 
 // Blob ids of the working-tree content of these paths, null where there is no file or link. Files go through one
 // batched git call; a link goes through one call of its own, because git reads a single object from stdin, and the
@@ -71,26 +50,21 @@ function hashPaths(paths) {
 // The manifest of this working tree: the tracked files the template owns, sorted by code unit.
 function current() {
   const version = read(VERSION_FILE)?.trim() || fail(`${VERSION_FILE} is missing or empty`);
-  const listed = git(['ls-files', '-z']) ?? fail('git ls-files failed');
-  const only = (path) => TEMPLATE_ONLY.some((entry) => (entry.endsWith('/') ? path.startsWith(entry) : path === entry));
-  const ids = hashPaths(listed.split('\0').filter((path) => path && path !== MANIFEST && !only(path)));
+  const tracked = git(['ls-files', '-z']) ?? fail('git ls-files failed');
+  const ids = hashPaths(tracked.split('\0').filter((path) => path && path !== MANIFEST && !listed(TEMPLATE_ONLY, path)));
   return { version, files: new Map([...ids].filter(([, id]) => id).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) };
 }
 
-// A remote URL as host/path, so the ssh and https forms of one repository compare equal.
-function normalize(url) {
-  const text = url.trim().replace(/\/+$/, '').replace(/\.git$/, '').replace(/\/+$/, '');
-  const parts = /^[a-z][a-z0-9+.-]*:\/\/(?:[^@/]*@)?([^/]+)\/(.+)$/i.exec(text) ?? /^(?:[^@/:]+@)?([^:/]+):(.+)$/.exec(text);
-  return parts ? `${parts[1].toLowerCase()}/${parts[2].replace(/^\/+/, '')}` : text;
-}
-
 function write() {
-  const recorded = /La plantilla mantenida es el repositorio cuyo remoto `origin` apunta a `([^`]+)`/.exec(read(ADOPTION) ?? '')?.[1];
+  const { recorded, origin, matches, maintained } = maintainedTemplate();
   if (!recorded) fail(`${ADOPTION} does not record the maintained template's URL, so --write cannot tell whether this is it`);
-  const origin = git(['remote', 'get-url', 'origin'])?.trim();
-  if (!origin || normalize(origin) !== normalize(recorded)) {
+  if (!matches) {
     fail(`--write is allowed only in the maintained template, whose origin is ${recorded}; here origin is ${origin || 'not set'}, ` +
       `so the manifest this project adopted stays as it is`);
+  }
+  if (!maintained) {
+    fail('--write is allowed only in the maintained template, which holds its CI files; this repository holds neither ' +
+      '.github/workflows/template-checks.yml nor .readme/94-template-ci.md, so the manifest this project adopted stays as it is');
   }
   const manifest = current();
   writeFileSync(MANIFEST, render(manifest));

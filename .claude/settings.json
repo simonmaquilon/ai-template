@@ -331,6 +331,27 @@
               "--hook"
             ],
             "statusMessage": "Checking destructive Git pushes"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-write-scope.mjs"
+            ],
+            "statusMessage": "Checking shell writes to temporary folders"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-write-scope.mjs"
+            ],
+            "statusMessage": "Checking where the file write lands"
           }
         ]
       }
@@ -404,6 +425,14 @@
               "${CLAUDE_PROJECT_DIR}/.scripts/check-bugs.mjs"
             ],
             "statusMessage": "Checking bug register"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-template-seal.mjs"
+            ],
+            "statusMessage": "Checking sealed template files"
           }
         ]
       }

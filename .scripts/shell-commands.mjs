@@ -7,7 +7,9 @@
 // $( ... ) or, outside PowerShell, backquoted, runs, so its commands are
 // returned too. A here-document body goes with the command that opens it; a
 // command fed by a pipe, a here-document, a here-string, or < is marked fed,
-// and redirection targets are not words. An escaped line end, CRLF included,
+// and redirection targets are not words: those of > and >> come back as the
+// command's targets; a redirection with no command of its own, as after the &
+// of &>, goes with the command before it, or, with none before, comes back as a command without words. An escaped line end, CRLF included,
 // continues the line. Keywords such as if or do come back as ordinary words.
 
 import { HEREDOC, literalListEnd, readBodies, readQuoted } from './shell-spans.mjs';
@@ -17,21 +19,26 @@ export function commands(script, { powershell = false } = {}) {
   const found = [];
   const nested = [];
   let words = [];
+  let targets = [];
   let word = null;
   let bodies = [];
   let delimiters = [];
   let fed = false;
   let target = false;
+  let output = false;
   const endWord = () => {
     if (word !== null && !target) words.push(word);
+    if (word !== null && target && output) targets.push(word);
     if (word !== null) target = false;
     word = null;
   };
   const endCommand = (piped = false) => {
     endWord();
     const empty = words.length === 0;
-    if (!empty) found.push({ words, bodies, fed });
+    if (!empty || (found.length === 0 && targets.length > 0)) found.push({ words, bodies, fed, targets });
+    else found.at(-1)?.targets.push(...targets);
     words = [];
+    targets = [];
     bodies = [];
     fed = piped || (empty && fed);
     target = false;
@@ -57,6 +64,7 @@ export function commands(script, { powershell = false } = {}) {
     } else if (script.startsWith('<<<', i)) {
       endWord();
       fed = target = true;
+      output = false;
       i += 2;
     } else if (c === '<' && script[i + 1] === '<') {
       endWord();
@@ -82,6 +90,7 @@ export function commands(script, { powershell = false } = {}) {
     } else if (c === ' ' || c === '\t' || c === '\r' || c === '<' || c === '>' || (powershell && c === '*' && script[i + 1] === '>')) {
       endWord();
       if (c === '<' || c === '>') target = true;
+      if (c === '<' || c === '>') output = c === '>';
       if (c === '<') fed = true;
     } else {
       word = (word ?? '') + c;

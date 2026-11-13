@@ -56,7 +56,7 @@ Spanish, decision level only: no reproduced identifiers, routes, or versions, an
 - Remove the Activos `TODO` row when recording the first bug, even if it belongs in Cerrados.
 - Preserve the header and delimiter of a bug table with no rows.
 - Keep evidence as the bugs.md schema specifies.
-- Change AGENTS.md only to record a deviation.
+- AGENTS.md is sealed: change it only to route the project module of a deviation, once `.agents/template-exceptions.json` records it, as `01` says.
 
 ## backlog.md
 

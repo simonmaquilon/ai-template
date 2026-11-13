@@ -2,7 +2,7 @@
 
 Un proyecto derivado guarda en `.agents/template-version` la versión de la plantilla que adoptó, con formato `MAJOR.MINOR.PATCH`, y en `.agents/template-manifest.json` el hash de cada archivo de la plantilla en esa versión; `01-meta-guidelines.md` pide cambiar ambos solo al adoptar una versión posterior. Este documento explica cómo crear un proyecto desde la plantilla, cómo adoptarla en un proyecto que ya existe y cómo adoptar después una versión posterior, sin perder el trabajo del proyecto.
 
-La plantilla mantenida es el repositorio cuyo remoto `origin` apunta a `https://github.com/simonmaquilon/ai-template.git`, como fija `01-meta-guidelines.md`; cualquier otro repositorio es un derivado. Por eso un derivado usa su propio `origin` y añade la plantilla como remoto `plantilla`, como muestra «Localizar las versiones».
+La plantilla mantenida es el repositorio cuyo remoto `origin` apunta a `https://github.com/simonmaquilon/ai-template.git` y que tiene en su último commit y en disco su workflow de CI, `.github/workflows/template-checks.yml`, o el documento de `.readme/` que lo describe, como fija `01-meta-guidelines.md`; cualquier otro repositorio es un derivado, y `template-manifest.mjs --write` se niega en él. Un fork o un clon de la plantilla que aún los rastrea y los tiene, con cualquier `origin`, tampoco queda sellado; uno de esos archivos creado a mano en un derivado, sin añadirlo al índice, no cuenta. Por eso un derivado usa su propio `origin` y añade la plantilla como remoto `plantilla`, como muestra «Localizar las versiones».
 
 ## Crear un proyecto
 
@@ -13,11 +13,17 @@ gh repo create <nombre> --template simonmaquilon/ai-template --private --clone
 cd <nombre>
 ```
 
-Abre el agente dentro de la carpeta nueva e invoca `/start` en Claude Code o `$start` en Codex, como explica [Skills de agentes](90-agent-skills.md): prepara el proyecto y completa sus referencias primarias antes de escribir código.
+Abre el agente dentro de la carpeta nueva e invoca `/start` en Claude Code o `$start` en Codex, como explica [Skills de agentes](90-agent-skills.md): prepara el proyecto y completa sus referencias primarias antes de escribir código. El proyecto nuevo es un derivado, con su propio `origin`, y el sello de la plantilla actúa en él en cuanto la limpieza de `start` borra el workflow y el documento de CI de la plantilla, antes de commitear nada, como explica «Archivos sellados».
 
 ## Adoptar la plantilla en un proyecto existente
 
 Un proyecto que ya existe, con o sin código, adopta la plantilla extrayendo sus archivos sobre los suyos; uno que ya guarda `.agents/template-version` la adoptó antes y sigue «Traer los cambios», salvo que su versión venga de una numeración anterior, como explica «Numeración anterior de versiones». Hazlo desde la raíz del proyecto y con el árbol de trabajo limpio, para que `git status` muestre cada archivo que la extracción sustituye y se pueda recuperar. En Windows, usa Git Bash con el modo de desarrollador activado, para que se puedan crear enlaces simbólicos.
+
+Antes del primer paso, marca la adopción en curso, para que el sello de la plantilla no restaure los archivos que la adopción cambia, como explica «Archivos sellados»:
+
+```bash
+mkdir -p .temp && date -u +%Y-%m-%dT%H:%M:%SZ > .temp/template-adoption
+```
 
 1. Añade el remoto `plantilla` y trae la versión que vas a adoptar, como muestra «Localizar las versiones»; en los pasos siguientes, `<ref>` es `refs/plantilla/<versión>`.
 2. Reúne las skills del proyecto en `.agents/skills/`, donde la plantilla las guarda y las enlaza desde `.claude/skills`:
@@ -57,18 +63,19 @@ Un proyecto que ya existe, con o sin código, adopta la plantilla extrayendo sus
 5. Añade al `.gitignore` del proyecto, o créalo, las reglas de `git show <ref>:.gitignore` que le falten; se excluye de la extracción para unirlo, no porque solo valide la plantilla. Después, `git ls-tree -r --name-only <ref> | git check-ignore -v --stdin` lista las rutas de la plantilla que el proyecto ignora y la regla que lo hace, también en `.git/info/exclude` o en las exclusiones globales de Git: quita o acota esas reglas, salvo en las rutas que la propia plantilla ignora y versiona, como `.temp/.gitignore`, que se añaden con `git add -f`.
 6. Con `git status` y `git diff`, une lo que la extracción sustituyó. Ningún secreto pasa a un archivo versionado (`AGENTS.md`): los tokens y claves de las copias del paso 3 van a la configuración del usuario, como su `.npmrc` personal, o a variables de entorno que el archivo nombra.
    - En los esqueletos de las referencias primarias y de `README.md`, conserva el de la plantilla y lleva el contenido del proyecto a sus secciones.
-   - En `AGENTS.md`, conserva el de la plantilla y lleva las reglas propias del proyecto a instrucciones enrutadas desde `AGENTS.md`, registrando como desviación la que se aparte de una regla de la plantilla, como explica `01-meta-guidelines.md`. Haz lo mismo con las de un `CLAUDE.md` del proyecto, en la raíz o dentro de `.claude/`, y bórralo después: Claude Code solo lee `AGENTS.md` cuando no encuentra ningún `CLAUDE.md`, tampoco dentro de `.claude/`, ni `CLAUDE.local.md` en la carpeta de trabajo ni en las superiores, como explica su [documentación](https://code.claude.com/docs/en/memory#agents-md).
+   - En `AGENTS.md`, conserva el de la plantilla y lleva las reglas propias del proyecto a instrucciones enrutadas desde `AGENTS.md`; como `AGENTS.md` queda sellado, regístralo entonces en la lista de excepciones, junto con cada desviación de una regla de la plantilla, como explican «Archivos sellados» y `01-meta-guidelines.md`. Haz lo mismo con las de un `CLAUDE.md` del proyecto, en la raíz o dentro de `.claude/`, y bórralo después: Claude Code solo lee `AGENTS.md` cuando no encuentra ningún `CLAUDE.md`, tampoco dentro de `.claude/`, ni `CLAUDE.local.md` en la carpeta de trabajo ni en las superiores, como explica su [documentación](https://code.claude.com/docs/en/memory#agents-md).
    - En `skills-lock.json`, conserva las entradas de la plantilla y copia tal cual las que el proyecto ya tenía con un nombre que la plantilla no usa, sin recalcular ni editar hashes (`03-code-authoring.md`).
    - `.gitattributes` fija finales de línea LF: los archivos del proyecto con CRLF pueden aparecer como modificados; después del commit de la adopción, normalízalos con `git add --renormalize .` en su propio commit.
    - En los demás archivos, incluidas las copias del paso 3, une las reglas de ambos.
 7. Deja `.agents/template-version` y `.agents/template-manifest.json` como los trae la extracción: son la versión adoptada y el registro de sus archivos.
 8. Comprueba que `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada: corrige o informa de lo que ya fallaba antes de adoptar, y pasa los documentos del proyecto en `.readme/` con prefijo 90 o superior a uno libre por debajo de 90 (`01-meta-guidelines.md`). Luego invoca `/start` o `$start`, que completa las referencias primarias y adapta las herramientas al stack instalado o al que se elija.
+9. Después del commit de la adopción, ciérrala con `node .scripts/check-template-seal.mjs --adoption-end`. Se niega, sin quitar la marca, y nombra lo pendiente mientras el manifiesto no esté commiteado tal como está o un archivo sellado difiera de él: tómalo de la plantilla o regístralo en la lista de excepciones, y repítelo.
 
 ## Qué pertenece a la plantilla
 
 Son de la plantilla los archivos que registra `.agents/template-manifest.json`, que `node .scripts/template-manifest.mjs --write` genera en la plantilla mantenida, como fija `12-version-control.md`: todos los versionados salvo los que solo la validan. En resumen:
 
-- `AGENTS.md`, con sus referencias primarias, sus reglas centrales y su tabla de enrutado, salvo su sección Deviations, que es del proyecto, y los módulos de instrucciones de `.agents/instructions/`;
+- `AGENTS.md`, con sus referencias primarias, sus reglas centrales y su tabla de enrutado, y los módulos de instrucciones de `.agents/instructions/`;
 - los esqueletos de `.docs/` (`product.md`, `design.md`, `stack.md`, `plan.md`, `coverage.md`, `bugs.md` y `security.md`) y `README.md`, además del archivo inicial vacío `.docs/backlog.md`, cuyo ciclo de vida gobierna [la instrucción de pendientes](../.agents/instructions/11-pending-work.md);
 - la sección Template Tooling de `.docs/stack.md`;
 - los documentos de `.readme/` con prefijo 90 o superior;
@@ -77,11 +84,34 @@ Son de la plantilla los archivos que registra `.agents/template-manifest.json`, 
 - las skills de la base en `.agents/skills/` y su entrada de `skills-lock.json`, que enumera [Skills de agentes](90-agent-skills.md);
 - las reglas de la plantilla en `.gitignore`, `.gitattributes` y `.temp/.gitignore`.
 
-Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. La lista exacta está en `.scripts/template-manifest.mjs`. Nunca se adoptan, no entran en el manifiesto y no cambian la versión. Un proyecto creado como copia de la plantilla los borra, cosa que hace la skill `start` al prepararlo (si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla), y un proyecto existente no los extrae al adoptarla.
+Quedan fuera los archivos que solo validan la plantilla: el workflow de CI `template-checks.yml`, el lanzador de checks `run-checks.mjs` con la carpeta `tests` de `.scripts`, los scripts que solo él usa, `check-security-skill.mjs` y `security-skill-hash.mjs`, y el documento que describe ese CI. La lista exacta es `TEMPLATE_ONLY`, en `.scripts/template-files.mjs`. Nunca se adoptan, no entran en el manifiesto y no cambian la versión. Un proyecto creado como copia de la plantilla los borra, cosa que hace la skill `start` al prepararlo (si conservara el workflow, GitHub omitiría su job, que solo corre en un repositorio marcado como plantilla), y un proyecto existente no los extrae al adoptarla.
 
 Con esos archivos se van las entradas de `.claude/settings.json` que los nombran, la exención de `sandbox.excludedCommands` y las reglas de `permissions.allow` de `run-checks.mjs`: un proyecto derivado las quita, y la plantilla las conserva porque sus mantenedores las necesitan.
 
-Lo demás es del proyecto: el código, lo que añadió en archivos de la plantilla porque esta lo pide, el contenido con que rellenó las referencias primarias, incluida la sección Project Tooling de `.docs/stack.md`, las skills del catálogo opcional que instaló, sus documentos de `.readme/` por debajo de 90 y sus políticas propias, enrutadas y registradas como desviaciones en `AGENTS.md`.
+Lo demás es del proyecto: el código, lo que añadió en archivos de la plantilla porque esta lo pide, el contenido con que rellenó las referencias primarias, incluida la sección Project Tooling de `.docs/stack.md`, las skills del catálogo opcional que instaló, sus documentos de `.readme/` por debajo de 90 y sus políticas propias, enrutadas y registradas como desviaciones en la lista de excepciones, junto con los archivos sellados que esa lista nombra.
+
+## Archivos sellados
+
+En un proyecto derivado, los archivos de la plantilla quedan sellados. En cada mensaje al agente, el hook del sello, descrito en [Hooks de agentes](92-agent-hooks.md), los compara con `.agents/template-manifest.json`; restaura el que difiere desde su blob en el git local, después de guardar la versión cambiada en `.temp/template-drift/<UTC>/<ruta>`, y pide al agente que avise de qué restauró. Solo restaura rutas que git no ignora y que algo más respalda: la versión adoptada, si `refs/plantilla/<versión>` está en el git local, debe traerlas con ese contenido; si no, el commit que registró el manifiesto debe tenerlas así. De las demás solo avisa. Sin la versión en el git local, los archivos adoptados tienen que ir en el mismo commit que el manifiesto: si no, `--adoption-end` se niega y, si alguien quita la marca a mano, las diferencias posteriores de esos archivos solo se avisan. En un clon superficial, una diferencia ya commiteada antes del límite del clon también se queda en aviso. Por eso conviene conservar en el git local la versión adoptada: `git fetch --no-tags plantilla "refs/tags/<versión>:refs/plantilla/<versión>"`, como muestra «Localizar las versiones», con `<versión>` la de `.agents/template-version`. Con ella, el sello respalda cada archivo por la propia versión, toma de ella el tipo y el bit de ejecución, y avisa de los archivos que trae y el manifiesto no lista. El hook de alcance de escritura impide además que las herramientas de archivo del agente los editen. Así, un cambio a un archivo de la plantilla se hace en la plantilla y llega con una versión nueva.
+
+Son del proyecto, y el sello no los toca, los que `PROJECT_OWNED` lista en `.scripts/template-files.mjs`: `.docs/` entero, `README.md`, `.claude/settings.json`, `.codex/config.toml`, `.mcp.json`, `.readme/91-agent-sandbox.md`, `.readme/95-agent-tool-servers.md`, `.gitignore`, `.gitattributes` y `skills-lock.json`. Los demás archivos del manifiesto quedan sellados: `AGENTS.md` entero, `.agents/instructions/`, las skills de la base, `.agents/template-version`, `.claude/agents/`, el enlace `.claude/skills`, `.codex/` salvo su `config.toml`, `.scripts/`, los demás documentos de `.readme/` con prefijo 90 o superior, `.markdownlint-cli2.jsonc`, `.npmrc`, `.playwright/cli.config.json` y `.temp/.gitignore`, además del propio manifiesto, que se compara con el de `HEAD`. Lo que el proyecto añade fuera del manifiesto, como sus skills o sus scripts, nunca se toca. De `.claude/settings.json` el hook solo comprueba que siga registrando los hooks de la plantilla, y avisa si falta alguno.
+
+Una desviación deliberada se registra en la lista de excepciones, el archivo `template-exceptions.json` de la carpeta `.agents/`, propio del proyecto, que la plantilla no trae: un objeto JSON cuyas claves son las rutas, o las carpetas terminadas en `/`, que el proyecto se queda, relativas a la raíz, y cuyos valores dicen por qué y enlazan la política del proyecto que sustituye a la de la plantilla. Por ejemplo:
+
+```json
+{
+  "AGENTS.md": "Enruta .agents/instructions/20-facturacion.md, la política de facturación del proyecto",
+  ".markdownlint-cli2.jsonc": "Silencia en overrides la skill propia .agents/skills/informes"
+}
+```
+
+- Ninguna entrada puede cubrir `.agents/template-manifest.json` ni `.agents/template-version`, que solo cambian al adoptar.
+- Si el archivo no es un objeto así, el sello se detiene, no restaura nada y lo avisa en cada mensaje hasta que se corrija.
+- Un proyecto que enruta instrucciones propias registra `AGENTS.md`, porque su tabla de enrutado vive ahí, y uno que quita a propósito un hook de la plantilla de `.claude/settings.json` registra el script de ese hook.
+- El agente no edita la lista sin el usuario, ni con sus herramientas de archivo ni con una redirección o `tee`: Claude Code pide confirmación y Codex lo deniega, salvo durante una adopción, cuyo procedimiento registra ahí las desviaciones, porque cada entrada saca un archivo del sello.
+- Las rutas de la lista son archivos que el proyecto cambió, así que, en la adopción siguiente, `--compare` las muestra como `merge` o `review` si la versión nueva también los cambia.
+
+El sello no actúa en una copia de la plantilla, que tiene en su último commit y en disco su workflow o su documento de CI (crear uno de ellos en un derivado pide confirmación en Claude Code y se deniega en Codex), sin manifiesto commiteado, ni mientras exista `.temp/template-adoption`, la marca de adopción en curso: un archivo ignorado, propio de cada copia local, que se crea a mano al empezar una adopción, como el usuario y no el agente, cuyas herramientas de archivo, redirecciones y `tee` piden confirmación en Claude Code o se deniegan en Codex al escribirla, y se quita con `node .scripts/check-template-seal.mjs --adoption-end` al terminarla. Mientras existe, cada mensaje al agente recuerda que la adopción sigue en curso, así que no se queda puesta sin que se note. `--adoption-end` se niega, sin quitarla, mientras el manifiesto no esté commiteado tal como está, no nombre la versión de `.agents/template-version`, la lista de excepciones no sea válida, algún archivo sellado difiera del manifiesto adoptado o no esté commiteado en el mismo commit que el manifiesto, y nombra lo que falta. Sin la marca, un manifiesto de otra versión que el commiteado detiene el sello en lugar de devolver los archivos a la versión anterior.
 
 ## Localizar las versiones
 
@@ -118,7 +148,7 @@ Como la extracción solo sobrescribe, antes de ella compara las rutas de la plan
 
 ## Traer los cambios
 
-Trae la versión nueva como muestra «Localizar las versiones» y clasifica cada archivo de la plantilla con:
+Antes de restaurar nada, marca la adopción en curso con el comando de «Adoptar la plantilla en un proyecto existente»: en cuanto llegan los scripts y los hooks de la versión nueva, el sello actúa en cada mensaje y, sin la marca, devolvería cada archivo al manifiesto que aún está commiteado. Trae la versión nueva como muestra «Localizar las versiones» y clasifica cada archivo de la plantilla con:
 
 ```bash
 node .scripts/template-manifest.mjs --compare refs/plantilla/<versión-nueva>
@@ -127,7 +157,8 @@ node .scripts/template-manifest.mjs --compare refs/plantilla/<versión-nueva>
 Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión nueva, sin escribir nada, y agrupa las rutas por acción:
 
 - `take`, `add` y `delete`: el proyecto no las tocó, así que toma la versión nueva con `git restore --source=refs/plantilla/<versión-nueva> -- <ruta>`, que también borra el archivo si la versión nueva lo retiró. Con el sandbox de Claude Code activo, `git restore` no puede escribir las rutas que ese sandbox protege, como `.claude/settings.json`, `.claude/agents/`, `.agents/skills/`, `.mcp.json`, `.scripts/` y `.codex/`, y falla en ellas con `Operation not permitted`; con varias rutas en un mismo comando restaura las demás y deja esas como estaban, así que el paso queda a medias sin que se note. Restaura esas rutas en un comando aparte, fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md).
-- `merge` y `review`: el proyecto las modificó, por una desviación registrada en `AGENTS.md` o porque la propia plantilla pide adaptarlo, como las concesiones del catálogo de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md), las exenciones de sandbox de [Sandbox de agentes](91-agent-sandbox.md), los hooks propios registrados en [Hooks de agentes](92-agent-hooks.md) o sus reglas de `.gitignore` y `.gitattributes` y su `.npmrc`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
+- `merge` y `review`: el proyecto las modificó, por una desviación registrada en la lista de excepciones o porque la propia plantilla pide adaptarlo, como las concesiones del catálogo de [Skills de agentes](90-agent-skills.md), los plugins de [Servidores de lenguaje de agentes](93-agent-language-servers.md), los servidores de [Servidores de herramientas de agentes](95-agent-tool-servers.md), las exenciones de sandbox de [Sandbox de agentes](91-agent-sandbox.md), los hooks propios registrados en [Hooks de agentes](92-agent-hooks.md), sus reglas de `.gitignore` y `.gitattributes`, o un archivo sellado que adaptó con una entrada de esa lista, como su `.npmrc`, aplica el cambio de la plantilla a mano y conserva lo del proyecto.
+- Si `AGENTS.md` aún tiene la sección Deviations de versiones anteriores, pásala a la lista de excepciones antes de cerrar la adopción: por cada desviación, una entrada con la ruta sellada que el proyecto conserva cambiada, como el módulo de `.agents/instructions/` que modificó, o `AGENTS.md` si la desviación enruta un módulo propio, y como valor el texto de la desviación con su enlace. Después toma el `AGENTS.md` de la versión nueva, que ya no tiene esa sección; si `AGENTS.md` quedó en la lista, aplica a mano el cambio de la plantilla y quita igualmente la sección, porque el registro vive ya en la lista.
 - Si el proyecto aún conserva en `.claude/settings.json` las entradas de `sandbox.excludedCommands` y de `permissions.allow` que nombran archivos que solo validan la plantilla, hoy las cinco de `run-checks.mjs`, que muestra el bloque siguiente, quítalas como en «Adoptar la plantilla en un proyecto existente» y deja las demás como están.
 
   ```text
@@ -154,10 +185,11 @@ Compara el manifiesto que adoptaste, tus archivos y el manifiesto de la versión
 
 Al terminar, y antes de tomar el manifiesto nuevo, comprueba que todas las rutas `take`, `add` y `delete` quedaron idénticas a la versión nueva: repite el `--compare`, y ninguna ruta debe seguir en esos grupos; una que siga ahí no se restauró. Con el manifiesto nuevo ya tomado, esa ruta saldría como cambiada solo en el proyecto.
 
-En el mismo cambio, fija en `.agents/template-version` la versión adoptada, toma su manifiesto con `git show refs/plantilla/<versión-nueva>:.agents/template-manifest.json > .agents/template-manifest.json` y registra en la sección Deviations de `AGENTS.md` cada desviación deliberada que conserves, con el enlace a la política del proyecto que la sustituye.
+En el mismo cambio, fija en `.agents/template-version` la versión adoptada, toma su manifiesto con `git show refs/plantilla/<versión-nueva>:.agents/template-manifest.json > .agents/template-manifest.json` y registra en la lista de excepciones cada desviación deliberada que conserves, con el enlace a la política del proyecto que la sustituye. Después del commit de la adopción, ciérrala con `node .scripts/check-template-seal.mjs --adoption-end`, que se niega y nombra lo pendiente mientras el manifiesto no esté commiteado tal como está o un archivo sellado difiera de él: tómalo de la versión nueva o regístralo en la lista, y repítelo.
 
 ## Después de adoptar
 
+- `.temp/template-adoption` ya no existe, y el sello vuelve a restaurar los archivos sellados en cada mensaje.
 - `node .scripts/check-doc-links.mjs` y `node .scripts/check-instructions.mjs` no informan de nada. El segundo no cuenta como retirados los archivos de instrucciones ni los documentos de `.readme/` que el proyecto borró hasta el commit que añadió por primera vez `.agents/template-version`, ese incluido: eran del conjunto que la plantilla sustituyó, así que sus prefijos quedan libres.
 - Codex vuelve a pedir la aprobación de los hooks que cambiaron, como explica [Hooks de agentes](92-agent-hooks.md).
 - Los binarios de los servidores de lenguaje siguen instalados en la versión que fija [stack.md](../.docs/stack.md); si cambió, se reinstalan como explica [Servidores de lenguaje de agentes](93-agent-language-servers.md).

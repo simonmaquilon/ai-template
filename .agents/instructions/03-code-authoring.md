@@ -23,3 +23,4 @@ Read before writing or modifying code, placing new files, or running repository 
 - Start a background process, such as a server, a log follower like `tail -f`, a watcher, or a wait loop, only with a timeout or a stop the task controls, and bound every wait with a time limit.
 - Before reporting, stop every background process you started, above all any that cannot end on its own.
 - Treat `.temp/` as outside the repository's truth: never cite it as evidence, count it in usage sweeps, or update it to match a change, and keep there the ignored tool caches and hook state the repository configures.
+- Write files only in the project, its linked worktrees, the directories its settings declare, and the client's own memory and plan files, and anywhere else only with the user's approval, except a system temporary folder or the client's session scratchpad, never used because `.temp/` replaces them.
