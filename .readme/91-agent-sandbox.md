@@ -85,7 +85,7 @@ El sandbox de Codex protege `.codex/` y `.git/`, pero deja escribir `.claude/set
 
 ## Caso conocido: navegadores bajo macOS
 
-Chromium registra un puerto Mach al arrancar su propio sandbox. Seatbelt —el sandbox de macOS sobre el que se apoyan estos clientes— lo deniega, y cualquier runner que lo controle falla con `Permission denied` antes de levantar la aplicación.
+Chromium registra un puerto Mach al arrancar su propio sandbox. Seatbelt —el sandbox de macOS sobre el que se apoyan estos clientes— lo deniega, y cualquier runner que lo controle falla con `Permission denied` antes de levantar la aplicación. Una aplicación Electron, que lleva Chromium dentro, falla igual (comprobado: `bootstrap_check_in …MachPortRendezvousServer…: Permission denied`).
 
 El mensaje parece un arranque E2E roto y no lo es: ningún cambio en la configuración de pruebas, en los navegadores instalados ni en las rutas de caché lo corrige. Tampoco `sandbox.network.allowMachLookup`, que la documentación oficial cita para Playwright: permite buscar servicios Mach, no registrarlos, y Chromium falla al registrar el suyo con `bootstrap_check_in` (comprobado en macOS con `allowMachLookup: ["*"]`). La única salida es que el comando quede fuera del sandbox.
 

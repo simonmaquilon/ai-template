@@ -6,12 +6,12 @@ La plantilla ofrece exactamente dos herramientas de automatización y cada una t
 
 | Herramienta | Pruebas automatizadas del proyecto | Sesiones que opera el agente |
 | --- | --- | --- |
-| Playwright | Web y API en esta entrega; Electron, pendiente de una versión posterior | Web, con el [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador) |
+| Playwright | Web, API y aplicaciones de escritorio Electron, estas con el soporte que Playwright declara experimental | Web, con el [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador); el lanzador no abre aplicaciones Electron |
 | Appium con WebdriverIO | Android e iOS, pendiente de una versión posterior | Pendiente de una versión posterior |
 
 - Las pruebas del proyecto las escribe y las mantiene el proyecto, corren en su CI y cuentan como cobertura en `.docs/coverage.md`. Las sesiones del agente verifican de forma interactiva y nunca cuentan como cobertura (`04-validation-and-testing.md`).
 - La skill `start` elige entre las dos herramientas con la evidencia del proyecto (superficie web, API, aplicación de escritorio o aplicación móvil) y registra la decisión en la línea «Extremo a extremo» de `.docs/plan.md`; si queda pendiente, en `.docs/backlog.md`. `start` no instala nada, tampoco después de elegir, y nunca crea archivos de configuración ni de pruebas: la dependencia y esos archivos los añade el proyecto después con su gestor de paquetes, con la aprobación que `06-dependencies-and-stack.md` exige para una dependencia.
-- Esta entrega no trae instrucciones de uso de Appium ni de Electron; el documento se ampliará cuando lleguen.
+- Esta entrega no trae instrucciones de uso de Appium; el documento se ampliará cuando lleguen.
 
 ## Playwright para las pruebas del proyecto
 
@@ -105,17 +105,52 @@ test('el listado incluye el registro creado', async ({ request }, testInfo) => {
 
 Las pruebas que cambian estado global van aparte (lección (b)): en su propio archivo o proyecto de Playwright, que se lanza con `npx playwright test --workers=1`, según la página de paralelismo. `test.describe.configure({ mode: 'serial' })` ordena las pruebas de un archivo, pero no impide que otros archivos corran en otros workers, y la propia documentación lo desaconseja.
 
+### Electron
+
+Playwright maneja una aplicación Electron con la clase [`Electron`](https://playwright.dev/docs/api/class-electron), que su documentación declara experimental y limita a Electron 21 o superior; el nombre `_electron`, con guion bajo, lo recuerda. No hay navegador que instalar ni servidor que arrancar: la prueba lanza la aplicación, que ya es una dependencia del proyecto, y `baseURL` y `webServer` no aplican. El ejemplo, con cada `<…>` declarado por el proyecto, sigue la referencia de [`ElectronApplication`](https://playwright.dev/docs/api/class-electronapplication):
+
+```ts
+// <carpeta de las pruebas>/ventana.spec.ts
+import { test, expect, _electron as electron } from '@playwright/test';
+
+test('la ventana principal responde', async () => {
+  // Lanza la aplicación con el Electron que el proyecto tiene instalado.
+  const app = await electron.launch({ args: ['<script principal o carpeta de la aplicación>'] });
+  try {
+    // Espera a la primera ventana, que es una página como las de una prueba web.
+    const window = await app.firstWindow();
+    await window.getByRole('button', { name: '<nombre del botón>' }).click();
+    await expect(window.getByText('<texto esperado>')).toBeVisible();
+    // Esta función corre en el proceso principal de Electron, no en la ventana.
+    expect(await app.evaluate(({ app }) => app.getName())).toBe('<nombre de la aplicación>');
+  } finally {
+    // Se cierra aunque la prueba falle, para no dejar la aplicación abierta.
+    await app.close();
+  }
+});
+```
+
+Lo que conviene saber antes de adoptarlo, de la documentación oficial y de lo comprobado con esta plantilla en macOS:
+
+- El lanzamiento agota su tiempo si la aplicación empaquetada desactiva el fuse `nodeCliInspect` (`FuseV1Options.EnableNodeCliInspectArguments`); las pruebas necesitan una compilación que lo conserve.
+- Los diálogos nativos no se interceptan, porque los abre el proceso principal contra el sistema operativo: la prueba sustituye el método, por ejemplo `dialog.showOpenDialog`, con `app.evaluate`.
+- Una terminal abierta desde un editor construido con Electron puede heredar la variable `ELECTRON_RUN_AS_NODE`, con la que Electron arranca como Node y el lanzamiento falla con `Process failed to launch!`. El comando de pruebas del proyecto la quita del entorno; el fallo no está en la prueba ni en la aplicación.
+- Electron no arranca dentro del sandbox en macOS, por el mismo motivo que un navegador (sección «Sandbox»), así que el runner necesita la misma exención.
+- Cada prueba lanza y cierra su propia aplicación, y los datos que la aplicación guarda en disco son estado compartido como cualquier otro (lecciones (a) y (c)): el proyecto declara la carpeta de datos que usan las pruebas.
+
+Las sesiones del agente no cubren Electron: el lanzador del navegador solo abre navegadores, así que una ventana Electron se verifica con las pruebas del proyecto, y el cierre de un cambio dice esa laguna cuando la verificación interactiva hacía falta.
+
 ### Relación con el lanzador del agente
 
 Son independientes. Las pruebas usan la versión que fija el lockfile del proyecto y los navegadores que el proyecto instala. El [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador) usa la versión de `.agents/tool-versions.json` y el Chrome del equipo, y solo sirve a las sesiones del agente. Actualizar una no actualiza la otra, y un proyecto que adopta solo las pruebas no necesita el lanzador, ni al revés. Las capturas y mediciones de una sesión del agente (tamaños, modos de color, desbordamientos, objetivos y foco) las hace el subcomando [`capture`](90-agent-skills.md#captura-y-medición-del-navegador) del lanzador; son verificación interactiva y, como esta, no cuentan como cobertura automatizada.
 
 ## Sandbox
 
-- El runner que arranca un navegador no corre dentro del sandbox en macOS: es el [caso conocido de los navegadores](91-agent-sandbox.md#caso-conocido-navegadores-bajo-macos). El fallo (`Permission denied` antes de levantar la aplicación) parece un arranque roto y no lo es: ningún cambio en la configuración de pruebas, en los navegadores instalados ni en las cachés lo corrige.
+- El runner que arranca un navegador o una aplicación Electron no corre dentro del sandbox en macOS: es el [caso conocido de los navegadores](91-agent-sandbox.md#caso-conocido-navegadores-bajo-macos). El fallo (`Permission denied` antes de levantar la aplicación) parece un arranque roto y no lo es: ningún cambio en la configuración de pruebas, en los navegadores instalados ni en las cachés lo corrige.
 - La inspección de procesos tampoco funciona confinada, según el [caso conocido de inspección de procesos](91-agent-sandbox.md#caso-conocido-inspección-de-procesos): un script que busca un servidor por nombre o por su línea de comandos concluye que no existe, mientras que `lsof` sí encuentra quién escucha en un puerto.
 - La salida en Claude Code es una exención `sandbox.excludedCommands` para el comando exacto del runner del proyecto, con un espacio antes del `*` final cuando el comando admite argumentos, para no cubrir otros scripts con el mismo prefijo, y con las condiciones de forma que explica [Sandbox de agentes](91-agent-sandbox.md#claude-code). En Codex no hay exención por comando: el runner pide la escalada de su sandbox.
 - Riesgo: esa exención ejecuta sin confinar el código del proyecto, es decir, sus pruebas, sus scripts y todo lo que estos invoquen, y `filesystem.denyWrite` no lo protege, así que un comando confinado puede reescribir ese código antes de que corra sin confinar. Por eso se declara solo con autorización explícita.
-- La declara `start`, en el mensaje de aprobación de su paso de herramientas, cuando el proyecto adopta pruebas de extremo a extremo con navegador, y solo con un sí explícito; un proyecto que las adopta más tarde la añade con la misma autorización. Se registra en `.readme/91-agent-sandbox.md` de ese proyecto, que es suyo (`.scripts/template-files.mjs` lo lista como propiedad del proyecto), en su sección de exenciones del proyecto si la tiene; la plantilla no define esa sección.
+- La declara `start`, en el mensaje de aprobación de su paso de herramientas, cuando el proyecto adopta pruebas de extremo a extremo con navegador o con Electron, y solo con un sí explícito; un proyecto que las adopta más tarde la añade con la misma autorización. Se registra en `.readme/91-agent-sandbox.md` de ese proyecto, que es suyo (`.scripts/template-files.mjs` lo lista como propiedad del proyecto), en su sección de exenciones del proyecto si la tiene; la plantilla no define esa sección.
 
 ## Lecciones
 
