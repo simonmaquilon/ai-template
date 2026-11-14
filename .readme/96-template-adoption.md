@@ -59,7 +59,7 @@ mkdir -p .temp && date -u +%Y-%m-%dT%H:%M:%SZ > .temp/template-adoption
      y las dos reglas PowerShell(...) con los mismos comandos
    ```
 
-   Deja las demás entradas como están. Esa ruta está protegida por el sandbox: edítala fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md).
+   Si el proyecto no adopta la verificación en navegador operada por el agente, quita también `node .scripts/browser.mjs*` de `sandbox.excludedCommands`, vuelve a añadir la entrada si la adopta más tarde y quítala si la retira después. Deja las demás entradas como están. Esa ruta está protegida por el sandbox: edítala fuera del sandbox y con la confirmación normal, como explica [Sandbox de agentes](91-agent-sandbox.md).
 5. Añade al `.gitignore` del proyecto, o créalo, las reglas de `git show <ref>:.gitignore` que le falten; se excluye de la extracción para unirlo, no porque solo valide la plantilla. Después, `git ls-tree -r --name-only <ref> | git check-ignore -v --stdin` lista las rutas de la plantilla que el proyecto ignora y la regla que lo hace, también en `.git/info/exclude` o en las exclusiones globales de Git: quita o acota esas reglas, salvo en las rutas que la propia plantilla ignora y versiona, como `.temp/.gitignore`, que se añaden con `git add -f`.
 6. Con `git status` y `git diff`, une lo que la extracción sustituyó. Ningún secreto pasa a un archivo versionado (`AGENTS.md`): los tokens y claves de las copias del paso 3 van a la configuración del usuario, como su `.npmrc` personal, o a variables de entorno que el archivo nombra.
    - En los esqueletos de las referencias primarias y de `README.md`, conserva el de la plantilla y lleva el contenido del proyecto a sus secciones.

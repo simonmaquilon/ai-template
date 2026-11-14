@@ -11,7 +11,7 @@
 // there with npm from that folder so no project npm configuration applies.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { accessSync, constants, existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -22,8 +22,13 @@ import { npmScripts } from './npm-cli.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = { outputDir: '.temp/playwright-cli' };
 
+// What a rejected command line gets told, since it is not for the launcher to run: the launcher section of
+// .readme/90-agent-skills.md documents how to run it instead.
+const APPROVAL = " Run it through the client's approval instead, as `node .scripts/run-pinned.mjs playwright cli <command>` "
+  + '(.readme/90-agent-skills.md, "Lanzador del navegador").';
+
 function fail(message, blocked = true) {
-  console.error(`browser: ${message}.${blocked ? " Run it through the client's approval instead (.readme/91-agent-sandbox.md)." : ''}`);
+  console.error(`browser: ${message}.${blocked ? APPROVAL : ''}`);
   process.exit(1);
 }
 
@@ -32,15 +37,15 @@ const isLink = (path) => lstatSync(path, { throwIfNoEntry: false })?.isSymbolicL
 function checkConfig() {
   const file = join(ROOT, '.playwright', 'cli.config.json');
   for (const path of [dirname(file), file, join(ROOT, '.temp'), join(ROOT, '.temp', 'playwright-cli')]) {
-    if (isLink(path)) fail(`${path} is a symbolic link`);
+    if (isLink(path)) fail(`${path} is a symbolic link; replace it with a regular file or folder`, false);
   }
   let config;
   try {
     config = JSON.parse(readFileSync(file, 'utf8'));
   } catch {
-    fail('.playwright/cli.config.json is missing or not valid JSON');
+    fail(`.playwright/cli.config.json is missing or not valid JSON; restore it with exactly ${JSON.stringify(CONFIG)}`, false);
   }
-  if (JSON.stringify(config) !== JSON.stringify(CONFIG)) fail(`.playwright/cli.config.json must be exactly ${JSON.stringify(CONFIG)}`);
+  if (JSON.stringify(config) !== JSON.stringify(CONFIG)) fail(`.playwright/cli.config.json must be exactly ${JSON.stringify(CONFIG)}`, false);
 }
 
 function pinnedVersion() {
@@ -55,6 +60,20 @@ function cacheDir() {
   if (process.platform === 'win32') return join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'agent-browser');
   if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches', 'agent-browser');
   return join(process.env.XDG_CACHE_HOME || join(homedir(), '.cache'), 'agent-browser');
+}
+
+// The client sandbox denies confined commands the per-user cache, so a launch there cannot install or run anything;
+// the folder may not exist yet, and then its nearest existing ancestor must take the new one.
+function checkCache() {
+  let path = cacheDir();
+  const cache = path;
+  while (!existsSync(path) && dirname(path) !== path) path = dirname(path);
+  try {
+    accessSync(path, constants.W_OK);
+  } catch {
+    fail(`cannot write its cache ${cache}. It is most likely running inside the client sandbox: run it alone, from the `
+      + "repository root, so that the client's exemption applies, or with the client's approval (.readme/91-agent-sandbox.md)", false);
+  }
 }
 
 const installedVersion = (dir, name) => {
@@ -101,6 +120,7 @@ try {
   fail(error.message);
 }
 checkConfig();
+checkCache();
 const dir = install(pinnedVersion());
 sameCommand(dir, args, command);
 const cli = join(dir, 'node_modules', 'playwright', 'cli.js');

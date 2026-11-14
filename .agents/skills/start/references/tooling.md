@@ -9,6 +9,7 @@ Adapt the agent tooling once stack.md's Selected Stack is settled, or, with exis
 - Add one only after checking publisher, provenance, license, and maintenance (`06`), with the install command that catalog documents, after confirming its options with the pinned version's `--help` (`03`); then review the `allowed-tools` and hooks it brings and record accepted grants in the permissions table of `.readme/90-agent-skills.md`.
 - Keep one the stack does not use by writing in its stack.md skills Notes cell: `Kept by user decision on <YYYY-MM-DD>; the stack does not use it.`
 - Afterwards confirm that only that skill's folder and its `skills-lock.json` entry changed, and that `.claude/skills` is still a symlink. Never edit the lockfile by hand (`03`).
+- The launcher of the browser capability is exempt from the sandbox through `node .scripts/browser.mjs*` in `sandbox.excludedCommands` of `.claude/settings.json`, which serves nothing else: when the project does not adopt agent-operated browser verification, include removing that entry in this step's approval message unless step 2 already did, and leave it when the project adopts it or while plan.md leaves that line as `TODO` with a backlog.md entry, until that entry is resolved. A project that adopts the capability later adds the entry back, and one that drops it later removes the entry (`.readme/90-agent-skills.md`).
 
 ## Tool servers
 
@@ -23,4 +24,4 @@ Adapt the agent tooling once stack.md's Selected Stack is settled, or, with exis
 
 - Codex asks to trust the repository's hooks in its first session (`.readme/92-agent-hooks.md`).
 - Claude Code asks to approve each project tool server.
-- No sandbox exemption until the project has an end-to-end runner (`.readme/91-agent-sandbox.md`).
+- No new sandbox exemption until the project has an end-to-end runner (`.readme/91-agent-sandbox.md`); the launcher's one is the exception: it stays, or comes back, only when the project adopts agent-operated browser verification.

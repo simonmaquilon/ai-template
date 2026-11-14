@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import test from 'node:test';
 import { checkArgs } from '../browser-args.mjs';
-import { ROOT, WINDOWS, run } from './support.mjs';
+import { fixture } from './browser-fixture.mjs';
+import { ROOT, WINDOWS } from './support.mjs';
 
 const PIN = /^\| `playwright` \| (\d+\.\d+\.\d+) \|/m.exec(readFileSync(join(ROOT, '.docs', 'stack.md'), 'utf8'))?.[1];
 const refusal = (args) => {
@@ -55,41 +56,6 @@ test('browser refuses what would run code, install, reach other browsers, sessio
   for (const [args, reason] of cases) assert.match(refusal(args) ?? 'accepted', reason, args.join(' '));
 });
 
-// A copy of the launcher with its configuration, a home folder of its own, and a stand-in for npm that
-// installs a fake Playwright CLI printing where and with what it was launched.
-function fixture(t) {
-  mkdirSync(join(ROOT, '.temp'), { recursive: true });
-  const dir = mkdtempSync(join(ROOT, '.temp', 'browser-'));
-  t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 5 }));
-  for (const name of ['browser.mjs', 'browser-args.mjs', 'npm-cli.mjs']) cpSync(join(ROOT, '.scripts', name), join(dir, '.scripts', name));
-  cpSync(join(ROOT, '.docs', 'stack.md'), join(dir, '.docs', 'stack.md'));
-  cpSync(join(ROOT, '.playwright'), join(dir, '.playwright'), { recursive: true });
-  mkdirSync(join(dir, 'npm'));
-  writeFileSync(join(dir, 'npm', 'npm-cli.js'), `const fs = require('fs'), path = require('path');
-fs.appendFileSync(${JSON.stringify(join(dir, 'npm.log'))}, JSON.stringify([process.cwd(), ...process.argv.slice(2)]) + '\\n');
-const version = process.argv.at(-1).split('@').at(-1);
-for (const name of ['playwright', 'playwright-core']) {
-  fs.mkdirSync(path.join('node_modules', name), { recursive: true });
-  fs.writeFileSync(path.join('node_modules', name, 'package.json'), JSON.stringify({ name, version }));
-}
-fs.writeFileSync(path.join('node_modules', 'playwright', 'cli.js'), 'console.log(JSON.stringify([process.cwd(), ...process.argv.slice(2)]))');
-const client = path.join('node_modules', 'playwright-core', 'lib', 'tools', 'cli-client');
-fs.mkdirSync(client, { recursive: true });
-fs.writeFileSync(path.join(client, 'help.json'), '{ "booleanOptions": [] }');
-fs.writeFileSync(path.join(client, 'minimist.js'), 'exports.minimist = (args) => ({ _: args.filter((arg) => !arg.startsWith("-")) });');
-`);
-  writeFileSync(join(dir, 'npm', 'npx-cli.js'), '');
-  // The stand-ins are CommonJS whatever package.json encloses the repository.
-  writeFileSync(join(dir, 'npm', 'package.json'), '{ "type": "commonjs" }\n');
-  const home = join(dir, 'home');
-  const env = { ...process.env, PINNED_NPM_CLI_DIR: join(dir, 'npm'), HOME: home, USERPROFILE: home,
-    LOCALAPPDATA: join(home, 'local'), XDG_CACHE_HOME: join(home, 'cache') };
-  const browser = (args) => run(process.execPath, [join(dir, '.scripts', 'browser.mjs'), ...args], { cwd: join(dir, 'npm'), env });
-  browser.dir = dir;
-  browser.npmCalls = () => readFileSync(join(dir, 'npm.log'), 'utf8').trim().split('\n').map((line) => JSON.parse(line));
-  return browser;
-}
-
 test('browser installs the pinned playwright once in a per-user cache and runs its cli from the repository root', (t) => {
   assert.ok(PIN, '.docs/stack.md pins playwright');
   const browser = fixture(t);
@@ -119,17 +85,31 @@ test('browser runs nothing when its arguments or the CLI configuration could tak
     assert.equal(result.status, 1);
     assert.equal(result.stdout, '');
     assert.match(result.stderr, reason);
+    return result.stderr;
   };
-  refused(['run-code', 'x'], /not an allowed command/);
+  // A rejected command points to the client's approval; a configuration to correct says what to correct instead.
+  assert.match(refused(['run-code', 'x'], /not an allowed command/), /approval.*\.readme\/90-agent-skills\.md/);
   writeFileSync(join(browser.dir, '.playwright', 'cli.config.json'), '{ "outputDir": ".temp/playwright-cli", "browser": {} }');
-  refused(['list'], /must be exactly/);
+  assert.doesNotMatch(refused(['list'], /must be exactly/), /approval/);
   if (!WINDOWS) {
     rmSync(join(browser.dir, '.playwright'), { recursive: true });
     mkdirSync(join(browser.dir, 'elsewhere'));
     symlinkSync(join(browser.dir, 'elsewhere'), join(browser.dir, '.playwright'));
-    refused(['list'], /is a symbolic link/);
+    assert.doesNotMatch(refused(['list'], /is a symbolic link/), /approval/);
   }
   assert.throws(() => browser.npmCalls(), 'npm never ran');
+});
+
+test('browser refuses a file whose path crosses a symbolic link inside the repository', { skip: WINDOWS }, (t) => {
+  mkdirSync(join(ROOT, '.temp'), { recursive: true });
+  const dir = mkdtempSync(join(ROOT, '.temp', 'browser-link-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 5 }));
+  mkdirSync(join(dir, 'real'));
+  symlinkSync(join(dir, 'real'), join(dir, 'link'));
+  const link = relative(ROOT, join(dir, 'link')).split('\\').join('/');
+  assert.match(refusal(['screenshot', `--filename=${link}/a.png`]), /crosses a symbolic link/);
+  assert.match(refusal(['state-save', `${link}/state.json`]), /crosses a symbolic link/);
+  assert.equal(refusal(['screenshot', `--filename=${link.replace(/link$/, 'real')}/a.png`]), null, 'the same folder without the link');
 });
 
 // claude-permissions.test.mjs keeps the gh exclusions to read-only commands.
