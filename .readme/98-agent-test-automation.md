@@ -147,7 +147,7 @@ Son independientes. Las pruebas usan la versión que fija el lockfile del proyec
 
 ### Requisitos
 
-Los fija cada herramienta en su `package.json` y en su documentación, no esta plantilla: la versión de Node que pide WebdriverIO (`npm view webdriverio engines.node`), que es más estricta que la de Appium; un JDK y el SDK de Android, con `ANDROID_HOME` apuntando a él, para Android; y macOS con Xcode y un runtime de simulador instalado para iOS. Un emulador o un simulador es un binario más del equipo y lo instala quien lo usa, no la plantilla.
+`node .scripts/device.mjs doctor` comprueba los de este equipo sin instalar nada. Los fija cada herramienta en su `package.json` y en su documentación, no esta plantilla: la versión de Node que pide WebdriverIO (`npm view webdriverio engines.node`), que es más estricta que la de Appium; un JDK y el SDK de Android, con `ANDROID_HOME` apuntando a él, para Android; y macOS con Xcode y un runtime de simulador instalado para iOS. Un emulador o un simulador es un binario más del equipo y lo instala quien lo usa, no la plantilla.
 
 ### Cómo añade el proyecto Appium
 
@@ -221,7 +221,7 @@ Se lanza con `npx wdio run wdio.conf.js`, que el proyecto publica como script. L
 Comprobado con esta plantilla en macOS, con un simulador de iOS y un emulador de Android, y un proyecto de prueba que no forma parte del repositorio:
 
 - El ejemplo abre la sesión y lee la pantalla en las dos plataformas con las versiones que npm resolvió ese día; ninguna versión se fija aquí.
-- En Android, la primera sesión que deja a Appium arrancar el emulador en frío agotó dos veces sus plazos (el arranque del emulador y la instalación del servidor del driver, que el propio error nombra como `uiautomator2ServerInstallTimeout`) y pasó al tercer intento. Arrancar el emulador antes de la corrida, o subir esos plazos en las capacidades, evita tomar por fallo de la prueba lo que es un arranque lento.
+- En Android, la primera sesión que deja a Appium arrancar el emulador en frío agotó dos veces sus plazos (el arranque del emulador y la instalación del servidor del driver, que el propio error nombra como `uiautomator2ServerInstallTimeout`) y pasó al tercer intento. Arrancar el emulador antes de la corrida, con el [lanzador de dispositivos móviles](90-agent-skills.md#lanzador-de-dispositivos-móviles), o subir esos plazos en las capacidades, evita tomar por fallo de la prueba lo que es un arranque lento.
 - Dentro del sandbox la corrida falla con un mensaje que apunta a otra cosa (sección «Sandbox»).
 - En Windows y en Linux no está comprobado, y en dispositivos físicos tampoco.
 
