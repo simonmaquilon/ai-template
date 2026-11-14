@@ -7,7 +7,8 @@
 // Markdown one runs check-markdown.mjs --all, which lints each whole .md file that Git lists and no attribute skips:
 // vendored or generated unless `markdown-structure` is set, or `-markdown-structure`), the stack document check, which
 // fails when a generated block of .docs/stack.md is out of date, the template manifest check, which fails when
-// .agents/template-manifest.json is out of date, and the
+// .agents/template-manifest.json is out of date, the tool versions check, which fails when .agents/tool-versions.json is
+// malformed, and the
 // source-file limit, which receives the arguments given here, such as --base <revision>. Exits with status 1 when any
 // step fails, and with status 3 when the only problem is a step the environment
 // blocked, such as a sandbox that denies writes under .git or .temp, which never
@@ -62,6 +63,7 @@ const steps = [
   ['markdown structure', [join('.scripts', 'check-markdown.mjs'), '--all'], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['instruction files', [join('.scripts', 'check-instructions.mjs')], (run) => run.status === 0 && run.stdout.trim() === ''],
   ['stack document', [join('.scripts', 'update-stack-doc.mjs'), '--check'], (run) => run.status === 0],
+  ['tool versions', [join('.scripts', 'tool-versions.mjs'), '--check'], (run) => run.status === 0],
   ['template manifest', [join('.scripts', 'template-manifest.mjs'), '--check'], (run) => run.status === 0],
   ['source-file limit', [join('.scripts', 'check-file-length.mjs'), ...process.argv.slice(2)], (run) => run.status === 0],
 ];

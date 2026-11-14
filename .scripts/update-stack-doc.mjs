@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { readHookInput } from './hook-support.mjs';
 import { inFolder, openRegular } from './safe-fs.mjs';
 import * as sources from './stack-sources.mjs';
+import { toolingRows } from './tool-versions-file.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RULE = '06-dependencies-and-stack.md';
@@ -26,6 +27,7 @@ const BLOCKS = {
   skills: [sources.skills, ['Skill', 'Source', 'Pinned by'], 'skills-lock.json or .agents/skills'],
   'mcp-servers': [sources.mcpServers, ['Server', 'Claude Code', 'Codex', 'Endpoint or command'], '.mcp.json or .codex/config.toml'],
   plugins: [sources.plugins, ['Plugin', 'Marketplace', 'Enabled'], 'enabledPlugins in .claude/settings.json'],
+  'template-tooling': [toolingRows, ['Package', 'Version', 'Published', 'License', 'Origin', 'Retention'], '.agents/tool-versions.json'],
   workflows: [sources.workflows, ['Workflow', 'Runners', 'Node', 'Actions'], '.github/workflows'],
 };
 const MARKER = /<!-- (\/?)stack:generated ([\w-]+) -->/g;

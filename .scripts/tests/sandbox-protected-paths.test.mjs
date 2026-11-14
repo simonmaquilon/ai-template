@@ -46,8 +46,9 @@ for (const script of queue) {
     }
   }
 }
-// The client hook configs, and what run-checks.mjs runs: the hook tests and the prompt-plan skill scripts.
-for (const extra of ['.codex/hooks.json', '.codex/config.toml', '.scripts/tests', '.agents/skills/prompt-plan/scripts']) {
+// The client hook configs, what run-checks.mjs runs: the hook tests and the prompt-plan skill scripts, and the file that
+// the launchers run outside the sandbox take their tool versions from.
+for (const extra of ['.codex/hooks.json', '.codex/config.toml', '.scripts/tests', '.agents/skills/prompt-plan/scripts', '.agents/tool-versions.json']) {
   found.add(extra);
 }
 
@@ -56,7 +57,7 @@ const covered = (path) => denied.some((entry) => path === entry || path.startsWi
 
 test('the paths the template runs code from are collected', () => {
   for (const path of ['.scripts/check-bulk-staging.mjs', '.scripts/status-line.mjs', '.scripts/run-checks.mjs', '.scripts/browser.mjs',
-    '.scripts/hook-support.mjs', '.codex/hooks.json']) {
+    '.scripts/hook-support.mjs', '.codex/hooks.json', '.agents/tool-versions.json', '.scripts/tool-versions-file.mjs']) {
     assert.ok(found.has(path), `${path} is not collected`);
   }
 });

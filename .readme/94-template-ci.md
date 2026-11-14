@@ -15,6 +15,7 @@ Un único paso, `node .scripts/run-checks.mjs --base <revisión>`, que también 
 - la estructura Markdown de la documentación propia, con `node .scripts/check-markdown.mjs --all`, sobre los archivos `.md` completos que Git ve y existen en disco como archivos regulares, no enlaces simbólicos, salvo los que un atributo deja fuera, `-markdown-structure` o `linguist-vendored` o `linguist-generated` sin `markdown-structure`, como `security-audit`, así que revisa las cuatro skills propias, y que también falla si informa de algo;
 - la comprobación de la estructura de las instrucciones y de los prefijos de `.readme/` de `.scripts/check-instructions.mjs`, que también falla si informa de algo;
 - que los bloques generados de `.docs/stack.md` estén al día, con `node .scripts/update-stack-doc.mjs --check`;
+- que `.agents/tool-versions.json` tenga la forma que espera, con `node .scripts/tool-versions.mjs --check`, sin red;
 - que `.agents/template-manifest.json` esté al día, con `node .scripts/template-manifest.mjs --check`;
 - el límite de líneas de `.scripts/check-file-length.mjs`, sobre los archivos que cambian respecto a la revisión de `--base`; sin `--base` revisa solo los cambios sin commitear respecto a `HEAD`, que en el checkout limpio del CI no existen.
 

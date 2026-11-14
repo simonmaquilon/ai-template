@@ -3,10 +3,11 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSyn
 import { join, relative } from 'node:path';
 import test from 'node:test';
 import { checkArgs } from '../browser-args.mjs';
+import { TOOL_VERSIONS } from '../tool-versions-file.mjs';
 import { fixture } from './browser-fixture.mjs';
 import { ROOT, WINDOWS } from './support.mjs';
 
-const PIN = /^\| `playwright` \| (\d+\.\d+\.\d+) \|/m.exec(readFileSync(join(ROOT, '.docs', 'stack.md'), 'utf8'))?.[1];
+const PIN = JSON.parse(readFileSync(join(ROOT, TOOL_VERSIONS), 'utf8')).playwright?.version;
 const refusal = (args) => {
   try {
     checkArgs(args, ROOT);
@@ -57,7 +58,7 @@ test('browser refuses what would run code, install, reach other browsers, sessio
 });
 
 test('browser installs the pinned playwright once in a per-user cache and runs its cli from the repository root', (t) => {
-  assert.ok(PIN, '.docs/stack.md pins playwright');
+  assert.ok(PIN, '.agents/tool-versions.json records playwright');
   const browser = fixture(t);
   for (const args of [['-s=check', 'open', 'about:blank'], ['list']]) {
     const result = browser(args);

@@ -37,7 +37,7 @@
       "allowLocalBinding": true
     },
     "filesystem": {
-      "denyWrite": [".scripts", ".codex", ".agents/skills", ".temp/playwright-cli"]
+      "denyWrite": [".scripts", ".codex", ".agents/skills", ".agents/tool-versions.json", ".temp/playwright-cli"]
     }
   },
   "permissions": {

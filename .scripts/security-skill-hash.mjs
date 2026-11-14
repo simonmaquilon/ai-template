@@ -1,4 +1,4 @@
-// Match computeSkillFolderHash of the skills CLI version that .docs/stack.md pins:
+// Match computeSkillFolderHash of the skills CLI version that .agents/tool-versions.json records:
 // sort portable relative names using localeCompare, then hash each name
 // followed by its raw bytes with SHA-256.
 // The top-level LICENSE is our verified overlay copied from the upstream root.

@@ -1,0 +1,45 @@
+{
+  "playwright": {
+    "version": "1.64.0",
+    "integrity": "sha512-kVzTnYFYEyQ9RGzBjNCd2+yEqWmVbxl3AHPynv3qQ6JTjv4a+kwRcnqQwIpuP3NnrnIrE/Q6wWAIAvMfIE2/Yg==",
+    "published": "2026-10-07T20:42:55.791Z",
+    "resolved": "2026-11-14T13:36:34.681Z",
+    "repository": "https://github.com/microsoft/playwright",
+    "license": "Apache-2.0",
+    "hold": "1.64.0",
+    "holdReason": "the launcher filter .scripts/browser-args.mjs lists the options of 1.64.0, and 1.65.0 adds console --all, requests --all and cookie-delete --domain and --path",
+    "dependencies": {
+      "playwright-core": {
+        "version": "1.64.0",
+        "integrity": "sha512-T9r+MZkTECl2+oUcZ26YgZzTrYidTsIhYYkJix+6iDOymOb1FB2RLLSOxRGnZGv5DStt+aduIVbt+E8WygXYpg=="
+      }
+    }
+  },
+  "skills": {
+    "version": "1.7.6",
+    "integrity": "sha512-dAee29yRGin7ub6VHwmifLEfHrysGD41yq4RkY0gg7QQh0wyQKWfhiORGb/r6uNpKWc9A1GY8yowV07Lh+4rCg==",
+    "published": "2026-11-03T00:17:11.594Z",
+    "resolved": "2026-11-14T13:13:41.117Z",
+    "repository": "https://github.com/vercel-labs/skills",
+    "license": "MIT"
+  },
+  "typescript": {
+    "version": "6.0.3",
+    "integrity": "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==",
+    "published": "2026-04-16T23:38:27.905Z",
+    "resolved": "2026-11-14T13:13:33.626Z",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "license": "Apache-2.0",
+    "hold": "6",
+    "holdReason": "typescript-language-server wraps tsserver, which TypeScript 7 does not ship; its README installs typescript@6",
+    "provenanceException": "published by typescript-bot, which publishes no provenance attestation; no step of the template validates its signature, and npm audit signatures is a manual check that nobody runs"
+  },
+  "typescript-language-server": {
+    "version": "6.0.3",
+    "integrity": "sha512-iAxKyLXRNbnxGfCGZ/j4ilAb0PSNommvTvcghF8B8sq5JFGDKEQwzNEFZ0KTYEwzcA7rtRa+2OPeouiFR8L5KA==",
+    "published": "2026-11-02T09:14:30.154Z",
+    "resolved": "2026-11-14T13:13:42.404Z",
+    "repository": "https://github.com/typescript-language-server/typescript-language-server",
+    "license": "Apache-2.0"
+  }
+}

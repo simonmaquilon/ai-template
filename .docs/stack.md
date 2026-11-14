@@ -63,14 +63,16 @@ Other ecosystems, and transitive dependencies through an inventory or SBOM linke
 
 ## Template Tooling
 
-The tooling that the template's agent configuration runs. The commands in `.readme/` run these packages through `node .scripts/run-pinned.mjs`, which takes the version from this table or from Project Tooling, so no command repeats it; changing a version is an update that `06-dependencies-and-stack.md` subjects to approval.
+The tooling that the template's agent configuration runs. `.agents/tool-versions.json` records, for each package, its exact version, integrity hash, publication and resolution dates, source repository, license, and any hold on a version line with its reason. A version is never written by hand: `node .scripts/tool-versions.mjs --refresh` resolves it from the npm registry as the dist-tag `latest` when that is stable and at least 7 days old, otherwise the newest stable version before it that is, inside the held line, and records it only when its provenance attestation names the recorded repository; it runs only when asked, and outside the client sandbox, which protects the file. The commands in `.readme/` run these packages through `node .scripts/run-pinned.mjs`, which takes the version from that file, or from Project Tooling for a package the file does not list, so no command repeats it; `06-dependencies-and-stack.md` subjects a refresh that changes a version to approval. The block below is generated from the file: edit only its Notes column.
 
-| Package | Version | License | Origin | Verification |
-| --- | --- | --- | --- | --- |
-| `skills` | 1.7.4 | MIT | [vercel-labs/skills](https://github.com/vercel-labs/skills) | published with a provenance attestation from `vercel-labs/skills`; checked in the npm registry when pinned |
-| `typescript-language-server` | 6.0.1 | Apache-2.0 | [typescript-language-server/typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) | published from GitHub Actions with a provenance attestation; registry signature and attestation checked with `npm audit signatures`; no dependencies or install scripts; requires Node 22.22.2 or later |
-| `typescript` | 6.0.3 | Apache-2.0 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) | published by `typescript-bot`; registry signature checked with `npm audit signatures`; no dependencies or install scripts |
-| `playwright` | 1.64.0 | Apache-2.0 | [microsoft/playwright](https://github.com/microsoft/playwright) | published from GitHub Actions with a provenance attestation; registry signatures and attestations of it and its only dependency, `playwright-core` at the same version, checked with `npm audit signatures`; no install scripts; `.scripts/browser.mjs` installs it with npm in a per-user cache outside the repository, not through `run-pinned.mjs`, and runs its `cli` command for agent-operated browser sessions |
+<!-- stack:generated template-tooling -->
+| Package | Version | Published | License | Origin | Retention | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `playwright` | 1.64.0 | 2026-10-07 | Apache-2.0 | [microsoft/playwright](https://github.com/microsoft/playwright) | line 1.64.0: the launcher filter .scripts/browser-args.mjs lists the options of 1.64.0, and 1.65.0 adds console --all, requests --all and cookie-delete --domain and --path | its provenance is checked by `--refresh`; its only dependency, `playwright-core` at the same version, is recorded with its integrity hash too; no install scripts; `.scripts/browser.mjs` installs it with npm in a per-user cache outside the repository, not through `run-pinned.mjs`, refuses an install whose integrity hash is not the recorded one, and runs its `cli` command for agent-operated browser sessions |
+| `skills` | 1.7.6 | 2026-11-03 | MIT | [vercel-labs/skills](https://github.com/vercel-labs/skills) | none | its provenance is checked by `--refresh`; `run-pinned.mjs` runs it with `npx` |
+| `typescript` | 6.0.3 | 2026-04-16 | Apache-2.0 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) | line 6: typescript-language-server wraps tsserver, which TypeScript 7 does not ship; its README installs typescript@6 | published by `typescript-bot` without a provenance attestation, an exception recorded in `.agents/tool-versions.json`; no step of the template validates its signature, and `npm audit signatures` is a manual check that nobody runs; no install scripts |
+| `typescript-language-server` | 6.0.3 | 2026-11-02 | Apache-2.0 | [typescript-language-server/typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) | none | its provenance is checked by `--refresh`; no install scripts; the Node version it requires is in its `engines` |
+<!-- /stack:generated template-tooling -->
 
 The rest of the agent tooling is pinned by its own configuration and listed under Agent and Automation Inventory.
 
@@ -82,7 +84,7 @@ The rest of the agent tooling is pinned by its own configuration and listed unde
 
 ## Project Tooling
 
-Tooling that the project adds to the agent configuration, such as the binary of another language server, with the same columns as Template Tooling; adopting a newer template version never changes it.
+Tooling that the project adds to the agent configuration, such as the binary of another language server, with the columns below, which hold the version `run-pinned.mjs` reads; adopting a newer template version never changes it.
 
 | Package | Version | License | Origin | Verification |
 | --- | --- | --- | --- | --- |

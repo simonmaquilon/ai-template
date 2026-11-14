@@ -19,4 +19,4 @@ Read before editing `AGENTS.md`, an instruction module, a primary-reference or r
 - Without a prior template commit, preserve a verifiable inherited version; start a new template with no inherited version at `1.0.0`, and never infer a release number when provenance is ambiguous.
 - Keep template-maintenance findings out of the primary-reference skeletons that derived projects inherit; report them, or record them in a template-owned register when one is configured.
 - Reserve `.readme/` prefixes `90` and above for template-owned documents, which derived projects inherit except the template-only ones.
-- Treat the Template Tooling section of `.docs/stack.md` as template-owned and replaced as a whole on adoption, and every other section as project-owned.
+- Treat the Template Tooling section of `.docs/stack.md` as template-owned and replaced as a whole on adoption, its generated block following the project-owned `.agents/tool-versions.json`, and every other section as project-owned.

@@ -12,6 +12,6 @@ Read before adding, updating, replacing, or removing a dependency, CLI tool, or 
 - Keep runtime, platform, database, and external-service versions in `.docs/stack.md` with their source of truth and support status.
 - Outside declared and resolved versions and the generated blocks, name in `.docs/stack.md` the file that pins a value instead of copying it, and never repeat a `.docs/stack.md` value in another document.
 - Record an approved technology's target version under Approved Target Versions until installation resolves one, then move it to the installed section.
-- Record the tooling that template-owned agent configuration runs under Template Tooling and the tooling the project adds under Project Tooling, never both, with version and provenance; packages and binaries that only agent tooling or automation needs go there, never in `.docs/security.md`.
-- Run that tooling through the repository script that reads its version from `.docs/stack.md`, and never write a version into a command in documentation.
+- Record the tooling that template-owned agent configuration runs in `.agents/tool-versions.json`, which Template Tooling shows, and the tooling the project adds under Project Tooling, never both, with version and provenance; packages and binaries that only agent tooling or automation needs go there, never in `.docs/security.md`.
+- Run that tooling through the repository script that reads its version from those records, never write a version into a command or document, and change a recorded version only with the repository's refresh command, which is an upgrade that needs approval.
 - Leave the blocks between `stack:generated` markers to the script that regenerates them, editing only their Notes column.

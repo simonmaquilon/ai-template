@@ -1,23 +1,26 @@
 #!/usr/bin/env node
 // Runs an agent-operated browser session command through the `cli` of the
-// `playwright` package at the version .docs/stack.md pins, from the repository root:
+// `playwright` package at the version that .agents/tool-versions.json records, from the repository root:
 //   node .scripts/browser.mjs [-s=<session>] <command> [args...]
 // The client sandbox cannot start Chromium on macOS, so .claude/settings.json
 // exempts this script. Because it runs unconfined, it lets through only the
 // command lines browser-args.mjs allows, reads no configuration a confined
 // command could have changed beyond the expected .playwright/cli.config.json,
-// and runs Playwright from a per-user cache outside the repository and the
-// temporary directory, where confined commands cannot write, installing it
+// refuses an install whose integrity hash is not the one that file (protected like
+// .scripts) records, and runs Playwright from a per-user cache outside the repository
+// and the temporary directory, where confined commands cannot write, installing it
 // there with npm from that folder so no project npm configuration applies.
 
 import { spawnSync } from 'node:child_process';
-import { accessSync, constants, existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { accessSync, constants, existsSync, lstatSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkArgs } from './browser-args.mjs';
+import { expectedPackages, lockMismatch } from './browser-lock.mjs';
 import { npmScripts } from './npm-cli.mjs';
+import { TOOL_VERSIONS, entryProblems, readToolVersions } from './tool-versions-file.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = { outputDir: '.temp/playwright-cli' };
@@ -48,11 +51,15 @@ function checkConfig() {
   if (JSON.stringify(config) !== JSON.stringify(CONFIG)) fail(`.playwright/cli.config.json must be exactly ${JSON.stringify(CONFIG)}`, false);
 }
 
-function pinnedVersion() {
-  const stack = readFileSync(join(ROOT, '.docs', 'stack.md'), 'utf8');
-  const section = stack.split(/^## /m).find((part) => part.startsWith('Template Tooling'));
-  return /^\| `playwright` \| (\d+\.\d+\.\d+) \|/m.exec(section ?? '')?.[1]
-    ?? fail('the Template Tooling table of .docs/stack.md pins no playwright version', false);
+// The recorded playwright entry, which must be valid; the refresh command that records it runs outside the sandbox.
+function pinnedEntry() {
+  const { data, error } = readToolVersions(ROOT);
+  const problems = error ? [error] : data?.playwright === undefined ? ['it has none'] : entryProblems('playwright', data.playwright);
+  if (problems.length > 0) {
+    fail(`${TOOL_VERSIONS} holds no valid playwright entry (${problems[0]}); run \`node .scripts/tool-versions.mjs --refresh playwright\` `
+      + 'outside the client sandbox, with its approval', false);
+  }
+  return data.playwright;
 }
 
 // The per-user cache folder of each system, which the client sandbox does not let confined commands write.
@@ -76,25 +83,23 @@ function checkCache() {
   }
 }
 
-const installedVersion = (dir, name) => {
-  try {
-    return JSON.parse(readFileSync(join(dir, 'node_modules', name, 'package.json'), 'utf8')).version;
-  } catch {
-    return null;
-  }
-};
-
-function install(version) {
+// Each launch compares what npm recorded for playwright and its recorded dependencies with the record, not the content;
+// a mismatch reinstalls.
+function install({ version, integrity, dependencies }) {
   const dir = join(cacheDir(), `playwright-${version}`);
-  const ready = () => ['playwright', 'playwright-core'].every((name) => installedVersion(dir, name) === version);
-  if (ready()) return dir;
+  const expected = expectedPackages({ version, integrity, dependencies });
+  if (lockMismatch(dir, expected, TOOL_VERSIONS) === undefined) return dir;
+  rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
   mkdirSync(dir, { recursive: true });
-  if (!existsSync(join(dir, 'package.json'))) writeFileSync(join(dir, 'package.json'), '{ "private": true }\n');
+  writeFileSync(join(dir, 'package.json'), '{ "private": true }\n');
   const scripts = npmScripts() ?? fail('npm CLI scripts not found for this Node', false);
   const run = spawnSync(process.execPath, [join(scripts, 'npm-cli.js'), 'install', '--no-save', '--ignore-scripts',
     '--no-audit', '--no-fund', `playwright@${version}`], { cwd: dir, stdio: ['ignore', 'ignore', 'inherit'] });
-  if (run.status !== 0 || !ready()) fail(`installing playwright@${version} in ${dir} failed`, false);
-  return dir;
+  if (run.status !== 0) fail(`installing playwright@${version} in ${dir} failed`, false);
+  const why = lockMismatch(dir, expected, TOOL_VERSIONS);
+  if (why === undefined) return dir;
+  rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
+  fail(`npm installed ${why}; the folder was removed and nothing ran`, false);
 }
 
 // Reads the arguments again with the installed CLI's own parser and flags, and refuses when it would run
@@ -121,7 +126,7 @@ try {
 }
 checkConfig();
 checkCache();
-const dir = install(pinnedVersion());
+const dir = install(pinnedEntry());
 sameCommand(dir, args, command);
 const cli = join(dir, 'node_modules', 'playwright', 'cli.js');
 const run = spawnSync(process.execPath, [cli, 'cli', ...args], { cwd: ROOT, stdio: 'inherit' });

@@ -32,6 +32,7 @@ export const PROJECT_OWNED = [
   '.gitignore',
   '.gitattributes',
   'skills-lock.json',
+  '.agents/tool-versions.json',
 ];
 
 export const listed = (list, path) => list.some((entry) => (entry.endsWith('/') ? path.startsWith(entry) : path === entry));

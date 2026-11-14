@@ -11,6 +11,14 @@ Adapt the agent tooling once stack.md's Selected Stack is settled, or, with exis
 - Afterwards confirm that only that skill's folder and its `skills-lock.json` entry changed, and that `.claude/skills` is still a symlink. Never edit the lockfile by hand (`03`).
 - The launcher of the browser capability is exempt from the sandbox through `node .scripts/browser.mjs*` in `sandbox.excludedCommands` of `.claude/settings.json`, which serves nothing else: when the project does not adopt agent-operated browser verification, include removing that entry in this step's approval message unless step 2 already did, and leave it when the project adopts it or while plan.md leaves that line as `TODO` with a backlog.md entry, until that entry is resolved. A project that adopts the capability later adds the entry back, and one that drops it later removes the entry (`.readme/90-agent-skills.md`).
 
+## Tool versions
+
+`.agents/tool-versions.json` records the version and integrity hash of the tools the template runs; the scripts read it, and nothing changes it but `node .scripts/tool-versions.mjs --refresh`.
+
+- Offer the refresh in this step's approval message: it re-resolves each recorded package from the npm registry by the rule of `.scripts/tool-versions-select.mjs` (stable `latest` old enough, or the newest stable version before it that is), keeps each hold with its reason, accepts a version only with a provenance attestation naming the recorded repository, or without one when the entry records a `provenanceException`, installs nothing, and prints each previous and new version. State that it runs outside the client sandbox, with that approval, because the project protects the file; run it only after an explicit yes, and keep the versions as shipped on any other answer.
+- Confirm that `.agents/tool-versions.json` is in `sandbox.filesystem.denyWrite` of `.claude/settings.json`, which launchers outside the sandbox trust; when it is missing, include adding it in the same message.
+- After a refresh, run `node .scripts/tool-versions.mjs --check` and confirm with the version's `--help` that the commands `.readme/90-agent-skills.md` cites still exist (`03`).
+
 ## Tool servers
 
 `context7` stays. Propose another server only when an official one exists for a selected technology, and add it as "Añadir otro servidor" in `.readme/95-agent-tool-servers.md` describes: declared in both `.mcp.json` and `.codex/config.toml`, with its row and section in that document, stating what data it receives.
