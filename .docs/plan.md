@@ -33,7 +33,7 @@ Qué se valida en cada nivel; las herramientas están en [stack.md](stack.md) y 
 - Estático, formato y tipos: TODO
 - Unitarias: TODO
 - Integración y contratos: TODO
-- Extremo a extremo: TODO
+- Extremo a extremo: TODO (adoptado, con la herramienta, las plataformas y, si existen, el puerto y el estado compartidos y las firmas de fallos intermitentes conocidos, dichos como decisión o con el archivo que los fija; o `No aplica` con el motivo)
 - Verificación en navegador por agente: TODO (adoptada, o `No aplica` con el motivo)
 - Seguridad, accesibilidad y rendimiento: TODO
 

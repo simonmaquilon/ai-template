@@ -2,7 +2,7 @@
 
 Read before validating or testing a normal or risk change, before debugging or reviewing, and whenever a check fails.
 
-- Verify every acceptance criterion through the check its specification names, with evidence observed after the last relevant edit; a criterion without passing evidence is unmet.
+- Verify every acceptance criterion through the check its specification names, with evidence observed after the last relevant edit and figures copied from the real output; a criterion without passing evidence is unmet.
 - Run the smallest set of checks covering the changed behavior, file types, and preservation criteria, plus every check the project requires for that scope; an interrupted run or one whose final summary was not observed has no result, and a later relevant edit supersedes earlier passes.
 - Run checks and long commands so that only their outcome enters the context: keep their full output in a file under `.temp/` or in the log a repository script writes, read its summary and the failing part, and prefer a repository script or a check that prints one line per result.
 - Before validating against a local environment, confirm that the state it depends on matches what the repository declares: applied schema changes, configuration key names, generated artifacts, and provisioned resources.
@@ -18,7 +18,13 @@ Read before validating or testing a normal or risk change, before debugging or r
 - Keep tests deterministic and isolated: control time, randomness, external dependencies, mutable state, and order, and never depend on production data or services.
 - Give a server or service a test run starts its own persistence, build output, caches, and locks, so it runs alongside the developer's instance instead of excluding it.
 - When removing or rewriting tests, keep every assertion whose behavior survives, adapted to the new interface, and add or replace test tooling only with approval.
-- Before a run that starts long-lived processes, clear only those an abandoned run left; treat runs that seed or mutate shared local state as mutually exclusive across sessions, asking when one may be in progress, and clear what an interrupted run leaves behind.
+- Before a run that starts long-lived processes, clear only those an abandoned run left; treat runs that bind a fixed port or seed or mutate shared local state, as the project declares them where `.docs/plan.md` points, as mutually exclusive across sessions and within one, asking when one may be in progress, and clear what an interrupted run leaves behind.
+- Make each automated test create the data it needs and clean up what it created, never relying on another test's leftovers or on seed state it does not declare.
+- Have a test that changes global state declare it where the test lives, in its own file or the runner's configuration, and never run it in parallel with another test.
+- Repeat an intermittent failure in isolation before calling it real or known; known means its signature is declared where `.docs/plan.md` points, and a failure that passes on repetition is reported as intermittent, never as a pass.
+- In a negative assertion, remove random identifiers, sequence numbers, and dates from the compared values first, so it cannot pass on a difference that is only noise.
+- State in the evidence which states a test exercised for real and which it simulated, and never present a simulated state as covered in the real one.
+- When a long suite exhausts the memory of a server it starts or a request limit such as sign-in, measure it for the project and fix it there by reusing sessions or raising the process limit, never by relaxing the test.
 - Before fixing an unmet criterion, establish its cause with exact evidence or label it a hypothesis.
 - Risk: state each fix directive with the criterion, evidence, cause, minimal fix, and check to rerun.
 - A cycle is one fix applied and its check rerun: when the same failure follows two fixes without a new confirmed cause, diagnose instead of fixing, and stop fixing a criterion after three cycles.

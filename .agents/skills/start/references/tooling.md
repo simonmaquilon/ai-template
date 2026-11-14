@@ -11,6 +11,13 @@ Adapt the agent tooling once stack.md's Selected Stack is settled, or, with exis
 - Afterwards confirm that only that skill's folder and its `skills-lock.json` entry changed, and that `.claude/skills` is still a symlink. Never edit the lockfile by hand (`03`).
 - The launcher of the browser capability is exempt from the sandbox through `node .scripts/browser.mjs*` in `sandbox.excludedCommands` of `.claude/settings.json`, which serves nothing else: when the project does not adopt agent-operated browser verification, include removing that entry in this step's approval message unless step 2 already did, and leave it when the project adopts it or while plan.md leaves that line as `TODO` with a backlog.md entry, until that entry is resolved. A project that adopts the capability later adds the entry back, and one that drops it later removes the entry (`.readme/90-agent-skills.md`).
 
+## End-to-end runner
+
+- When `plan.md` adopts end-to-end tests that start a browser, include in this step's approval message the `sandbox.excludedCommands` exemption for the exact command of the project's runner, in the form the repository publishes it (`03`), with a space before the final `*` when the command takes arguments so that no other script with the same prefix is covered, and the shape `.readme/91-agent-sandbox.md` requires.
+- State its reason and risk: on macOS a runner that starts a browser cannot run inside the sandbox, and the failure looks like a broken start; the exemption runs the project's tests and scripts outside the sandbox, which `filesystem.denyWrite` does not protect; Codex has no per-command exemption, so the runner asks for the sandbox escalation.
+- Add it only after an explicit yes, and record it in the project's own copy of `.readme/91-agent-sandbox.md`; without a yes, leave the runner unexempted and say so in the report.
+- When the project has no runner command yet because it adds the dependency later, add nothing, and record the offer in its own backlog.md entry (`11`) until the command exists; an offer the user declines or postpones gets its own entry too, since the line itself is adopted and has none. An API-only runner needs no exemption until a confined run shows a sandbox restriction (`04`).
+
 ## Tool versions
 
 `.agents/tool-versions.json` records the version and integrity hash of the tools the template runs; the scripts read it, and nothing changes it but `node .scripts/tool-versions.mjs --refresh`.
@@ -32,4 +39,4 @@ Adapt the agent tooling once stack.md's Selected Stack is settled, or, with exis
 
 - Codex asks to trust the repository's hooks in its first session (`.readme/92-agent-hooks.md`).
 - Claude Code asks to approve each project tool server.
-- No new sandbox exemption until the project has an end-to-end runner (`.readme/91-agent-sandbox.md`); the launcher's one is the exception: it stays, or comes back, only when the project adopts agent-operated browser verification.
+- No sandbox exemption for a runner the project does not have yet (`.readme/91-agent-sandbox.md`): the end-to-end runner's one is offered as the End-to-end runner section says, and the launcher's stays, or comes back, only when the project adopts agent-operated browser verification.

@@ -41,6 +41,10 @@ English. Load `06` first.
 Spanish, decision level only: no reproduced identifiers, routes, or versions, and nothing stack.md already holds; pending-item identifiers and links are allowed. Until directories exist, Propietario names the owning area or system.
 
 - Ask now: Estado (Objetivo, plus Fase actual and Estado verificado as they stand: `planificación, sin código` without existing code), Decisiones técnicas, Arquitectura y propiedad, Datos e integraciones, Validación, Entrega y operación, and Riesgos técnicos aceptados. Unfinished phases go to backlog.md (`11`); Fases entregadas records verified phases only, which Existing code may allow now.
+- The line `Extremo a extremo` must end as adopted, `No aplica` with the reason, or `TODO` with a backlog.md entry (`11`). Adopted names the tool, the platforms and, when they exist, the shared port and state and the known intermittent failure signatures, as a decision or with the file that holds them (`10`).
+  - Resolve it from project evidence, not from a question about tools: a web surface or an API points to Playwright; a desktop app (Electron) and a mobile app (Android or iOS, Appium with WebdriverIO) have no support yet, since both are pending a later template release. Offer the tool that matches and say why, as `.readme/98-agent-test-automation.md` explains; without a surface to test, propose `No aplica`.
+  - For a pending platform, name the tool in the backlog.md entry with that reason and keep `TODO` on the line.
+  - The decision installs nothing and creates no configuration or test files: the project adds the dependency later, under `06`. When the line stays `TODO` for lack of evidence or an answer, reference its backlog.md entry from the line, as for the browser line.
 - The line `Verificación en navegador por agente` must end as adopted (a web surface and the user agrees), `No aplica` with the reason, or `TODO` with a backlog.md entry (`11`), because `07` depends on it.
 
 ## security.md and README.md
@@ -66,6 +70,6 @@ Spanish. It starts empty: follow `11`, and add entries only for real pending wor
 
 - No stack.md value is repeated in product.md, plan.md, or security.md (`06`).
 - The project name is identical in README, design.md, and security.md; terminology matches product.md's Terminología across design.md, plan.md, and README.
-- Surface Acceptance matches Recorridos principales; phases cover Alcance and respect its exclusions; the browser verification line agrees with Plataforma.
+- Surface Acceptance matches Recorridos principales; phases cover Alcance and respect its exclusions; the end-to-end and browser verification lines agree with Plataforma.
 - Each pending item or open decision is detailed once in backlog.md, and the other documents only reference it (`11`).
 - Languages follow `AGENTS.md`; design.md's headings and frontmatter keys are intact.

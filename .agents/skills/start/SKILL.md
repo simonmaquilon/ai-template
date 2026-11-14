@@ -16,7 +16,7 @@ Take a project the user just created from this template, or an existing project 
 
 ## Boundaries
 
-- No application code, manifests, scaffolding, generators, or dependency installs. The only install is pinned agent tooling through `node .scripts/run-pinned.mjs`, after the user consents.
+- No application code, manifests, scaffolding, generators, test or test-configuration files, or dependency installs, the end-to-end tools included. The only install is pinned agent tooling through `node .scripts/run-pinned.mjs`, after the user consents.
 - No staging, commits, branches, or pushes unless the user explicitly asks, and then under `12`. Otherwise the only git write is `git remote add --no-tags plantilla <template URL>`, after consent. Delete files through the filesystem, never with `git rm`.
 - Do not edit `.agents/instructions/`, the primary references or routing table of `AGENTS.md`, `.agents/template-version`, `.agents/tool-versions.json` (only its refresh command changes it, once approved), stack.md's Template Tooling, or `stack:generated` blocks other than their Notes column. Client settings, hooks, sandbox, permissions, `.gitignore`, and `.gitattributes` change only inside a tooling change the user approved, except the template-only entries that Cleanup removes from `.claude/settings.json`.
 - Record a deviation only when the user decides to depart from a baseline rule after hearing what it protects; then follow `01`: an entry of `.agents/template-exceptions.json` keyed by the sealed path the project keeps, linking the routed project policy that replaces the rule.
@@ -58,9 +58,9 @@ Recompute it on every run from the repository itself; keep no state file.
 3. product.md, by the topics in documents.md.
 4. design.md: first ask whether the project has a user-facing surface. Write tokens only for brand values the user marks as binding; otherwise record one open decision leaving the visual direction to the UI design workflow when the first screen is built, or, with an existing interface, documenting that interface through it. Never ask about aesthetic styles or CSS values.
 5. stack.md: apply the existing-code check. When the user delegates the choice, propose a stack with reason, impact, and alternatives, and record `delegated: …` only after the user accepts that proposal; delegating the choice does not accept it in advance. Approved Target Versions get exact stable versions verified in the session. Outside the declared and resolved versions of Platform Versions and Dependencies (`06`), never copy a value that a manifest pins.
-6. plan.md, at decision level: no reproduced implementation identifiers, paths, or versions (`10`), while pending-item identifiers and links are allowed. The phase table takes only the delivered phases that documents.md lets existing code record; unfinished phases go to backlog.md (`11`). The agent-operated browser verification line is resolved as documents.md says.
+6. plan.md, at decision level: no reproduced implementation identifiers or versions (`10`), only the path of the source that fixes a decision, while pending-item identifiers and links are allowed. The phase table takes only the delivered phases that documents.md lets existing code record; unfinished phases go to backlog.md (`11`). The end-to-end line and the agent-operated browser verification line are resolved as documents.md says; the end-to-end decision offers one of the template's two automation tools from project evidence, installs nothing, and creates no configuration or test files.
 7. security.md's Status, then README.
-8. Tooling, by references/tooling.md, with one approval message.
+8. Tooling, by references/tooling.md, with one approval message, which includes the sandbox exemption for the end-to-end runner when the project adopted browser-based end-to-end tests.
 9. Reconcile: run the checklist in documents.md, then `node .scripts/check-doc-links.mjs` and `node .scripts/check-instructions.mjs`, which must print nothing; confirm stack.md's generated blocks reflect the deletions and removals, and rerun the checks after any fix.
 
 ## Report
