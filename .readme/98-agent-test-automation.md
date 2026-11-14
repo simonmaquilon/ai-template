@@ -7,11 +7,10 @@ La plantilla ofrece exactamente dos herramientas de automatización y cada una t
 | Herramienta | Pruebas automatizadas del proyecto | Sesiones que opera el agente |
 | --- | --- | --- |
 | Playwright | Web, API y aplicaciones de escritorio Electron, estas con el soporte que Playwright declara experimental | Web, con el [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador); el lanzador no abre aplicaciones Electron |
-| Appium con WebdriverIO | Android e iOS, pendiente de una versión posterior | Pendiente de una versión posterior |
+| Appium con WebdriverIO | Android e iOS | Pendiente de una versión posterior |
 
 - Las pruebas del proyecto las escribe y las mantiene el proyecto, corren en su CI y cuentan como cobertura en `.docs/coverage.md`. Las sesiones del agente verifican de forma interactiva y nunca cuentan como cobertura (`04-validation-and-testing.md`).
 - La skill `start` elige entre las dos herramientas con la evidencia del proyecto (superficie web, API, aplicación de escritorio o aplicación móvil) y registra la decisión en la línea «Extremo a extremo» de `.docs/plan.md`; si queda pendiente, en `.docs/backlog.md`. `start` no instala nada, tampoco después de elegir, y nunca crea archivos de configuración ni de pruebas: la dependencia y esos archivos los añade el proyecto después con su gestor de paquetes, con la aprobación que `06-dependencies-and-stack.md` exige para una dependencia.
-- Esta entrega no trae instrucciones de uso de Appium; el documento se ampliará cuando lleguen.
 
 ## Playwright para las pruebas del proyecto
 
@@ -144,13 +143,98 @@ Las sesiones del agente no cubren Electron: el lanzador del navegador solo abre 
 
 Son independientes. Las pruebas usan la versión que fija el lockfile del proyecto y los navegadores que el proyecto instala. El [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador) usa la versión de `.agents/tool-versions.json` y el Chrome del equipo, y solo sirve a las sesiones del agente. Actualizar una no actualiza la otra, y un proyecto que adopta solo las pruebas no necesita el lanzador, ni al revés. Las capturas y mediciones de una sesión del agente (tamaños, modos de color, desbordamientos, objetivos y foco) las hace el subcomando [`capture`](90-agent-skills.md#captura-y-medición-del-navegador) del lanzador; son verificación interactiva y, como esta, no cuentan como cobertura automatizada.
 
+## Appium con WebdriverIO para las pruebas del proyecto
+
+### Requisitos
+
+Los fija cada herramienta en su `package.json` y en su documentación, no esta plantilla: la versión de Node que pide WebdriverIO (`npm view webdriverio engines.node`), que es más estricta que la de Appium; un JDK y el SDK de Android, con `ANDROID_HOME` apuntando a él, para Android; y macOS con Xcode y un runtime de simulador instalado para iOS. Un emulador o un simulador es un binario más del equipo y lo instala quien lo usa, no la plantilla.
+
+### Cómo añade el proyecto Appium
+
+El servidor, los drivers y el cliente son dependencias de desarrollo del proyecto y el lockfile fija sus versiones. La [documentación de Appium](https://appium.io/docs/en/latest/guides/managing-exts/) solo admite npm para gestionar los drivers como dependencias: sin `APPIUM_HOME` en el entorno, Appium carga los drivers que declara el `package.json` del proyecto donde corre. El [servicio de Appium de WebdriverIO](https://webdriver.io/docs/appium-service) instala el servidor junto al servicio:
+
+```bash
+npm install -D @wdio/cli @wdio/local-runner @wdio/mocha-framework @wdio/appium-service appium
+npm install -D appium-uiautomator2-driver@<línea compatible>
+npm install -D appium-xcuitest-driver@<línea compatible>
+```
+
+Cada driver declara en `peerDependencies` qué servidor acepta, y su última versión puede exigir un servidor que aún es beta: entonces npm se niega con `ERESOLVE`, y forzarlo con `--force` o `--legacy-peer-deps` deja una combinación que nadie probó. La línea compatible es la versión mayor más reciente cuyo `peerDependencies.appium` acepta el servidor instalado, y se consulta, no se recuerda:
+
+```bash
+npm view appium version
+npm view appium-uiautomator2-driver@<mayor> peerDependencies.appium
+```
+
+`npx appium driver list --installed` confirma después qué drivers ve el servidor.
+
+### Ejemplo mínimo con WebdriverIO
+
+Es texto de este documento, no un archivo del repositorio; cada `<…>` lo declara el proyecto. El servicio arranca el servidor de Appium del proyecto antes de las pruebas y lo detiene al terminar, así que no hay un servidor que lanzar aparte.
+
+```js
+// wdio.conf.js
+const android = {
+  platformName: 'Android',
+  'appium:automationName': 'UiAutomator2',
+  'appium:avd': '<nombre del emulador>',
+  'appium:app': '<ruta del paquete de la aplicación>',
+};
+const ios = {
+  platformName: 'iOS',
+  'appium:automationName': 'XCUITest',
+  'appium:udid': '<identificador del simulador>',
+  'appium:app': '<ruta del paquete de la aplicación>',
+};
+
+export const config = {
+  runner: 'local',
+  specs: ['<carpeta de las pruebas>/**/*.spec.js'],
+  // Un solo dispositivo es estado compartido: una sesión a la vez (lección (c)).
+  maxInstances: 1,
+  port: 4723,
+  // El servidor escucha solo en este equipo.
+  services: [['appium', { args: { address: '127.0.0.1' }, logPath: '<carpeta de registros>' }]],
+  capabilities: [process.env.<variable de plataforma> === 'ios' ? ios : android],
+  framework: 'mocha',
+  // El primer arranque en iOS compila el agente de pruebas en el simulador y tarda minutos.
+  mochaOpts: { timeout: 300000 },
+};
+```
+
+```js
+// <carpeta de las pruebas>/pantalla.spec.js
+import { $, expect } from '@wdio/globals';
+
+describe('la pantalla inicial', () => {
+  it('muestra su título', async () => {
+    // El selector ~ busca por identificador de accesibilidad, que vale en las dos plataformas.
+    await expect($('~<identificador de accesibilidad>')).toBeDisplayed();
+  });
+});
+```
+
+Se lanza con `npx wdio run wdio.conf.js`, que el proyecto publica como script. Los datos que la aplicación guarda en el dispositivo son estado compartido entre pruebas y entre corridas: cada prueba deja la aplicación como la encontró o la reinstala, y el proyecto declara qué supone del dispositivo (lecciones (a) y (c)).
+
+### Lo comprobado y sus límites
+
+Comprobado con esta plantilla en macOS, con un simulador de iOS y un emulador de Android, y un proyecto de prueba que no forma parte del repositorio:
+
+- El ejemplo abre la sesión y lee la pantalla en las dos plataformas con las versiones que npm resolvió ese día; ninguna versión se fija aquí.
+- En Android, la primera sesión que deja a Appium arrancar el emulador en frío agotó dos veces sus plazos (el arranque del emulador y la instalación del servidor del driver, que el propio error nombra como `uiautomator2ServerInstallTimeout`) y pasó al tercer intento. Arrancar el emulador antes de la corrida, o subir esos plazos en las capacidades, evita tomar por fallo de la prueba lo que es un arranque lento.
+- Dentro del sandbox la corrida falla con un mensaje que apunta a otra cosa (sección «Sandbox»).
+- En Windows y en Linux no está comprobado, y en dispositivos físicos tampoco.
+
+Las sesiones del agente sobre una aplicación móvil no usan estas dependencias: quedan para una entrega posterior de la plantilla.
+
 ## Sandbox
 
 - El runner que arranca un navegador o una aplicación Electron no corre dentro del sandbox en macOS: es el [caso conocido de los navegadores](91-agent-sandbox.md#caso-conocido-navegadores-bajo-macos). El fallo (`Permission denied` antes de levantar la aplicación) parece un arranque roto y no lo es: ningún cambio en la configuración de pruebas, en los navegadores instalados ni en las cachés lo corrige.
+- Las pruebas móviles tampoco corren confinadas en macOS: dentro del sandbox `simctl` no alcanza el servicio de simuladores del sistema (`CoreSimulatorService connection became invalid`), y Appium responde `Unknown device or simulator UDID` para un simulador que existe y está arrancado. En Android, dentro del sandbox `adb devices` ve como `offline` un emulador que fuera está listo, y Appium agota su plazo con `Error getting AVD with retry`. En los dos casos el mensaje apunta al dispositivo y la causa es el sandbox: ningún cambio en el dispositivo ni en las capacidades lo corrige.
 - La inspección de procesos tampoco funciona confinada, según el [caso conocido de inspección de procesos](91-agent-sandbox.md#caso-conocido-inspección-de-procesos): un script que busca un servidor por nombre o por su línea de comandos concluye que no existe, mientras que `lsof` sí encuentra quién escucha en un puerto.
 - La salida en Claude Code es una exención `sandbox.excludedCommands` para el comando exacto del runner del proyecto, con un espacio antes del `*` final cuando el comando admite argumentos, para no cubrir otros scripts con el mismo prefijo, y con las condiciones de forma que explica [Sandbox de agentes](91-agent-sandbox.md#claude-code). En Codex no hay exención por comando: el runner pide la escalada de su sandbox.
 - Riesgo: esa exención ejecuta sin confinar el código del proyecto, es decir, sus pruebas, sus scripts y todo lo que estos invoquen, y `filesystem.denyWrite` no lo protege, así que un comando confinado puede reescribir ese código antes de que corra sin confinar. Por eso se declara solo con autorización explícita.
-- La declara `start`, en el mensaje de aprobación de su paso de herramientas, cuando el proyecto adopta pruebas de extremo a extremo con navegador o con Electron, y solo con un sí explícito; un proyecto que las adopta más tarde la añade con la misma autorización. Se registra en `.readme/91-agent-sandbox.md` de ese proyecto, que es suyo (`.scripts/template-files.mjs` lo lista como propiedad del proyecto), en su sección de exenciones del proyecto si la tiene; la plantilla no define esa sección.
+- La declara `start`, en el mensaje de aprobación de su paso de herramientas, cuando el proyecto adopta pruebas de extremo a extremo con navegador, con Electron o con un emulador o simulador móvil, y solo con un sí explícito; un proyecto que las adopta más tarde la añade con la misma autorización. Se registra en `.readme/91-agent-sandbox.md` de ese proyecto, que es suyo (`.scripts/template-files.mjs` lo lista como propiedad del proyecto), en su sección de exenciones del proyecto si la tiene; la plantilla no define esa sección.
 
 ## Lecciones
 
