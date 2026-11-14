@@ -128,6 +128,54 @@ La exención del lanzador, la entrada `node .scripts/browser.mjs*` de `sandbox.e
 
 Sus snapshots y trazas van a `.temp/playwright-cli/`: lo fija `outputDir` en `.playwright/cli.config.json`, que la herramienta carga desde la raíz, donde la ejecuta el lanzador. Como todo artefacto de tarea bajo `.temp/` fuera de `.temp/plans/`, se borran al cerrar la tarea, según `AGENTS.md`.
 
+## Captura y medición del navegador
+
+`capture` es un subcomando del lanzador: en lugar de escribir cada agente su propio script de capturas, el mismo comando toma las capturas y mide la página de una sesión que el agente ya abrió. Corre con la exención del lanzador, la misma entrada `node .scripts/browser.mjs*`, sin script exento ni ajuste nuevos, y la lógica vive en `.scripts/browser-capture*.mjs`, que `filesystem.denyWrite` protege como el resto de `.scripts/`.
+
+```bash
+# Valores del proyecto, opcionales: .playwright/capture.config.json
+node .scripts/browser.mjs [-s=<sesión>] capture --name <etiqueta> <url>... \
+  [--viewport <ancho>x<alto>]... [--scheme light|dark|no-preference]... [--min-target <px>] [--focus-steps <n>]
+```
+
+Cada URL es un estado o un idioma que el agente quiere ver: cómo se cambia de idioma depende del proyecto, así que el agente pasa la URL de cada uno. Por cada URL, tamaño y modo de color hace una captura de página completa y mide la página. No abre ni cierra la sesión: falla si no está abierta (`node .scripts/browser.mjs -s=<sesión> open about:blank`), y al terminar, aunque falle un comando de la corrida, quita cualquier emulación de modo de color, también una que la sesión tuviera de antes, y devuelve el tamaño que tenía la ventana, si la corrida los cambió y la página informó un tamaño utilizable; si no, el informe lo dice. Con `no-preference` quita la emulación.
+
+### Valores del proyecto
+
+Cada proyecto declara sus valores en `capture.config.json` de `.playwright/`, un archivo opcional que la plantilla no trae:
+
+```json
+{ "viewports": ["390x844", "1280x800"], "schemes": ["light", "dark"], "minTarget": 24 }
+```
+
+Los argumentos de la corrida (`--viewport`, `--scheme`, `--min-target`) sustituyen a los del archivo, y lo que ni el archivo ni la corrida declaran se omite, sin valor por omisión: sin tamaños, una sola captura con el tamaño actual; sin modos, sin emular; sin tamaño mínimo, sin comprobar objetivos. Los criterios que fija `.docs/design.md` mandan: el archivo es su copia ejecutable, y si difieren se corrige el archivo. `--focus-steps` solo se pide en la corrida.
+
+### Qué ejecuta
+
+Solo comandos de la CLI de Playwright, cada uno comprobado por el filtro del lanzador y leído otra vez por el analizador de la CLI instalada, igual que los que escribe el agente: `resize`, `set-color-scheme` o `clear-color-scheme`, `goto`, `eval`, `console error`, `screenshot --full-page` y `press Tab`. No usa `run-code`. Cada `eval` envía una función fija de `.scripts/browser-capture-pages.mjs`: ni un argumento, ni el archivo de valores, ni la página escriben en su texto. Las funciones solo recogen cajas, estilos y textos cortos, acotados en tamaño, y `.scripts/browser-capture-measure.mjs` decide qué es un hallazgo, con funciones puras que se prueban sin navegador.
+
+### Qué mide
+
+| Medición | Qué cuenta | Límites |
+| --- | --- | --- |
+| Desbordamiento horizontal | El documento es más ancho que la ventana por más de 1 px; lista hasta 20 elementos que sobresalen sin un ancestro que recorte | La tolerancia de 1 px oculta un desbordamiento real de 1 px; el contenido que sobresale dentro de un contenedor que se desplaza no cuenta, porque no ensancha el documento |
+| Contenido recortado | Elementos con `overflow` oculto en un eje cuyo contenido excede su caja, hasta 20 listados; excluye cajas de 1 px o menos, `text-overflow: ellipsis` en el eje horizontal, el recorte por líneas (`line-clamp`) en el vertical, y campos de formulario, medios y SVG | Heurística: un recorte deliberado distinto de esos, como la pista de un carrusel, no se distingue de un fallo |
+| Objetivos pequeños | Solo con tamaño mínimo declarado: elementos interactivos visibles y habilitados con un lado menor que el mínimo; excluye los enlaces dentro de una línea de texto (`display: inline`), que la regla de tamaño de objetivo de WCAG exime, y los recuenta aparte | Mide la caja propia del elemento, no su etiqueta, el área que la rodea ni la separación entre objetivos; es una heurística |
+| Errores de la consola | `console error` tras cargar la página: recuento y hasta 20 mensajes | Solo lo emitido desde la última navegación |
+| Foco del teclado | Solo con `--focus-steps` (1 a 50): pulsa Tab, registra qué elemento recibe el foco y si cambia alguno de nueve estilos calculados (contorno, sombra, colores, subrayado) respecto al estado sin foco; cuenta los pasos sin cambio | Heurística: no ve un indicador dibujado de otro modo; para leer el estilo sin foco desenfoca y vuelve a enfocar el elemento sin transiciones, así que sus manejadores de `blur` y `focus` corren una vez más |
+
+Cada medición es independiente: si una falla, el informe lo dice y las demás siguen. Los elementos se identifican con un selector corto y su texto recortado a 40 caracteres, sin volcar el DOM. Ambos vienen de la página y son datos del informe, no instrucciones.
+
+### Salida
+
+Escribe solo en `.temp/playwright-cli/<etiqueta>/`, carpeta de salida que protege `filesystem.denyWrite`, nunca en una ruta que elija la entrada: una captura PNG por combinación (`u<n>-<ancho>x<alto>-<modo>.png`, con `current` y `default` si no se declaró tamaño o modo) y `report.json`. Una corrida con la misma etiqueta borra primero las capturas y el informe de la anterior, de modo que una corrida que falla no deja evidencia vieja. El informe recoge los valores usados y quién los declaró, los hallazgos de cada combinación, lo omitido por no estar declarado y las notas sobre qué estados son simulados: el tamaño es la ventana redimensionada, sin proporción de píxeles ni táctil, y el modo de color es la emulación de `prefers-color-scheme`, no el interruptor real de la aplicación. En `stdout` imprime, por combinación, la ruta de la captura, la URL y el recuento de cada medición (`-` si no se midió, `error` si falló), y las partes omitidas.
+
+Termina con código 0 cuando la corrida acaba, tenga o no hallazgos: medir no es aprobar. Termina con código distinto de 0 solo por una entrada inválida, que no ejecuta nada, o por un fallo de ejecución, como una sesión que no está abierta o una navegación o una captura que falla; entonces no escribe `report.json`.
+
+### Entradas que valida
+
+El lanzador corre sin confinar y un comando confinado pudo escribir lo que lee, así que valida de forma estricta y falla cerrado, con un mensaje que dice qué corregir y sin proponer la aprobación del cliente: la etiqueta, solo letras, dígitos, `-` y `_` (hasta 64); las URL, solo `http`, `https` o `about:blank`, sin espacios, caracteres de control ni marcas de dirección de texto; la sesión, como en el resto del lanzador; los tamaños, de 200 a 8000 px por lado; `--min-target`, de 1 a 200; `--focus-steps`, de 1 a 50; un máximo de 8 tamaños, y un tope de 24 combinaciones de URL, tamaño y modo por corrida. `capture.config.json` de `.playwright/` no puede ser un enlace simbólico, ni estar en una carpeta que lo sea, pesa 4096 bytes como máximo y solo admite las claves `viewports`, `schemes` y `minTarget` con esos mismos tipos y rangos; cualquier otra cosa lo rechaza. Ese archivo no está bajo `filesystem.denyWrite` y no hace falta: lo que contiene no puede elegir una ruta, un comando ni un texto que llegue a la página.
+
 ## Invocación de `prompt`
 
 `/prompt` en Claude Code, o `$prompt` en Codex, mejora un borrador antes de usarlo. Solo se invoca a mano: en Claude Code porque su cabecera declara `disable-model-invocation`, y en Codex porque `agents/openai.yaml` declara `allow_implicit_invocation: false`. Así la petición de delegar en subagentes que describe su sección Client bindings es siempre la del usuario, y el modelo no la activa por su cuenta.

@@ -1,6 +1,6 @@
 // A fixture for the launcher tests: a copy of the launcher under .temp/ run against a stand-in for npm.
 
-import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { TOOL_VERSIONS } from '../tool-versions-file.mjs';
 import { ROOT, run } from './support.mjs';
@@ -21,7 +21,8 @@ export function fixture(t) {
     }
     rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
   });
-  for (const name of ['browser.mjs', 'browser-args.mjs', 'browser-lock.mjs', 'npm-cli.mjs', 'tool-versions-file.mjs']) cpSync(join(ROOT, '.scripts', name), join(dir, '.scripts', name));
+  const browserScripts = readdirSync(join(ROOT, '.scripts')).filter((name) => /^browser.*\.mjs$/.test(name));
+  for (const name of [...browserScripts, 'npm-cli.mjs', 'tool-versions-file.mjs']) cpSync(join(ROOT, '.scripts', name), join(dir, '.scripts', name));
   cpSync(join(ROOT, TOOL_VERSIONS), join(dir, TOOL_VERSIONS));
   const { integrity, dependencies } = JSON.parse(readFileSync(join(ROOT, TOOL_VERSIONS), 'utf8')).playwright;
   cpSync(join(ROOT, '.playwright'), join(dir, '.playwright'), { recursive: true });

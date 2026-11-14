@@ -2,6 +2,7 @@
 // Runs an agent-operated browser session command through the `cli` of the
 // `playwright` package at the version that .agents/tool-versions.json records, from the repository root:
 //   node .scripts/browser.mjs [-s=<session>] <command> [args...]
+//   node .scripts/browser.mjs [-s=<session>] capture --name <label> <url>... (browser-capture.mjs, run with the same checks)
 // The client sandbox cannot start Chromium on macOS, so .claude/settings.json
 // exempts this script. Because it runs unconfined, it lets through only the
 // command lines browser-args.mjs allows, reads no configuration a confined
@@ -18,6 +19,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkArgs } from './browser-args.mjs';
+import { isCapture, planCapture, runCapture, safe } from './browser-capture.mjs';
 import { expectedPackages, lockMismatch } from './browser-lock.mjs';
 import { npmScripts } from './npm-cli.mjs';
 import { TOOL_VERSIONS, entryProblems, readToolVersions } from './tool-versions-file.mjs';
@@ -111,24 +113,38 @@ function sameCommand(dir, args, command) {
     const { minimist } = require('./minimist.js');
     const boolean = [...require('./help.json').booleanOptions, 'all', 'g', 'help', 'json', 'raw', 'version'];
     if (minimist(args, { boolean, string: ['_'] })._[0] === command) return;
-  } catch {
-    // An unreadable parser fails closed below.
-  }
-  fail("the CLI's own parser does not read the same command");
+  } catch { /* An unreadable parser fails closed below. */ }
+  const problem = "the CLI's own parser does not read the same command";
+  if (capturing) throw new Error(problem); // a capture restores the session before it fails
+  fail(problem);
 }
 
 const args = process.argv.slice(2);
-let command;
+const capturing = isCapture(args);
+let plan;
 try {
-  command = checkArgs(args, ROOT);
+  if (capturing) plan = planCapture(args, ROOT);
+  else checkArgs(args, ROOT);
 } catch (error) {
-  fail(error.message);
+  fail(capturing ? safe(error.message) : error.message, !capturing);
 }
 checkConfig();
 checkCache();
 const dir = install(pinnedEntry());
-sameCommand(dir, args, command);
 const cli = join(dir, 'node_modules', 'playwright', 'cli.js');
-const run = spawnSync(process.execPath, [cli, 'cli', ...args], { cwd: ROOT, stdio: 'inherit' });
+// Every command run, those a capture generates included, is checked by browser-args.mjs and read again by the installed CLI.
+const launch = (callArgs, options) => {
+  sameCommand(dir, callArgs, checkArgs(callArgs, ROOT));
+  return spawnSync(process.execPath, [cli, 'cli', ...callArgs], { cwd: ROOT, ...options });
+};
+if (plan) {
+  try {
+    runCapture(plan, (callArgs) => launch(callArgs, { encoding: 'utf8', maxBuffer: 1 << 24 }), ROOT);
+  } catch (error) {
+    fail(safe(error.message), false);
+  }
+  process.exit(0);
+}
+const run = launch(args, { stdio: 'inherit' });
 if (run.error) fail(run.error.message, false);
 process.exit(run.status ?? 1);

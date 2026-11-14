@@ -107,7 +107,7 @@ Las pruebas que cambian estado global van aparte (lección (b)): en su propio ar
 
 ### Relación con el lanzador del agente
 
-Son independientes. Las pruebas usan la versión que fija el lockfile del proyecto y los navegadores que el proyecto instala. El [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador) usa la versión de `.agents/tool-versions.json` y el Chrome del equipo, y solo sirve a las sesiones del agente. Actualizar una no actualiza la otra, y un proyecto que adopta solo las pruebas no necesita el lanzador, ni al revés.
+Son independientes. Las pruebas usan la versión que fija el lockfile del proyecto y los navegadores que el proyecto instala. El [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador) usa la versión de `.agents/tool-versions.json` y el Chrome del equipo, y solo sirve a las sesiones del agente. Actualizar una no actualiza la otra, y un proyecto que adopta solo las pruebas no necesita el lanzador, ni al revés. Las capturas y mediciones de una sesión del agente (tamaños, modos de color, desbordamientos, objetivos y foco) las hace el subcomando [`capture`](90-agent-skills.md#captura-y-medición-del-navegador) del lanzador; son verificación interactiva y, como esta, no cuentan como cobertura automatizada.
 
 ## Sandbox
 
