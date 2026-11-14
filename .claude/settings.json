@@ -514,8 +514,8 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true
   },
-  "model": "opus",
-  "effortLevel": "xhigh",
+  "model": "fable",
+  "effortLevel": "medium",
   "outputStyle": "Concise",
   "viewMode": "focus",
   "tui": "fullscreen",
