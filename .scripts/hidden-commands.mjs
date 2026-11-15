@@ -69,7 +69,7 @@ export function fileScripts(name, args, cwd, seen) {
   const path = name === 'source' || name === '.' ? args[0] : /[\\/]/.test(name) ? name : null;
   const full = path ? resolve(cwd, path.replace(/\\/g, '/')) : null;
   const text = full && !repeated(seen, full) ? read(full) : null;
-  return text === null ? [] : [{ script: text, powershell: /\.ps1$/i.test(path) }];
+  return text === null ? [] : [{ script: text, powershell: /\.ps1$/i.test(path), batch: /\.(?:bat|cmd)$/i.test(path) }];
 }
 
 // The recipe lines make runs for the targets it is asked for.

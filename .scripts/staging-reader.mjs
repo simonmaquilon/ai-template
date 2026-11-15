@@ -6,8 +6,10 @@
 // its text through hidden-commands.mjs: eval, a shell's -c or file script, a
 // here-document fed to a shell, a sourced or path-run file, make targets, and
 // git aliases; a PowerShell $name = <command> runs its command too.
-// visit({ name, args, fed, xargs, cwd, env }) returns true to stop, env holding
-// the assignments in front of the command, and walk returns whether it stopped;
+// visit({ name, args, fed, xargs, cwd, env, targets, powershell, batch }) returns true to stop, env holding
+// the assignments in front of the command, targets the files its > and >> redirections write, powershell the
+// reading of the script it came from, batch whether that script is a .bat or .cmd file, which cmd runs, and walk
+// returns whether it stopped; a redirection with no command of its own is visited with an empty name;
 // nesting deeper than MAX_DEPTH throws. A script may also be an argument list,
 // read as one command.
 
@@ -46,24 +48,25 @@ function assignments(words) {
   return null;
 }
 
-export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen = new Set()) {
+export function walk(script, { powershell = false, batch = false, cwd, visit }, depth = 0, seen = new Set()) {
   if (depth > MAX_DEPTH) throw new Error('nested too deep');
-  const nested = ({ script: inner, powershell: innerPowershell }) => walk(inner, { powershell: innerPowershell, cwd, visit }, depth + 1, seen);
+  const nested = ({ script: inner, powershell: innerPowershell, batch: innerBatch = false }) =>
+    walk(inner, { powershell: innerPowershell, batch: batch || innerBatch, cwd, visit }, depth + 1, seen);
   const variables = new Map();
   const key = (name) => (powershell ? name.toLowerCase() : name);
-  const list = Array.isArray(script) ? [{ words: script.map(String), bodies: [], fed: false }] : commands(script, { powershell });
-  return list.some(({ words, bodies, fed }) => {
+  const list = Array.isArray(script) ? [{ words: script.map(String), bodies: [], fed: false, targets: [] }] : commands(script, { powershell });
+  return list.some(({ words, bodies, fed, targets }) => {
     const expanded = words.map((word) => word.replace(/\$\{?(\w+)\}?/g, (text, name) => variables.get(key(name)) ?? text));
     const assigned = assignments(expanded);
     for (const [name, value] of assigned ?? []) variables.set(key(name), value);
     // A PowerShell $name = <command> also runs that command.
-    if (assigned) return expanded[1] === '=' && expanded.length > 2 && run(expanded.slice(2), bodies, fed, true);
-    return run(expanded, bodies, fed, false);
+    if (assigned) return expanded[1] === '=' && expanded.length > 2 && run(expanded.slice(2), bodies, fed, true, targets);
+    return run(expanded, bodies, fed, false, targets);
   });
 
   // value marks the right-hand side of an assignment, which may be a plain
   // value, such as a path, rather than a command naming a file to run.
-  function run(expanded, bodies, fed, value) {
+  function run(expanded, bodies, fed, value, targets) {
     let i = 0;
     const env = [];
     while (i < expanded.length) {
@@ -83,8 +86,8 @@ export function walk(script, { powershell = false, cwd, visit }, depth = 0, seen
       else break;
     }
     const [name, ...args] = expanded.slice(i);
-    if (name === undefined) return false;
-    if (visit({ name, args, fed, xargs: false, cwd, env })) return true;
+    if (name === undefined) return targets.length > 0 && visit({ name: '', args: [], fed, xargs: false, cwd, env, targets, powershell, batch });
+    if (visit({ name, args, fed, xargs: false, cwd, env, targets, powershell, batch })) return true;
     if (name === 'eval') return nested({ script: args.join(' '), powershell });
     let hidden;
     if (GIT.test(name)) {

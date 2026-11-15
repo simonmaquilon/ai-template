@@ -340,6 +340,27 @@
               "${CLAUDE_PROJECT_DIR}/.scripts/check-write-scope.mjs"
             ],
             "statusMessage": "Checking shell writes to temporary folders"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-protected-paths.mjs"
+            ],
+            "statusMessage": "Checking shell writes to protected paths"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-nul-redirect.mjs"
+            ],
+            "statusMessage": "Checking redirections to the NUL file"
           }
         ]
       },
@@ -491,6 +512,36 @@
               "--hook"
             ],
             "statusMessage": "Syncing .docs/stack.md"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-protected-paths.mjs",
+              "--after"
+            ],
+            "statusMessage": "Checking protected paths after the command"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-protected-paths.mjs",
+              "--after"
+            ],
+            "statusMessage": "Checking protected paths after a failed command"
           }
         ]
       }

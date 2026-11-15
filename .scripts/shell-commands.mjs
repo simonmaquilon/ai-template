@@ -7,8 +7,8 @@
 // $( ... ) or, outside PowerShell, backquoted, runs, so its commands are
 // returned too. A here-document body goes with the command that opens it; a
 // command fed by a pipe, a here-document, a here-string, or < is marked fed,
-// and redirection targets are not words: those of > and >> come back as the
-// command's targets; a redirection with no command of its own, as after the &
+// and redirection targets are not words: those of > and >>, and outside PowerShell of >| and >& followed by a
+// file, come back as the command's targets; a redirection with no command of its own, as after the &
 // of &>, goes with the command before it, or, with none before, comes back as a command without words. An escaped line end, CRLF included,
 // continues the line. Keywords such as if or do come back as ordinary words.
 
@@ -85,6 +85,8 @@ export function commands(script, { powershell = false } = {}) {
       endWord();
       words.push(...[...script.slice(i + 2, end).matchAll(/'([^']*)'|"([^"]*)"/g)].map((match) => match[1] ?? match[2]));
       i = end;
+    } else if (!powershell && target && output && script[i - 1] === '>' && (c === '|' || (c === '&' && !/^\s*[\d-]/.test(script.slice(i + 1, i + 3))))) {
+      // >| and >& name the file that follows; >&1, >&2, and >&- duplicate or close a descriptor instead.
     } else if (SEPARATORS.has(c) || ((c === '$' || (powershell && c === '@')) && script[i + 1] === '(')) {
       endCommand(c === '|' && script[i + 1] !== '|' && script[i - 1] !== '|');
     } else if (c === ' ' || c === '\t' || c === '\r' || c === '<' || c === '>' || (powershell && c === '*' && script[i + 1] === '>')) {

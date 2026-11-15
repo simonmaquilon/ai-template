@@ -134,7 +134,7 @@ for (const [client, file, tools] of [['claude', '.claude/settings.json', ['Edit'
     const groups = (event) => (hooks[event] ?? []).filter((group) => JSON.stringify(group).includes('update-stack-doc.mjs'));
     const [post] = groups('PostToolUse');
     assert.deepEqual(post.matcher.split('|').sort(), [...tools].sort());
-    assert.equal(hooks.PostToolUseFailure, undefined);
+    assert.deepEqual(groups('PostToolUseFailure'), []);
     assert.equal(groups('UserPromptSubmit').length, 1);
     const all = [...post.hooks, ...groups('UserPromptSubmit')[0].hooks];
     for (const hook of all.filter((h) => JSON.stringify(h).includes('update-stack-doc'))) {

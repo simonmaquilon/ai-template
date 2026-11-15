@@ -32,10 +32,16 @@ function documented() {
   });
 }
 
+// Events only Claude Code has, with the scripts it registers for each: Codex has no PostToolUseFailure, and its
+// PostToolUse already runs for a Bash command that exits with an error.
+const CLAUDE_ONLY = { PostToolUseFailure: ['check-protected-paths.mjs'] };
+const shared = Object.fromEntries(Object.entries(claude).filter(([event]) => !(event in CLAUDE_ONLY)));
+
 test('Claude Code, Codex command and Codex commandWindows register the same scripts for every event', () => {
-  assert.ok(Object.keys(claude).length > 0);
-  assert.deepEqual(registered('.codex/hooks.json', (hook) => scriptOf(hook.command)), claude);
-  assert.deepEqual(registered('.codex/hooks.json', (hook) => scriptOf(hook.commandWindows)), claude);
+  assert.ok(Object.keys(shared).length > 0);
+  assert.deepEqual(registered('.codex/hooks.json', (hook) => scriptOf(hook.command)), shared);
+  assert.deepEqual(registered('.codex/hooks.json', (hook) => scriptOf(hook.commandWindows)), shared);
+  for (const [event, names] of Object.entries(CLAUDE_ONLY)) assert.deepEqual(claude[event], names, event);
 });
 
 test('the registry table in 92-agent-hooks.md lists exactly the scripts the clients register for each event', () => {
