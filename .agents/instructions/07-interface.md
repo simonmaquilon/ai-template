@@ -1,6 +1,6 @@
 # Interface
 
-Read before changing user-facing interfaces, client state, components, styles, tokens, color modes, or non-trivial copy, and before operating an agent-operated browser session.
+Read before changing user-facing interfaces, client state, components, styles, tokens, color modes, or non-trivial copy, and before operating an agent-operated session.
 
 - Detect the affected scope's framework, rendering model, state, routing, data loading, and design-system conventions from manifests, configuration, and source, and load only the UI skills of the selected stack.
 - Consult `.docs/product.md` for users, journeys, and principles and `.docs/design.md` for typography, layout, and accessibility before altering a user-facing surface.
@@ -18,4 +18,5 @@ Read before changing user-facing interfaces, client state, components, styles, t
 - Batch visual inspection across surfaces, sizes, states, and color modes into one round, taking it with the repository's capture and measurement capability and the values the project declares when one exists, and writing no capture script of your own; confirm corrections in at most one more, reuse still-valid evidence, and rerun the affected checks.
 - Before closing a change to a web surface, observe it in the running application through the agent-operated browser capability when `.docs/plan.md` records its adoption, stating route, state, and viewport; otherwise report the gap.
 - Launch agent-operated browser sessions through the repository's launcher, against non-production data and test accounts whose credentials are not secrets, and close them and their browser processes before closing the task.
+- Operate a mobile app only through the tool server the repository declares for it, on emulators or simulators, under the same data and account rules, and close its sessions before closing the task; without one, report the gap.
 - Keep repository-managed browser downloads in an ignored tool directory under `.temp/`, except the code a sandbox-exempt launcher runs, which stays in a per-user cache, and preserve system browser installations.

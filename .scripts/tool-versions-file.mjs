@@ -1,6 +1,6 @@
 // Reads and validates .agents/tool-versions.json, which records the version, integrity hash, dates, origin repository,
 // license and optional hold of each tool the agent configuration runs (06-dependencies-and-stack.md). The launchers
-// that run outside the sandbox, run-pinned.mjs and browser.mjs, import only this module, so it holds no network code.
+// that run outside the sandbox, run-pinned.mjs, browser.mjs and mobile-server.mjs, import only this module, so it holds no network code.
 
 import { lstatSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

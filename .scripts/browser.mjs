@@ -13,19 +13,19 @@
 // there with npm from that folder so no project npm configuration applies.
 
 import { spawnSync } from 'node:child_process';
-import { accessSync, constants, existsSync, lstatSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkArgs } from './browser-args.mjs';
 import { isCapture, planCapture, runCapture, safe } from './browser-capture.mjs';
-import { expectedPackages, lockMismatch } from './browser-lock.mjs';
-import { npmScripts } from './npm-cli.mjs';
+import { expectedPackages } from './browser-lock.mjs';
+import { install as installIn, unwritableCache } from './cache-install.mjs';
 import { TOOL_VERSIONS, entryProblems, readToolVersions } from './tool-versions-file.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = { outputDir: '.temp/playwright-cli' };
+const CACHE = 'agent-browser';
 
 // What a rejected command line gets told, since it is not for the launcher to run: the launcher section of
 // .readme/90-agent-skills.md documents how to run it instead.
@@ -64,22 +64,10 @@ function pinnedEntry() {
   return data.playwright;
 }
 
-// The per-user cache folder of each system, which the client sandbox does not let confined commands write.
-function cacheDir() {
-  if (process.platform === 'win32') return join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'agent-browser');
-  if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches', 'agent-browser');
-  return join(process.env.XDG_CACHE_HOME || join(homedir(), '.cache'), 'agent-browser');
-}
-
-// The client sandbox denies confined commands the per-user cache, so a launch there cannot install or run anything;
-// the folder may not exist yet, and then its nearest existing ancestor must take the new one.
+// The client sandbox denies confined commands the per-user cache, so a launch there cannot install or run anything.
 function checkCache() {
-  let path = cacheDir();
-  const cache = path;
-  while (!existsSync(path) && dirname(path) !== path) path = dirname(path);
-  try {
-    accessSync(path, constants.W_OK);
-  } catch {
+  const cache = unwritableCache(CACHE);
+  if (cache) {
     fail(`cannot write its cache ${cache}. It is most likely running inside the client sandbox: run it alone, from the `
       + "repository root, so that the client's exemption applies, or with the client's approval (.readme/91-agent-sandbox.md)", false);
   }
@@ -87,22 +75,8 @@ function checkCache() {
 
 // Each launch compares what npm recorded for playwright and its recorded dependencies with the record, not the content;
 // a mismatch reinstalls.
-function install({ version, integrity, dependencies }) {
-  const dir = join(cacheDir(), `playwright-${version}`);
-  const expected = expectedPackages({ version, integrity, dependencies });
-  if (lockMismatch(dir, expected, TOOL_VERSIONS) === undefined) return dir;
-  rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'package.json'), '{ "private": true }\n');
-  const scripts = npmScripts() ?? fail('npm CLI scripts not found for this Node', false);
-  const run = spawnSync(process.execPath, [join(scripts, 'npm-cli.js'), 'install', '--no-save', '--ignore-scripts',
-    '--no-audit', '--no-fund', `playwright@${version}`], { cwd: dir, stdio: ['ignore', 'ignore', 'inherit'] });
-  if (run.status !== 0) fail(`installing playwright@${version} in ${dir} failed`, false);
-  const why = lockMismatch(dir, expected, TOOL_VERSIONS);
-  if (why === undefined) return dir;
-  rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
-  fail(`npm installed ${why}; the folder was removed and nothing ran`, false);
-}
+const install = ({ version, integrity, dependencies }) => installIn({ folder: CACHE, name: 'playwright', version,
+  expected: expectedPackages({ version, integrity, dependencies }), fail: (message) => fail(message, false) });
 
 // Reads the arguments again with the installed CLI's own parser and flags, and refuses when it would run
 // another command than the one checked, or when that parser is not where this version keeps it.

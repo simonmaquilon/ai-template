@@ -7,7 +7,7 @@ La plantilla ofrece exactamente dos herramientas de automatización y cada una t
 | Herramienta | Pruebas automatizadas del proyecto | Sesiones que opera el agente |
 | --- | --- | --- |
 | Playwright | Web, API y aplicaciones de escritorio Electron, estas con el soporte que Playwright declara experimental | Web, con el [lanzador del navegador](90-agent-skills.md#lanzador-del-navegador); el lanzador no abre aplicaciones Electron |
-| Appium con WebdriverIO | Android e iOS | Pendiente de una versión posterior |
+| Appium con WebdriverIO | Android e iOS | Android e iOS, con el servidor [`appium-mcp`](95-agent-tool-servers.md#appium-mcp) cuando el proyecto lo declara |
 
 - Las pruebas del proyecto las escribe y las mantiene el proyecto, corren en su CI y cuentan como cobertura en `.docs/coverage.md`. Las sesiones del agente verifican de forma interactiva y nunca cuentan como cobertura (`04-validation-and-testing.md`).
 - La skill `start` elige entre las dos herramientas con la evidencia del proyecto (superficie web, API, aplicación de escritorio o aplicación móvil) y registra la decisión en la línea «Extremo a extremo» de `.docs/plan.md`; si queda pendiente, en `.docs/backlog.md`. `start` no instala nada, tampoco después de elegir, y nunca crea archivos de configuración ni de pruebas: la dependencia y esos archivos los añade el proyecto después con su gestor de paquetes, con la aprobación que `06-dependencies-and-stack.md` exige para una dependencia.
@@ -225,7 +225,7 @@ Comprobado con esta plantilla en macOS, con un simulador de iOS y un emulador de
 - Dentro del sandbox la corrida falla con un mensaje que apunta a otra cosa (sección «Sandbox»).
 - En Windows y en Linux no está comprobado, y en dispositivos físicos tampoco.
 
-Las sesiones del agente sobre una aplicación móvil no usan estas dependencias: quedan para una entrega posterior de la plantilla.
+Las sesiones del agente sobre una aplicación móvil no usan estas dependencias: las abre el servidor [`appium-mcp`](95-agent-tool-servers.md#appium-mcp), que trae sus propios drivers, y son verificación interactiva que no cuenta como cobertura automatizada.
 
 ## Sandbox
 

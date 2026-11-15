@@ -33,7 +33,7 @@ export function makeRepo(t) {
     if (entry.isFile() && entry.name.endsWith('.mjs')) cpSync(join(scripts, entry.name), join(dir, '.scripts', entry.name));
     else if (entry.isDirectory() && entry.name !== 'tests') cpSync(join(scripts, entry.name), join(dir, '.scripts', entry.name), { recursive: true });
   }
-  const identity = ['-c', 'user.name=Hook Test', '-c', 'user.email=hook-test@example.invalid', '-c', 'core.autocrlf=false'];
+  const identity = ['-c', 'user.name=Hook Test', '-c', 'user.email=hook-test@example.invalid', '-c', 'core.autocrlf=false', '-c', 'maintenance.auto=false', '-c', 'gc.auto=0'];
   const repo = {
     dir,
     git: (...args) => run('git', [...identity, ...args], { cwd: dir }),
@@ -48,6 +48,10 @@ export function makeRepo(t) {
   // Saved in the repository too, so scripts that run their own git, such as prompt-plan's, keep LF line endings even
   // when the system configuration sets core.autocrlf=true, as Git for Windows does by default.
   repo.git('config', 'core.autocrlf', 'false');
+  // No background maintenance: after a commit git may start a detached process that packs and deletes loose objects
+  // while a test is still reading the folder.
+  repo.git('config', 'maintenance.auto', 'false');
+  repo.git('config', 'gc.auto', '0');
   repo.write('.gitignore', '.temp/\n');
   return repo;
 }

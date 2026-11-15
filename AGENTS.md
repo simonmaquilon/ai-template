@@ -70,7 +70,7 @@ Before acting, load only the modules in `.agents/instructions/` whose condition 
 - `04-validation-and-testing.md`: before validating or testing a normal or risk change, before debugging or reviewing, and whenever a check fails.
 - `05-independent-verification.md`: for a risk change, and when a criterion reaches the fix-cycle limit.
 - `06-dependencies-and-stack.md`: before adding, updating, replacing, or removing a dependency, CLI tool, or binary, or editing `.docs/stack.md`.
-- `07-interface.md`: before changing user-facing interfaces, client state, components, styles, tokens, color modes, or non-trivial copy, and before operating an agent-operated browser session.
+- `07-interface.md`: before changing user-facing interfaces, client state, components, styles, tokens, color modes, or non-trivial copy, and before operating an agent-operated session.
 - `08-security-and-data.md`: before changing authentication, authorization, trust boundaries, sessions, permissions, untrusted input, audit behavior, secrets, storage, sensitive or persisted data, schemas, or migrations.
 - `09-platform-and-runtime.md`: before changing runtime configuration, environments, deployment, external I/O, background work, caches, telemetry, or hot paths.
 - `10-documents.md`: before editing `README.md`, a primary reference, or `.readme/`, and before closing a change that altered a fact one of them owns.

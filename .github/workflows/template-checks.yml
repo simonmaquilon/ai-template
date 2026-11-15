@@ -21,12 +21,22 @@ jobs:
       matrix:
         os: [ubuntu-24.04, windows-2025]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
       - run: node .scripts/run-checks.mjs --base ${{ github.event.pull_request.base.sha || github.event.before }}
+      # The smoke test of the mobile server launcher: the template does not record appium-mcp, so this registers it in the
+      # runner's copy of .agents/tool-versions.json, which the runner discards with the rest of the checkout, and then
+      # installs the real package in the launcher's cache, starts it and lists its tools over stdio.
+      - name: Register appium-mcp in the runner copy
+        timeout-minutes: 5
+        run: node .scripts/tool-versions.mjs --add appium-mcp --repository https://github.com/appium/appium-mcp
+      - name: Smoke test of the mobile server launcher
+        timeout-minutes: 15
+        run: node .scripts/mobile-server.mjs --check

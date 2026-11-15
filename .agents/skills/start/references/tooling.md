@@ -29,7 +29,7 @@ Adapt the agent tooling once stack.md's Selected Stack is settled, or, with exis
 
 ## Tool servers
 
-`context7` stays. Propose another server only when an official one exists for a selected technology, and add it as "Añadir otro servidor" in `.readme/95-agent-tool-servers.md` describes: declared in both `.mcp.json` and `.codex/config.toml`, with its row and section in that document, stating what data it receives.
+`context7` stays. When the project has a mobile app, offer `appium-mcp` for agent-operated sessions as a separate item of this step's approval message, stating that it runs outside the sandbox with the machine's SDK tools, what it can do on a device and on the machine, that only the approval of each call limits it, and that under Codex a confined command can rewrite its launcher and its recorded version, which only Claude Code's `filesystem.denyWrite` protects; only after an explicit yes, record its version with `node .scripts/tool-versions.mjs --add`, which writes a protected file and so runs outside the sandbox (`.readme/91-agent-sandbox.md`), and declare it, launched through `.scripts/mobile-server.mjs`, with the restrictions `.readme/95-agent-tool-servers.md` gives, in both clients; without a yes, declare nothing and say so in the report. Propose another server only when an official one exists for a selected technology, and add it as "Añadir otro servidor" in `.readme/95-agent-tool-servers.md` describes: declared in both `.mcp.json` and `.codex/config.toml`, with its row and section in that document, stating what data it receives.
 
 ## Language servers
 
