@@ -56,11 +56,11 @@ test('prompt-plan time: table chains the segments with no gap, keeps waits out o
     '| --- | --- | --- | --- | --- |',
     '| 01 | Surface | 14:00:00 | 14:12:30 | 12 min 30 s |',
     '| 02 | Erase procedure | 14:12:30 | 14:58:10 | 45 min 40 s |',
-    '| \u2014 | \u23f8\ufe0f Wait: the owner\'s decision \\| D1 | 14:58:10 | 15:05:00 | 6 min 50 s |',
+    '| \u2014 | Pause: the owner\'s decision \\| D1 | 14:58:10 | 15:05:00 | 6 min 50 s |',
     '| 03 | Units kg and lb | 15:05:00 | 15:31:20 | 26 min 20 s |',
     '| 04 | Closing | 15:31:20 | 18:36:00 | 3 h 04 min 40 s |',
     '| | **Work** | | | **4 h 29 min 10 s** |',
-    '| | **Waits** | | | **6 min 50 s** |',
+    '| | **Pauses** | | | **6 min 50 s** |',
     '| | **Total** | **14:00:00** | **18:36:00** | **4 h 36 min 00 s** |',
     '',
   ].join('\n'));

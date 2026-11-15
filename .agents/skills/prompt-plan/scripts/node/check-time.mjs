@@ -4,7 +4,7 @@
 // a question to the user, a stop, a contention, or the end of an execution. Each line closes the segment the line
 // before it opened, so the segments follow one another with no gap. table prints, writing nothing, the Markdown table
 // of the closed segments in order, a fragment's row named by the first heading of its build file when its line was
-// written, without the number, and a wait's by its reason, then the work, the waits, and the total, which is their sum
+// written, without the number, and a pause's by its reason after the word Pause, with a dash for a number so that it does not read as a task, then the work, the pauses, and the total, which is their sum
 // and the time from the first line to the last. Start and end show local time, with the date when the lines span more
 // than one day. Exit status: 0 on success, 2 on misuse or refusal, which writes nothing.
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
@@ -58,9 +58,9 @@ function table() {
   console.log([
     '| # | Task | Start | End | Duration |',
     '| --- | --- | --- | --- | --- |',
-    ...rows.map((row) => `| ${row.kind === 'wait' ? `\u2014 | \u23f8\ufe0f Wait: ${cell(row.label)}` : `${row.kind} | ${cell(row.label)}`} | ${at(row.time)} | ${at(row.end)} | ${duration(row.length)} |`),
+    ...rows.map((row) => `| ${row.kind === 'wait' ? `\u2014 | Pause: ${cell(row.label)}` : `${row.kind} | ${cell(row.label)}`} | ${at(row.time)} | ${at(row.end)} | ${duration(row.length)} |`),
     `| | **Work** | | | **${duration(total(false))}** |`,
-    `| | **Waits** | | | **${duration(total(true))}** |`,
+    `| | **Pauses** | | | **${duration(total(true))}** |`,
     `| | **Total** | **${at(first)}** | **${at(last)}** | **${duration(last - first)}** |`,
   ].join('\n'));
   const open = lines.at(-1);
