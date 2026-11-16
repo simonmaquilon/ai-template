@@ -52,7 +52,7 @@ Recompute it on every run from the repository itself; keep no state file.
 ## Workflow
 
 1. Orient: run the guard, compute the progress state, and open. In a session that cannot receive replies, report the state and stop, unless the request already gives the approvals and answers the next steps need; then continue with them and stop at the first decision they do not cover.
-2. Cleanup: one approval message for the deletions, the settings entries, and the remote. Remove `.github/` once empty; leave `.agents/template-version` and `.agents/template-manifest.json` as they are; the stack hook regenerates its workflows block.
+2. Cleanup: one approval message for the deletions, the settings entries, and the remote. Remove `.github/` once empty; leave `.agents/template-version` and `.agents/template-manifest.json` as they are; the stack hook regenerates its workflows block, and when it did not run, `node .scripts/update-stack-doc.mjs` does.
    - In `.claude/settings.json`, remove every `sandbox.excludedCommands` and `permissions.allow` entry that names a template-only file, today the 5 `.scripts/run-checks.mjs` entries, and leave every other entry as it is, so that a `.scripts/run-checks.mjs` the project creates later never runs unsandboxed or without confirmation.
    - Remove `node .scripts/browser.mjs*` from `sandbox.excludedCommands` in the same message when the project does not adopt agent-operated browser verification, and keep it when it does; while that is still undecided, or plan.md leaves it as `TODO` with a backlog.md entry, leave it and settle it with the tooling approval of step 8 ([references/tooling.md](references/tooling.md)).
 3. product.md, by the topics in documents.md.

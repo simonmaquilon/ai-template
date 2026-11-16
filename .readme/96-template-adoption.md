@@ -13,6 +13,8 @@ gh repo create <nombre> --template simonmaquilon/ai-template --private --clone
 cd <nombre>
 ```
 
+Quien cree el proyecto sin `gh`, copiando el árbol de una versión y con su propio `git init`, añade `.temp/.gitignore` con `git add -f`, porque la regla `.temp/` del `.gitignore` lo ignora.
+
 Abre el agente dentro de la carpeta nueva e invoca `/start` en Claude Code o `$start` en Codex, como explica [Skills de agentes](90-agent-skills.md): prepara el proyecto y completa sus referencias primarias antes de escribir código. El proyecto nuevo es un derivado, con su propio `origin`, y el sello de la plantilla actúa en él en cuanto la limpieza de `start` borra el workflow y el documento de CI de la plantilla, antes de commitear nada, como explica «Archivos sellados».
 
 ## Adoptar la plantilla en un proyecto existente
