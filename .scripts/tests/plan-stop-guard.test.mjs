@@ -71,7 +71,8 @@ for (const client of ['claude', 'codex']) {
     writeFileSync(join(fixture.repo.dir, '.temp', 'plans', '1-broken', 'review'), 'not a folder\n');
     const isolated = stop(fixture);
     assert.match(isolated.reason, /2026-11-16-other, continuation 1 of at most 20 in 30 minutes:/);
-    assert.match(isolated.systemMessage, /\.temp\/plans\/1-broken could not be checked/);
+    // Windows reports a file used as a folder as a missing path, so that plan just counts as not started there.
+    if (process.platform !== 'win32') assert.match(isolated.systemMessage, /\.temp\/plans\/1-broken could not be checked/);
     mkdirSync(join(fixture.folder, 'review', 'report.md'), { recursive: true });
     const unreadable = stop(fixture);
     assert.match(unreadable.reason, /2026-11-16-other, continuation 2 of at most 20 in 30 minutes:/);
