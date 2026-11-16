@@ -109,6 +109,12 @@
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-template-seal.mjs\" ] || exit 0; node \"$r/.scripts/check-template-seal.mjs\"",
             "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-template-seal.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\"",
             "statusMessage": "Checking sealed template files"
+          },
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-plan-stop.mjs\" ] || exit 0; node \"$r/.scripts/check-plan-stop.mjs\" --turn-start",
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-plan-stop.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\" -- --turn-start",
+            "statusMessage": "Starting plan-execution tracking"
           }
         ]
       }
@@ -178,6 +184,36 @@
             "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-file-length.mjs\" ] || exit 0; node \"$r/.scripts/check-file-length.mjs\" --hook",
             "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-file-length.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\" -- --hook",
             "statusMessage": "Checking file lengths before finishing"
+          },
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-plan-stop.mjs\" ] || exit 0; node \"$r/.scripts/check-plan-stop.mjs\"",
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-plan-stop.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\"",
+            "statusMessage": "Checking the plan execution before finishing"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-plan-stop.mjs\" ] || exit 0; node \"$r/.scripts/check-plan-stop.mjs\" --agent-start",
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-plan-stop.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\" -- --agent-start",
+            "statusMessage": "Starting subagent plan-execution tracking"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$r/.scripts/check-plan-stop.mjs\" ] || exit 0; node \"$r/.scripts/check-plan-stop.mjs\"",
+            "commandWindows": "node -e \"const c=require('child_process'),p=require('path'),u=require('url'),f=require('fs');let r;try{r=c.execFileSync('git',['rev-parse','--show-toplevel'],{stdio:['ignore','pipe','ignore']}).toString().trim()}catch{process.exit(0)}const s=p.join(r,'.scripts','check-plan-stop.mjs');if(f.existsSync(s))import(u.pathToFileURL(s))\"",
+            "statusMessage": "Checking the subagent's plan execution before finishing"
           }
         ]
       }

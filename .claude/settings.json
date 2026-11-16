@@ -455,6 +455,15 @@
               "${CLAUDE_PROJECT_DIR}/.scripts/check-template-seal.mjs"
             ],
             "statusMessage": "Checking sealed template files"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-plan-stop.mjs",
+              "--turn-start"
+            ],
+            "statusMessage": "Starting plan-execution tracking"
           }
         ]
       }
@@ -557,6 +566,43 @@
               "--hook"
             ],
             "statusMessage": "Checking file lengths before finishing"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-plan-stop.mjs"
+            ],
+            "statusMessage": "Checking the plan execution before finishing"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-plan-stop.mjs",
+              "--agent-start"
+            ],
+            "statusMessage": "Starting subagent plan-execution tracking"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-plan-stop.mjs"
+            ],
+            "statusMessage": "Checking the subagent's plan execution before finishing"
           }
         ]
       }

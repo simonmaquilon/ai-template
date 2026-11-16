@@ -1,4 +1,5 @@
-// Records when a session's turn began for check-file-length.mjs, in a file under .temp/ that a sandboxed command
+// Records when a session's turn began for check-file-length.mjs, or a turn or a subagent began for
+// check-plan-stop.mjs, in a file under .temp/ that a sandboxed command
 // can write too while the hook runs outside the sandbox: nothing here follows a symlink or touches a file that is
 // not marker-shaped, so such a command cannot make the hook overwrite or delete a protected file.
 

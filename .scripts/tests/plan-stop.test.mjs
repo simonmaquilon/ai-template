@@ -1,0 +1,88 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { ACCEPTED, ASKED, DONE, answer, index, planRepo } from './plan-stop-fixture.mjs';
+
+const stop = (fixture, input = {}) => answer(assert, fixture.fire('Stop', { stop_hook_active: false, ...input }));
+
+for (const client of ['claude', 'codex']) {
+  test(`${client}: the plan-stop hook stays silent without a plan in execution this turn`, (t) => {
+    const fixture = planRepo(t, client);
+    fixture.turn();
+    assert.deepEqual(stop(fixture), {});
+    // A plan delivered this turn but never executed has no times.log.
+    fixture.plan({ 'review/times.log': null, 'build/00-index.md': index('pending'), 'review/report.md': '⏳ AC1 pending (01)\n' });
+    assert.deepEqual(stop(fixture), {});
+    // An execution from an earlier turn that nothing wrote this turn.
+    fixture.plan({});
+    fixture.old();
+    assert.deepEqual(stop(fixture), {});
+  });
+
+  test(`${client}: the plan-stop hook blocks on every open report line and lets a resolved or asked report through`, (t) => {
+    const fixture = planRepo(t, client);
+    fixture.turn();
+    fixture.plan({ 'build/00-index.md': DONE, 'review/report.md': 'Yes, it is done.\n\n- ✅ AC1 met (01)\n- ℹ️ note\n' });
+    assert.deepEqual(stop(fixture), {});
+    fixture.plan({ 'review/report.md': '✅ AC1 met\n⚠️ AC2 not measured (01)\n⏳ Commit waits on an authorization\n' });
+    const blocked = stop(fixture);
+    assert.equal(blocked.decision, 'block');
+    assert.match(blocked.reason, /execution\.md, Ending an execution/);
+    assert.match(blocked.reason, /review\/report\.md:2: ⚠️ AC2 not measured/);
+    assert.match(blocked.reason, /review\/report\.md:3: ⏳ Commit waits/);
+    assert.doesNotMatch(blocked.reason, /:1: /);
+    assert.match(blocked.reason, /within what the user authorized/);
+    assert.match(blocked.reason, /question mechanism/);
+    fixture.plan({ 'review/report.md': `✅ AC1 met\n⚠️ AC2 not measured ${ACCEPTED}\n⏳ Commit waits on an authorization ${ASKED}\n` });
+    assert.deepEqual(stop(fixture), {});
+    fixture.plan({ 'review/report.md': '⚠️ AC2 [asked the user someday]\n' });
+    assert.equal(stop(fixture).decision, 'block');
+  });
+
+  test(`${client}: the plan-stop hook asks that every fragment not done be named in a marked line`, (t) => {
+    const fixture = planRepo(t, client);
+    fixture.turn();
+    fixture.plan({ 'build/00-index.md': index('done', 'pending', '`pending`'), 'review/report.md': '✅ AC1 met\n' });
+    assert.match(stop(fixture).reason, /fragments pending, with none failed or blocked, that no marked ⏳ line names: 02, 03/);
+    // The user asked to run only fragment 01; the date of a mark names no fragment.
+    fixture.plan({ 'review/report.md': '✅ AC1 met\n⏳ Fragment 02 waits until the user asks to run it [accepted by the user 2026-01-03]\n' });
+    assert.match(stop(fixture).reason, /that no marked ⏳ line names: 03\n/);
+    fixture.plan({ 'review/report.md': `✅ AC1 met\n⏳ Fragments 02 and 03 wait until the user asks to run them ${ACCEPTED}\n` });
+    assert.deepEqual(stop(fixture), {});
+    fixture.plan({ 'build/00-index.md': index('done', 'failed', 'pending'), 'review/report.md': '✅ AC1 met\n' });
+    const failed = stop(fixture);
+    assert.match(failed.reason, /fragment 02 is failed and no marked ⏳ line names it/);
+    assert.doesNotMatch(failed.reason, /fragments pending/);
+    fixture.plan({ 'review/report.md': `❌ AC2 failed (02)\n⏳ Fragment 02 waits on how to go on ${ASKED}\n` });
+    assert.deepEqual(stop(fixture), {});
+    fixture.plan({ 'build/00-index.md': index('done', 'blocked', 'blocked') });
+    assert.match(stop(fixture).reason, /fragment 03 is blocked and no marked ⏳ line names it/);
+  });
+
+  test(`${client}: a subagent answers only for the fragments it opened and the report lines it wrote`, (t) => {
+    const fixture = planRepo(t, client);
+    fixture.turn();
+    fixture.plan({ 'build/00-index.md': index('done', 'pending', 'pending'), 'review/report.md': '⏳ Fragments 02 and 03 still to run\n' });
+    const input = { agent_id: 'agent-1', agent_type: 'general-purpose', stop_hook_active: false };
+    assert.deepEqual(answer(assert, fixture.fire('SubagentStop', input)), {}, 'no start marker');
+    fixture.agent('agent-1');
+    assert.deepEqual(answer(assert, fixture.fire('SubagentStop', input)), {}, 'a subagent that did no plan work');
+    // Each later run starts again, as a subagent the session launches or resumes does.
+    fixture.agent('agent-1');
+    // The session delegated fragment 02, which the subagent ran and recorded: 03 and the inherited line stay the session's.
+    fixture.plan({ 'build/00-index.md': index('done', 'done', 'pending'), 'review/report.md': '✅ AC2 met (02)\n⏳ Fragments 02 and 03 still to run\n' });
+    assert.deepEqual(answer(assert, fixture.fire('SubagentStop', input)), {});
+    fixture.agent('agent-1');
+    fixture.plan({ 'patch/03.before': 'tree\n', 'review/report.md': '✅ AC2 met (02)\n⏳ Fragments 02 and 03 still to run\n⚠️ AC3 not measured (03)\n' });
+    const blocked = answer(assert, fixture.fire('SubagentStop', input));
+    assert.match(blocked.reason, /fragment 03 \(pending\), whose before record this subagent opened, is not done/);
+    assert.match(blocked.reason, /report\.md:3: ⚠️ AC3 not measured/);
+    assert.doesNotMatch(blocked.reason, /still to run/);
+    assert.match(blocked.reason, /A subagent, which cannot ask the user, hands that question to its caller/);
+    if (client === 'claude') {
+      const background = [{ id: 'task-1', type: 'subagent', status: 'running', agent_type: 'general-purpose' }];
+      assert.deepEqual(stop(fixture, { background_tasks: background }), {});
+      const shell = [{ id: 'task-2', type: 'shell', status: 'running', command: 'tail -f log' }];
+      assert.equal(stop(fixture, { background_tasks: shell }).decision, 'block');
+    }
+  });
+}
