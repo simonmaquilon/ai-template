@@ -569,6 +569,7 @@
   "effortLevel": "medium",
   "outputStyle": "Concise",
   "viewMode": "focus",
+  "verbose": false,
   "tui": "fullscreen",
   "statusLine": {
     "type": "command",
