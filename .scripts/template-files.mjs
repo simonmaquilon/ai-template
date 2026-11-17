@@ -20,11 +20,12 @@ export const TEMPLATE_ONLY = [
   '.readme/94-template-ci.md',
 ];
 
-// Manifest files a derived project makes its own, so the template seal never compares or restores them.
+// Manifest files a derived project makes its own, so the template seal never compares or restores them. The shared
+// Claude Code settings are not among them: a project keeps its own in .claude/settings.local.json, which Claude Code
+// merges above them, or records the shared file in the exceptions list.
 export const PROJECT_OWNED = [
   '.docs/',
   'README.md',
-  '.claude/settings.json',
   '.codex/config.toml',
   '.mcp.json',
   '.readme/91-agent-sandbox.md',

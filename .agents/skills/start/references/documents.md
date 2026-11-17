@@ -49,7 +49,7 @@ Spanish, decision level only: no reproduced identifiers, routes, or versions, an
 ## security.md and README.md
 
 - security.md (English): in Status, Application, Owner, Private reporting channel (a contact that is not secret), Next review (an ISO date from an agreed cadence), and Overall status `not assessed`. Everything else is later.
-- README (Spanish): title, one-line pitch, and Propósito; Estado only links plan.md and security.md. A `LICENSE` only when the user picks the terms and the holder (`10`). Later: Inicio rápido, Comandos (verified only), Arquitectura, Estructura del repositorio, Pruebas y calidad, Despliegue y operación, Contribución.
+- README (Spanish): title, one-line pitch, and Propósito; Estado only links plan.md and security.md. Remove the whole opening quote (`> Plantilla: …`) when filling the README: it is the template's guide text, and its sentence on creating a project from the template means nothing in a project already created. A `LICENSE` only when the user picks the terms and the holder (`10`). Later: Inicio rápido, Comandos (verified only), Arquitectura, Estructura del repositorio, Pruebas y calidad, Despliegue y operación, Contribución.
 
 ## Not touched
 

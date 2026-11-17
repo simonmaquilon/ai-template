@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Guards the paths a project protects against shell commands (AGENTS.md), which the Edit deny rules of
 // permissions.deny never reach, and the sandbox only confines where the client has one. The list comes from
-// .claude/settings.json beside these scripts, as protected-paths.mjs reads it. Before a command, it judges the
+// .claude/settings.json and .claude/settings.local.json beside these scripts, as protected-paths.mjs reads them. It
+// judges the command of Claude Code's Monitor tool as one of Bash, and a Monitor without a command, which watches a
+// WebSocket, passes in silence. Before a command, it judges the
 // command as shell-commands.mjs and staging-reader.mjs read it: one that writes a protected path in an evident way
 // asks for the user's confirmation, as a permission decision on stdout for Claude Code; with --deny, which the Codex
 // hook passes because Codex does not support asking, the reason goes to stderr with exit status 2. A command that
@@ -15,15 +17,17 @@
 // or in saving the fingerprint, never blocks. A command that starts in another repository, such as an independent
 // project nested in this one, is left alone unless it may reach this one by changing directory or naming a repository.
 
-import { readFileSync } from 'node:fs';
-import { dirname, isAbsolute, join } from 'node:path';
+import { closeSync, constants, fstatSync, readFileSync } from 'node:fs';
+import { dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { governed, readHookInput } from './hook-support.mjs';
 import { protectedPaths, shellWrites } from './protected-paths.mjs';
 import { differences, fingerprint, saveFingerprint, stateName, takeFingerprint } from './protected-paths-state.mjs';
+import { inFolder, openRegular } from './safe-fs.mjs';
 
 const RULE = 'AGENTS.md';
 const SHOWN = 25;
+const LIMIT = 1024 * 1024;
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const input = await readHookInput();
 const cwd = typeof input?.cwd === 'string' && isAbsolute(input.cwd) ? input.cwd : process.cwd();
@@ -31,14 +35,44 @@ const command = input?.tool_input?.command;
 const text = [command ?? []].flat().join(' ');
 const name = stateName(input);
 
-// The protected paths, none when the project has no settings file; throws when it cannot be read.
-function listed() {
+// The text of the file `name` of .claude, read without following a link and without waiting on a pipe, or null when it
+// is missing; throws when it is a link, not a regular file, or over 1 MiB, or when .claude is a link.
+function settings(name) {
+  const read = () => {
+    let fd;
+    try {
+      fd = openRegular(name, constants.O_RDONLY);
+    } catch (error) {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    }
+    try {
+      if (fstatSync(fd).size > LIMIT) throw new Error('too large');
+      return readFileSync(fd, 'utf8');
+    } finally {
+      closeSync(fd);
+    }
+  };
+  let text;
   try {
-    return protectedPaths(readFileSync(join(root, '.claude', 'settings.json'), 'utf8'));
+    text = inFolder(root, '.claude', false, read);
   } catch (error) {
-    if (error.code === 'ENOENT') return [];
+    if (error.code === 'ENOENT') return null;
     throw error;
   }
+  if (text === undefined) throw new Error('.claude is a link');
+  return text;
+}
+
+// The protected paths of .claude/settings.json and .claude/settings.local.json together, none when the project has no
+// settings file; throws when settings.json cannot be read. A settings.local.json that is missing, unreadable, a link, too
+// large, or not JSON adds nothing, without a word, since Claude Code already reports it.
+function listed() {
+  let local = null;
+  try {
+    local = settings('settings.local.json');
+  } catch {}
+  return protectedPaths(settings('settings.json') ?? '{}', local);
 }
 
 function stop(reason) {
@@ -65,7 +99,7 @@ function before() {
   }
   if (found && governed(text, cwd)) {
     stop(`this command writes ${JSON.stringify(found)}, which the project protects (permissions.deny or sandbox.filesystem.denyWrite in `
-      + '.claude/settings.json); changing it needs the user\'s explicit authorization.');
+      + '.claude/settings.json or .claude/settings.local.json); changing it needs the user\'s explicit authorization.');
   }
   if (!name || paths.length === 0) return;
   try {

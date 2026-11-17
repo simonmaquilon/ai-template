@@ -89,7 +89,7 @@ test('project-owned files and files the project added are never touched', (t) =>
     '.docs/plan.md': '# Plan\nfilled in\n',
     'README.md': '# Project\n',
     '.gitignore': '.temp/\nnode_modules/\n',
-    '.claude/settings.json': read(repo, '.claude/settings.json').replace('"Concise"', '"Explanatory"'),
+    '.claude/settings.local.json': '{ "outputStyle": "Explanatory" }\n',
     '.scripts/own-task.mjs': 'console.log("project");\n',
     '.agents/skills/mine/SKILL.md': '# Mine\n',
   };

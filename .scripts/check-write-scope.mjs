@@ -8,7 +8,9 @@
 // except where template-seal.mjs guards it under the seal of 01-meta-guidelines.md in a derived project: a sealed
 // template file is denied, since the change belongs in the template or the exceptions list, and the exceptions list
 // or the adoption marker, which pause or narrow the seal, ask, or are denied where the client cannot ask outside an
-// adoption. For a shell command, write-scope-shell.mjs denies the evident writes into a temporary folder, the hook
+// adoption. Where the seal guards, a write that creates or writes a template-only path the sealed .claude/settings.json
+// exempts from the sandbox or pre-approves, which write-scope-template-only.mjs reserves, is denied too. For a shell command, which Claude Code's Monitor tool passes as well, with no command when it
+// watches a WebSocket, write-scope-shell.mjs denies the evident writes into a temporary folder, the hook
 // treats a redirection or tee into the list or the marker as a file tool's write, and stays silent about the rest,
 // which the sandbox confines, and about its own errors. Both decisions are one JSON object on stdout, which Claude
 // Code and Codex read. Whatever the hook cannot read or resolve for a file tool, its own errors included, asks instead
@@ -23,11 +25,13 @@ import { readHookInput, toPosix } from './hook-support.mjs';
 import { sealGuard } from './template-seal.mjs';
 import { realTarget, within, writeScope } from './write-scope.mjs';
 import { fromGitBash, shellTempWrite, shellWrites } from './write-scope-shell.mjs';
+import { reservedWrite } from './write-scope-template-only.mjs';
 
 const RULE = '03-code-authoring.md';
 const SEAL_RULE = '01-meta-guidelines.md';
 const SHELLS = new Set(['Bash', 'PowerShell', 'Monitor']);
 const PATCH_HEADER = /^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/gm;
+const WRITE_HEADER = /^\*\*\* (?:Add File|Update File|Move to): (.+)$/gm;
 const project = dirname(dirname(fileURLToPath(import.meta.url)));
 const input = await readHookInput();
 const cwd = typeof input?.cwd === 'string' && isAbsolute(input.cwd) ? input.cwd : process.cwd();
@@ -38,11 +42,12 @@ const UNRESOLVED = 'the write-scope guard could not tell where this write lands;
 // A path as JSON text, so a line break or another control character in it cannot reshape the message.
 const shown = (path) => JSON.stringify(path);
 
-// The paths a file tool names, or null when the input does not name them as absolute paths a patch may make relative.
-function targets(name, tool) {
+// The paths a file tool names, or null when the input does not name them as absolute paths a patch may make relative;
+// `header` picks which patch headers count, all of them or only those that create or write a file.
+function targets(name, tool, header = PATCH_HEADER) {
   if (name === 'apply_patch') {
     const patch = typeof tool?.command === 'string' ? tool.command : '';
-    const paths = [...patch.matchAll(PATCH_HEADER)].map((match) => match[1].trim());
+    const paths = [...patch.matchAll(header)].map((match) => match[1].trim());
     return paths.length > 0 ? paths.map((path) => (isAbsolute(path) ? path : `${cwd}${sep}${path}`)) : null;
   }
   const path = tool?.file_path ?? tool?.notebook_path;
@@ -105,6 +110,12 @@ function decide(name, tool) {
   }
   const decision = kind?.startsWith('control') ? control(guarded, kind) : null;
   if (decision) return decision;
+  const reserved = reservedWrite(targets(name, tool, WRITE_HEADER) ?? [], project);
+  if (reserved) {
+    return ['deny', `${shown(reserved)} is a template-only path (TEMPLATE_ONLY in .scripts/template-files.mjs) that the sealed `
+      + '.claude/settings.json exempts from the sandbox or pre-approves, so a file tool may not create or write it in a derived '
+      + 'project: a file there would run unconfined and unconfirmed; keep the project\'s own scripts elsewhere.', SEAL_RULE];
+  }
   const outside = kinds.find(([, kind]) => kind === 'outside');
   return outside ? ['ask', `${shown(outside[0])} is outside the project, its linked worktrees, and the directories its settings `
     + 'declare; writing there needs the user\'s approval.'] : null;

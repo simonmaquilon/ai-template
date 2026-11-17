@@ -20,6 +20,7 @@ test('the tool versions file is the project\'s in a derived project, part of the
 test('a sandboxed command cannot write the file that the launchers outside the sandbox read', () => {
   const { denyWrite } = JSON.parse(read('.claude/settings.json')).sandbox.filesystem;
   assert.ok(denyWrite.includes(TOOL_VERSIONS), denyWrite.join(', '));
+  assert.ok(!listed(PROJECT_OWNED, '.claude/settings.json'), 'a derived project cannot drop that denial: the seal restores the settings');
 });
 
 test('no version of the template tooling is written by hand outside the file and the generated block', () => {

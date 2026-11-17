@@ -82,25 +82,6 @@ test('an edited manifest is restored from HEAD; one from another release without
   assert.equal(read(repo, 'AGENTS.md'), 'from 9.0.0\n');
 });
 
-test('template hooks missing from .claude/settings.json are reported and the file is left as it is', (t) => {
-  const repo = derived(t);
-  const settings = JSON.parse(read(repo, '.claude/settings.json'));
-  const prompt = settings.hooks.UserPromptSubmit[0];
-  prompt.hooks = prompt.hooks.filter((hook) => !hook.args[0].includes('check-doc-links.mjs'));
-  settings.hooks.PreToolUse = settings.hooks.PreToolUse.filter((group) => group.matcher !== 'Write|Edit|NotebookEdit');
-  const text = `${JSON.stringify(settings, null, 2)}\n`;
-  repo.write('.claude/settings.json', text);
-  const message = seal(repo);
-  assert.match(message, /\.claude\/settings\.json no longer registers these template hooks/);
-  assert.match(message, /UserPromptSubmit check-doc-links\.mjs/);
-  assert.match(message, /PreToolUse \(Write\|Edit\|NotebookEdit\) check-write-scope\.mjs/);
-  assert.equal(read(repo, '.claude/settings.json'), text);
-  repo.write(EXCEPTIONS, JSON.stringify({ '.scripts/check-doc-links.mjs': 'The project checks links in CI', '.scripts/check-write-scope.mjs': 'Own guard' }));
-  assert.equal(seal(repo), '');
-  repo.write('.claude/settings.json', '{ not json');
-  assert.match(seal(repo), /cannot read \.claude\/settings\.json/);
-});
-
 test('file tools may not edit a sealed file; project files, exceptions, the template and an adoption are left alone', (t) => {
   const repo = derived(t);
   const [decision, reason] = guard(repo, 'claude', write(repo, 'AGENTS.md'));
@@ -114,7 +95,7 @@ test('file tools may not edit a sealed file; project files, exceptions, the temp
   }
   assert.equal(guard(repo, 'claude', write(repo, MANIFEST))?.[0], 'deny');
   assert.equal(guard(repo, 'codex', patch('.agents/instructions/01-meta-guidelines.md'))?.[0], 'deny');
-  for (const path of ['.docs/plan.md', 'README.md', '.claude/settings.json', '.scripts/own-task.mjs']) {
+  for (const path of ['.docs/plan.md', 'README.md', '.claude/settings.local.json', '.scripts/own-task.mjs']) {
     assert.equal(guard(repo, 'claude', write(repo, path)), null, path);
   }
   repo.write(EXCEPTIONS, JSON.stringify({ 'AGENTS.md': 'Routes .agents/instructions/20-own.md' }));

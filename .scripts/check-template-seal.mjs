@@ -2,11 +2,13 @@
 // Keeps the sealed template files of a derived project as the adopted release ships them (01-meta-guidelines.md).
 // At every prompt it compares them with .agents/template-manifest.json, restores each that differs from its local
 // blob, when the fetched release or the commit that recorded the manifest vouches for it, after saving the changed
-// version under .temp/template-drift/<UTC>/; it reports the release's files the manifest leaves out, and checks that
-// .claude/settings.json still registers the hooks the template's own settings register, unless the exceptions list
-// names the hook's script. It prints plain text, which both clients add to the model's context, asking the agent to
-// tell the user; it prints nothing when all is in order, in a checkout of the template, without a committed manifest,
-// and in another repository, and never blocks a prompt.
+// version under .temp/template-drift/<UTC>/; it reports the release's files the manifest leaves out. .claude/settings.json
+// is one of those sealed files, so a difference is restored like any other; only when the exceptions list names it, so
+// that the seal leaves it to the project, does the seal check that it still registers the hooks the template's own
+// settings register, unless the exceptions list names the hook's script, and it names each path the project holds that those
+// settings reserve (exempt from the sandbox or pre-approved), asking to rename it. It prints plain text, which both clients add to
+// the model's context, asking the agent to tell the user; it prints nothing when all is in order, in a checkout of the
+// template, without a committed manifest, and in another repository, and never blocks a prompt.
 // While .temp/template-adoption marks an adoption in progress it only says so. That marker is made by hand, and
 //
 //   node .scripts/check-template-seal.mjs --adoption-end
@@ -20,6 +22,7 @@ import { MANIFEST, VERSION_FILE, listed, parseManifest, readText } from './templ
 import { ADOPTING, EXCEPTIONS, isBlobId, readExceptions, sealState, sealedPairs } from './template-seal.mjs';
 import { findDrift, unlisted, unvouched } from './template-seal-drift.mjs';
 import { restore } from './template-seal-restore.mjs';
+import { reservedOnDisk } from './write-scope-template-only.mjs';
 
 const HEAD = 'Template seal (01-meta-guidelines.md)';
 const SETTINGS = '.claude/settings.json';
@@ -77,13 +80,19 @@ function prompt() {
       + `${left.slice(0, SHOWN).join(', ')}${left.length > SHOWN ? `, and ${left.length - SHOWN} more` : ''}. The manifest may have `
       + 'been edited, so the seal does not guard them; tell the user.');
   }
-  const hooks = missingHooks(state.manifest, state.exceptions);
+  // Only an excepted settings file is left as the project has it; a sealed one was restored above.
+  const hooks = listed(state.exceptions, SETTINGS) ? missingHooks(state.manifest, state.exceptions) : {};
   if (hooks.error) out.push(`${HEAD}: ${hooks.error}, so the template hooks it registers were not checked; tell the user.`);
   if (hooks.missing?.length > 0) {
-    out.push(`${HEAD}: ${SETTINGS} no longer registers these template hooks: ${hooks.missing.join('; ')}. Tell the user, in their `
-      + `language; restore them from the template's ${SETTINGS}, as .readme/92-agent-hooks.md lists them, or, if the project `
-      + `drops one on purpose, record its script in ${EXCEPTIONS}.`);
+    out.push(`${HEAD}: ${SETTINGS} is excepted in ${EXCEPTIONS}, so the seal does not restore it, and it no longer registers these `
+      + `template hooks: ${hooks.missing.join('; ')}. Tell the user, in their language; register them again as the template's `
+      + `${SETTINGS} does, as .readme/92-agent-hooks.md lists them, record the script of one the project drops on purpose in `
+      + `${EXCEPTIONS}, or remove the exception so that the seal restores the file.`);
   }
+  const held = reservedOnDisk();
+  if (held.length > 0) out.push(`${HEAD}: the project holds ${held.join(', ')}; the sealed ${SETTINGS} exempts such a path from the sandbox or `
+    + 'pre-approves it, so a program there would run unconfined and without confirmation. Tell the user, in their language, to rename '
+    + `${held.length > 1 ? 'them' : 'it'}; this hook neither deletes nor moves anything.`);
   return out;
 }
 

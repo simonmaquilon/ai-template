@@ -6,7 +6,7 @@ import { ROOT, hookFor } from './support.mjs';
 import { before, project, reason, silent } from './protected-paths-fixture.mjs';
 
 const MESSAGE = (path) => new RegExp(`^AGENTS\\.md: this command writes ${JSON.stringify(path).replaceAll('.', '\\.')}, which the project protects `
-  + '\\(permissions\\.deny or sandbox\\.filesystem\\.denyWrite in \\.claude/settings\\.json\\); changing it needs the user\'s explicit authorization\\.$');
+  + '\\(permissions\\.deny or sandbox\\.filesystem\\.denyWrite in \\.claude/settings\\.json or \\.claude/settings\\.local\\.json\\); changing it needs the user\'s explicit authorization\\.$');
 const DENIED = [['echo x > .agents/tool-versions.json', '.agents/tool-versions.json'], ['rm -rf .scripts/old', '.scripts'], ['sed -i s/a/b/ .codex/hooks.json', '.codex'],
   ['git checkout -- config', 'config'], ['cat a | tee docs/b.md', 'docs'], ['cd docs && mv a.md b.md', 'docs'], ['bash -c "rm docs/a.md"', 'docs'],
   ['cp x config/a.json && echo done', 'config'], ['truncate -s 0 .scripts/a.mjs', '.scripts'], ['git restore docs/a.md', 'docs']];
@@ -64,10 +64,10 @@ test('claude: the PowerShell tool is read as PowerShell, and a command nested to
 test('the protected-paths hook is registered before and after shell commands in both clients, and rejects in Codex', () => {
   const settings = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8'));
   const group = (event) => settings.hooks[event].find((candidate) => JSON.stringify(candidate).includes('check-protected-paths.mjs'));
-  assert.equal(group('PreToolUse').matcher, 'Bash|PowerShell');
-  assert.equal(group('PostToolUse').matcher, 'Bash|PowerShell');
+  assert.equal(group('PreToolUse').matcher, 'Bash|PowerShell|Monitor');
+  assert.equal(group('PostToolUse').matcher, 'Bash|PowerShell|Monitor');
   assert.deepEqual(group('PostToolUse').hooks[0].args.slice(1), ['--after']);
-  assert.equal(group('PostToolUseFailure').matcher, 'Bash|PowerShell');
+  assert.equal(group('PostToolUseFailure').matcher, 'Bash|PowerShell|Monitor');
   assert.deepEqual(group('PostToolUseFailure').hooks[0].args.slice(1), ['--after']);
   const pre = hookFor('codex', 'PreToolUse', 'check-protected-paths.mjs');
   assert.match(pre.command, /--deny$/);

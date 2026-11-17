@@ -116,7 +116,7 @@ Comprobado en macOS, fuera de un cliente y hablando el protocolo por `stdio` con
 ## Retirar o desactivar un servidor
 
 - Un proyecto derivado lo retira borrando su entrada de `.mcp.json` y su tabla `[mcp_servers.<nombre>]` de `.codex/config.toml` en el mismo cambio, y su fila y su sección de este archivo.
-- Para desactivarlo sin borrar su configuración, Codex acepta `enabled = false` en su tabla, y Claude Code, el nombre del servidor en la lista `disabledMcpjsonServers` de sus ajustes; en `.claude/settings.local.json` solo afecta a una persona.
+- Para desactivarlo sin borrar su configuración, Codex acepta `enabled = false` en su tabla, y Claude Code, el nombre del servidor en la lista `disabledMcpjsonServers` de sus ajustes; en `.claude/settings.local.json` solo afecta a una persona, y es el sitio de esa lista en un derivado, donde `.claude/settings.json` está sellado.
 
 ## Añadir otro servidor
 

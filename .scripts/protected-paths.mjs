@@ -1,5 +1,6 @@
 // Finds the evident writes of a shell command into the paths a project protects, for the protected-paths hook
-// (AGENTS.md). protectedPaths reads the list from the text of .claude/settings.json: the Edit(...) rules of
+// (AGENTS.md). protectedPaths reads the list from the text of .claude/settings.json and, as a union, from that of
+// .claude/settings.local.json, where a derived project keeps its own: the Edit(...) rules of
 // permissions.deny, which Claude Code applies to every file tool, since it matches no Write(...) rule, and the entries
 // of sandbox.filesystem.denyWrite, both read relative to the project root, a file or a folder with its contents;
 // absolute, home, and wildcard rules it cannot read as one path are left out. shellWrites
@@ -38,13 +39,22 @@ function relativeTo(spec, rooted) {
   return path === '.' || path.startsWith('..') ? null : path;
 }
 
-// The protected paths a settings file lists, relative to the project root with forward slashes. Throws when the text
-// is not JSON.
-export function protectedPaths(text) {
-  const { permissions, sandbox } = JSON.parse(text) ?? {};
+// The paths one settings object lists.
+function listedIn({ permissions, sandbox } = {}) {
   const edits = (Array.isArray(permissions?.deny) ? permissions.deny : []).map((rule) => relativeTo(RULE.exec(rule)?.[1], true));
   const writes = (Array.isArray(sandbox?.filesystem?.denyWrite) ? sandbox.filesystem.denyWrite : []).map((spec) => relativeTo(spec, false));
-  return [...new Set([...edits, ...writes].filter(Boolean))];
+  return [...edits, ...writes];
+}
+
+// The protected paths the text of .claude/settings.json lists, and those of .claude/settings.local.json when its text is
+// given, relative to the project root with forward slashes. Throws when the first is not JSON; a local file that is
+// not JSON adds nothing, since Claude Code already says so.
+export function protectedPaths(text, localText = null) {
+  let local = [];
+  try {
+    local = localText ? listedIn(JSON.parse(localText) ?? {}) : [];
+  } catch {}
+  return [...new Set([...listedIn(JSON.parse(text) ?? {}), ...local].filter(Boolean))];
 }
 
 // The non-option arguments, those after -- included.

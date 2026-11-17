@@ -4,7 +4,7 @@ Un servidor de lenguaje da al cliente de agente diagnósticos tras cada edición
 
 ## Registro
 
-`enabledPlugins` en `.claude/settings.json` es la fuente de qué plugins están habilitados; la tabla añade lo que ese archivo no dice. Las extensiones son las que declara la entrada del plugin en su marketplace.
+`enabledPlugins` en `.claude/settings.json`, y en `.claude/settings.local.json` en un proyecto derivado que añade plugins propios, es la fuente de qué plugins están habilitados; la tabla añade lo que esos archivos no dicen. Las extensiones son las que declara la entrada del plugin en su marketplace.
 
 | Plugin | Lenguajes y extensiones | Binario | Claude Code | Codex |
 | --- | --- | --- | --- | --- |
@@ -29,11 +29,11 @@ El servidor usa el TypeScript del proyecto cuando `node_modules/typescript` trae
 
 ### Claude Code
 
-Los plugins se habilitan en `.claude/settings.json`, que se versiona, así que llegan a quien abre el proyecto y a los proyectos derivados. Claude Code registra el marketplace `claude-plugins-official` en la primera sesión interactiva de terminal e instala por su cuenta los plugins que `enabledPlugins` habilita desde él, porque ese marketplace los declara con una ruta relativa; no hace falta `claude plugin install`. En `claude -p` esa instalación corre en segundo plano y el plugin puede faltar en el primer turno; `CLAUDE_CODE_SYNC_PLUGIN_INSTALL=1` hace que la ejecución la espere.
+Los plugins de la plantilla se habilitan en `.claude/settings.json`, que se versiona y en un proyecto derivado queda sellado, así que llegan a quien abre el proyecto y a los derivados. Un plugin propio de un derivado se habilita en `.claude/settings.local.json`, que Claude Code aplica por encima del compartido y que no puede quitarle entradas; ese archivo es por persona, git lo ignora y las sesiones en la nube no lo leen, así que cada persona lo habilita en el suyo. Claude Code registra el marketplace `claude-plugins-official` en la primera sesión interactiva de terminal e instala por su cuenta los plugins que `enabledPlugins` habilita desde él, porque ese marketplace los declara con una ruta relativa; no hace falta `claude plugin install`. En `claude -p` esa instalación corre en segundo plano y el plugin puede faltar en el primer turno; `CLAUDE_CODE_SYNC_PLUGIN_INSTALL=1` hace que la ejecución la espere.
 
 Si falta el binario, la pestaña **Errors** de `/plugin` muestra `Executable not found in $PATH: "<binario>"` y la sesión sigue sin ese servidor. Claude Code no arranca servidores de lenguaje en las sesiones en la nube.
 
-Un plugin habilitado solo actúa sobre sus extensiones, así que no molesta a un proyecto derivado en otro lenguaje. Para retirarlo de un proyecto se pone a `false` en su `.claude/settings.json`; una persona lo desactiva solo en su máquina con `.claude/settings.local.json`.
+Un plugin habilitado solo actúa sobre sus extensiones, así que no molesta a un proyecto derivado en otro lenguaje. Para retirarlo de la plantilla se pone a `false` en `.claude/settings.json`; en un derivado, ese archivo sellado lo mantiene habilitado, y una persona lo desactiva solo en su máquina con `.claude/settings.local.json`, o el proyecto registra `.claude/settings.json` en la lista de excepciones de [Adopción de versiones de la plantilla](96-template-adoption.md), con la aprobación del usuario, y lo retira en él.
 
 Para comprobarlo, abre una sesión nueva en la raíz del proyecto y ejecuta `/plugin`: el plugin aparece en **Installed** y **Errors** no tiene filas suyas. Después pide a Claude que introduzca un error de sintaxis en un archivo de una extensión del plugin: bajo la edición aparece `Found N new diagnostic issues`. Deshaz el error. Sin sesión interactiva, el evento `init` de `claude -p --output-format stream-json --verbose` lista el plugin en `plugins` y la herramienta `LSP` en `tools`.
 
@@ -47,7 +47,7 @@ Un servidor de un marketplace oficial:
 
 1. Localiza el plugin del lenguaje en la tabla de plugins de inteligencia de código de la documentación de Claude Code y lee en su README qué binario necesita.
 2. Verifica la procedencia del binario según `06-dependencies-and-stack.md`, registra su versión y procedencia, en la tabla Project Tooling de [stack.md](../.docs/stack.md) si lo añade el proyecto y, si lo añade la plantilla, en `.agents/tool-versions.json` con `node .scripts/tool-versions.mjs --add <paquete> --repository <url>`, e instálalo; si es un paquete de npm, con `node .scripts/run-pinned.mjs --install <paquete>`.
-3. Revisa los hooks y permisos que declara el plugin, como exige `13-agent-tooling.md`, y añade `"<plugin>@claude-plugins-official": true` a `enabledPlugins` en `.claude/settings.json`.
+3. Revisa los hooks y permisos que declara el plugin, como exige `13-agent-tooling.md`, y añade `"<plugin>@claude-plugins-official": true` a `enabledPlugins`: en `.claude/settings.json` si lo añade la plantilla, y en `.claude/settings.local.json`, por persona, si lo añade un proyecto derivado.
 4. Añade su fila al registro y su sección a Binarios.
 
 Un servidor propio, sin plugin oficial:
