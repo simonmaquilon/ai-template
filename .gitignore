@@ -26,4 +26,6 @@ $RECYCLE.BIN/
 # Local agent overrides and credentials
 .claude/settings.local.json
 .codex/auth.json
+**/.claude/.cc-writes/
+.claude/worktrees/
 

@@ -2,7 +2,7 @@
 
 [Describe en una frase qué problema resuelve el proyecto y para quién.]
 
-> Plantilla: reemplaza el contenido entre corchetes, elimina las secciones que no apliquen y publica únicamente comandos que hayan sido verificados.
+> Plantilla: reemplaza el contenido entre corchetes, elimina las secciones que no apliquen y publica únicamente comandos que hayan sido verificados. Para crear un proyecto desde esta plantilla, sigue la sección [Crear un proyecto](.readme/96-template-adoption.md#crear-un-proyecto) e invoca la skill `start`.
 
 ## Estado
 
@@ -17,6 +17,7 @@ El estado de la entrega está en [plan.md](.docs/plan.md#estado); la versión de
 ### Requisitos
 
 - Runtime, versiones y herramientas: los fija [stack.md](.docs/stack.md).
+- `git` y Node en el `PATH`, que usan los hooks de los agentes: [Hooks de agentes](.readme/92-agent-hooks.md#sistemas-y-requisitos).
 - [Acceso, servicio externo o credenciales requeridos]
 
 ### Configuración
@@ -64,7 +65,7 @@ No incluyas secretos ni valores reales de producción en este repositorio.
 - [Bugs](.docs/bugs.md): bugs activos y cerrados.
 - [Seguridad](.docs/security.md): estado de seguridad, vulnerabilidades y riesgos aceptados.
 - [Pendientes](.docs/backlog.md): trabajo pendiente registrado.
-- Añade aquí los enlaces a documentos de operación o arquitectura en `.readme/` cuando existan.
+- La operación de los agentes y de la plantilla está en los documentos de `.readme/` con prefijo `90` o superior; añade aquí los enlaces a los documentos propios del proyecto.
 
 ## Pruebas y calidad
 

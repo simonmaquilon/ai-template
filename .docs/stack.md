@@ -29,6 +29,8 @@ Approved but not yet installed; a row moves to Platform Versions or Dependencies
 _None found in package.json packageManager or a lockfile._
 <!-- /stack:generated package-manager -->
 
+TODO: when the block above finds none, as in a stack without `package.json`, name the package manager and the file that pins it; otherwise delete this line.
+
 ## Platform Versions
 
 Runtimes, databases, platforms, and external services. The application's own version is in [security.md](security.md).
