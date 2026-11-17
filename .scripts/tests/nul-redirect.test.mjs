@@ -68,7 +68,7 @@ for (const client of ['claude', 'codex']) {
       assert.deepEqual([result.status, result.stdout, result.stderr], [0, '', ''], text);
     }
     for (const input of [{}, { tool_input: {} }, { tool_input: { command: ['echo', '>', 'NUL'] } }, { tool_name: 'PowerShell', ...command('x 2>NUL') },
-      { tool_name: 'Monitor', ...command('x 2>NUL') }]) {
+      { tool_name: 'Read', ...command('x 2>NUL') }, { tool_name: 'Monitor', tool_input: { ws: { url: 'wss://example.invalid/feed' } } }]) {
       const result = fire(client, repo, input);
       assert.deepEqual([result.status, result.stdout, result.stderr], [0, '', ''], JSON.stringify(input));
     }
@@ -86,10 +86,10 @@ test('the NUL hook only rejects: it neither deletes nor creates any file', (t) =
   assert.equal(readFileSync(join(repo.dir, 'keep', 'nulled.txt'), 'utf8'), 'a file the command must not remove\n');
 });
 
-test('the NUL hook runs for Bash alone in Claude Code, and the Codex Windows form reads the command as possible PowerShell', () => {
+test('the NUL hook runs for Bash and Monitor alone in Claude Code, and the Codex Windows form reads the command as possible PowerShell', () => {
   const settings = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8'));
   const group = settings.hooks.PreToolUse.find((candidate) => JSON.stringify(candidate).includes('check-nul-redirect.mjs'));
-  assert.equal(group.matcher, 'Bash');
+  assert.equal(group.matcher, 'Bash|Monitor');
   const codex = hookFor('codex', 'PreToolUse', 'check-nul-redirect.mjs');
   assert.match(codex.commandWindows, /-- --powershell$/);
   assert.doesNotMatch(codex.command, /--powershell/);

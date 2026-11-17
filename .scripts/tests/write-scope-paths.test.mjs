@@ -30,13 +30,13 @@ test('a redirection that is the whole command keeps its target', (t) => {
   assert.deepEqual(commands('> "$TMPDIR/x"').map(({ targets }) => targets), [['$TMPDIR/x']]);
   assert.deepEqual(commands('>> a.txt; echo hi').map(({ targets }) => targets), [['a.txt'], []]);
   const { fire } = scope(t);
-  for (const client of ['claude', 'codex']) assertDenied(fire(client, client === 'claude' ? 'Bash|PowerShell' : 'Bash', bash('> $TMPDIR/x')), client);
+  for (const client of ['claude', 'codex']) assertDenied(fire(client, client === 'claude' ? 'Bash|PowerShell|Monitor' : 'Bash', bash('> $TMPDIR/x')), client);
 });
 
 test('an internal error of the shell reader leaves shell commands alone and still asks for file tools', (t) => {
   const { repo, outside, fire } = scope(t);
   writeFileSync(join(repo.dir, '.scripts', 'shell-commands.mjs'), "export function commands() { throw new Error('other version'); }\n");
-  assertSilent(fire('claude', 'Bash|PowerShell', bash('echo hi > $TMPDIR/x')), 'claude shell');
+  assertSilent(fire('claude', 'Bash|PowerShell|Monitor', bash('echo hi > $TMPDIR/x')), 'claude shell');
   assertSilent(fire('codex', 'Bash', bash('echo hi')), 'codex shell');
   assertAsked(fire('claude', FILES, write(join(outside, 'x.txt'))), 'file tool still asks');
 });

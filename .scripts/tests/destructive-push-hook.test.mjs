@@ -74,10 +74,10 @@ test('codex: on Windows the destructive-push guard reads the Bash tool command b
   }
 });
 
-test('claude: the destructive-push guard matches both of its shell tools and runs without --deny', () => {
+test('claude: the destructive-push guard matches its three shell tools and runs without --deny', () => {
   const settings = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8'));
   const group = settings.hooks.PreToolUse.find((candidate) => JSON.stringify(candidate).includes('check-destructive-push.mjs'));
-  assert.deepEqual(group.matcher.split('|').sort(), ['Bash', 'PowerShell']);
+  assert.deepEqual(group.matcher.split('|').sort(), ['Bash', 'Monitor', 'PowerShell']);
   assert.deepEqual(group.hooks[0].args.slice(1), ['--hook']);
 });
 

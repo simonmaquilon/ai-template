@@ -10,10 +10,11 @@ import { ROOT, WINDOWS, run, startRepo } from './support.mjs';
 const CONFIGS = { claude: '.claude/settings.json', codex: '.codex/hooks.json' };
 const SCRIPT = 'check-write-scope.mjs';
 
-// The hook a client registers for this script in the PreToolUse group whose matcher is exactly `matcher`.
+// The hook a client registers for this script in the PreToolUse group whose matcher covers every tool `matcher` names.
 export function scopeHook(client, matcher) {
   const groups = JSON.parse(readFileSync(join(ROOT, CONFIGS[client]), 'utf8')).hooks.PreToolUse ?? [];
-  const hook = groups.filter((group) => group.matcher === matcher).flatMap((group) => group.hooks)
+  const covers = (group) => matcher.split('|').every((tool) => (group.matcher ?? '').split('|').includes(tool));
+  const hook = groups.filter(covers).flatMap((group) => group.hooks)
     .find((candidate) => JSON.stringify(candidate).includes(SCRIPT));
   if (!hook) throw new Error(`${client} has no PreToolUse ${matcher} hook for ${SCRIPT}`);
   return hook;

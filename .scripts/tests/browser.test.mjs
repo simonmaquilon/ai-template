@@ -116,6 +116,6 @@ test('browser refuses a file whose path crosses a symbolic link inside the repos
 // claude-permissions.test.mjs keeps the gh exclusions to read-only commands.
 test('the Claude Code sandbox exempts the browser script and nothing broader', () => {
   const excluded = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8')).sandbox.excludedCommands;
-  assert.ok(excluded.includes('node .scripts/browser.mjs*'));
+  assert.ok(excluded.includes('node .scripts/browser.mjs *'));
   assert.ok(excluded.every((pattern) => pattern.startsWith('node .scripts/') || pattern.startsWith('gh ')), excluded.join(', '));
 });

@@ -1,17 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import test from 'node:test';
-import { ROOT } from './support.mjs';
-
-const read = (path) => readFileSync(join(ROOT, path), 'utf8');
-
-// The script a command line runs, whatever shell form wraps its path: exactly one per hook.
-function scriptOf(command) {
-  const names = [...new Set(String(command).match(/[\w-]+\.mjs/g))];
-  assert.equal(names.length, 1, `one script expected in: ${command}`);
-  return names[0];
-}
+import { CLAUDE_ONLY, read, scriptOf } from './hook-registry-fixture.mjs';
 
 // Per event, the sorted script names a client file registers through one way of launching them, so a script
 // registered twice for the same event counts twice.
@@ -32,9 +21,6 @@ function documented() {
   });
 }
 
-// Events only Claude Code has, with the scripts it registers for each: Codex has no PostToolUseFailure, and its
-// PostToolUse already runs for a Bash command that exits with an error.
-const CLAUDE_ONLY = { PostToolUseFailure: ['check-protected-paths.mjs'] };
 const shared = Object.fromEntries(Object.entries(claude).filter(([event]) => !(event in CLAUDE_ONLY)));
 
 test('Claude Code, Codex command and Codex commandWindows register the same scripts for every event', () => {

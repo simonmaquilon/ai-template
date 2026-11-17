@@ -6,7 +6,8 @@
 // splits the command as the shell would, so a commit message, an echoed
 // mention, or a comment is never read as a command, while a command
 // substitution inside it, which the shell runs, is checked. PowerShell quoting
-// applies when the client names that tool. With --powershell, which the Codex
+// applies when the client names that tool. Claude Code's Monitor tool runs its command in the Bash shell, so it is read
+// as Bash, and a Monitor with no command, which watches a WebSocket, passes. With --powershell, which the Codex
 // hook passes on Windows, where its Bash tool may run the command through
 // PowerShell, the command is read both ways and rejected when either reading
 // finds bulk staging. tool_input.command may arrive as text or as an argument

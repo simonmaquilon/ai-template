@@ -13,8 +13,8 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "excludedCommands": [
-      "node .scripts/run-checks.mjs*",
-      "node .scripts/browser.mjs*",
+      "node .scripts/run-checks.mjs *",
+      "node .scripts/browser.mjs *",
       "gh repo view*",
       "gh repo list*",
       "gh pr view*",
@@ -313,7 +313,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|PowerShell",
+        "matcher": "Bash|PowerShell|Monitor",
         "hooks": [
           {
             "type": "command",
@@ -352,7 +352,7 @@
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Monitor",
         "hooks": [
           {
             "type": "command",
@@ -525,7 +525,7 @@
         ]
       },
       {
-        "matcher": "Bash|PowerShell",
+        "matcher": "Bash|PowerShell|Monitor",
         "hooks": [
           {
             "type": "command",
@@ -541,7 +541,7 @@
     ],
     "PostToolUseFailure": [
       {
-        "matcher": "Bash|PowerShell",
+        "matcher": "Bash|PowerShell|Monitor",
         "hooks": [
           {
             "type": "command",

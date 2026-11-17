@@ -10,7 +10,8 @@
 // silently. Commands are read as the staging hook reads them: shell-commands.mjs
 // splits the text as the shell would, so a commit message or an echoed mention
 // is never read as a command; PowerShell quoting applies when the client names
-// that tool, and with --powershell, which the Codex hook passes on Windows, the
+// that tool; Claude Code's Monitor tool runs its command in the Bash shell, so it is read as Bash, and a Monitor with no
+// command, which watches a WebSocket, passes. With --powershell, which the Codex hook passes on Windows, the
 // command is read both ways. tool_input.command may arrive as text or as an
 // argument list, and input.cwd sets where configuration, aliases, and script
 // files are read. A command that starts in another repository, such as an

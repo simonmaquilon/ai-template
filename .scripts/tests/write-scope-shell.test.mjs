@@ -7,7 +7,7 @@ import { fromGitBash } from '../write-scope-shell.mjs';
 import { WINDOWS } from './support.mjs';
 import { assertDenied, assertSilent, scope } from './write-scope-fixture.mjs';
 
-const MATCHERS = { claude: 'Bash|PowerShell', codex: 'Bash' };
+const MATCHERS = { claude: 'Bash|PowerShell|Monitor', codex: 'Bash' };
 const bash = (command) => ({ tool_name: 'Bash', tool_input: { command } });
 // A path as a POSIX shell takes it on Windows too, where a backslash would escape, and as Git Bash spells its drive.
 const inBash = (...parts) => toPosix(join(...parts));

@@ -106,10 +106,10 @@ for (const client of ['claude', 'codex']) {
   });
 }
 
-test('claude: the staging guard matches both of its shell tools', () => {
+test('claude: the staging guard matches its three shell tools', () => {
   const settings = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8'));
   const group = settings.hooks.PreToolUse.find((candidate) => JSON.stringify(candidate).includes('check-bulk-staging.mjs'));
-  assert.deepEqual(group.matcher.split('|').sort(), ['Bash', 'PowerShell']);
+  assert.deepEqual(group.matcher.split('|').sort(), ['Bash', 'Monitor', 'PowerShell']);
 });
 
 test('codex: on Windows the staging guard reads the Bash tool command both as PowerShell and as POSIX', (t) => {
