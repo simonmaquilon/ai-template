@@ -9,7 +9,7 @@ const tool = (tool_name, tool_input) => ({ tool_name, tool_input });
 // watches a WebSocket named in tool_input.ws and runs no shell at all.
 test('claude: the write-scope hook judges a Monitor command as the Bash one, and a Monitor without a command passes', (t) => {
   const { tmp, fire } = scope(t);
-  for (const command of ['tail -f build.log > "$TMPDIR/x.txt"', 'echo hi >> $TMP/notes.md', `make 2>&1 | tee -a ${tmp}/log.txt`, 'mktemp']) {
+  for (const command of ['tail -f build.log > "$TMPDIR/x.txt"', 'echo hi >> $TMP/notes.md', `make 2>&1 | tee -a ${tmp.replaceAll('\\', '/')}/log.txt`, 'mktemp']) {
     const bash = fire('claude', SHELLS, tool('Bash', { command }));
     assert.equal(assertDenied(bash, command), assertDenied(fire('claude', SHELLS, tool('Monitor', { command })), command), command);
   }
