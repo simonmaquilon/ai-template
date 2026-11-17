@@ -37,7 +37,7 @@ Before the first edit, state the change's level in one line.
 
 | Level | Change | Load | Specification | Verification |
 | --- | --- | --- | --- | --- |
-| Trivial | alters no executable behavior or contract: typos, comments, documentation, formatting, a copy fix that keeps meaning and layout | `01` or `10` for their files | one line on what changes | the smallest applicable check |
+| Trivial | alters no executable behavior or contract: typos, comments, documentation, formatting, a copy fix that keeps meaning and layout | the modules routed for the files it edits | one line on what changes | the smallest applicable check |
 | Normal | alters behavior without reaching a risk area | `02`, `03`, `04`, `14`, and matching area modules | objective and criteria, each with its check | tests and checks |
 | Risk | reaches authentication, authorization, trust boundaries, secrets, storage, persisted data or schemas, public contracts, deployment, automation, agent permissions or hooks, or an irreversible operation | normal plus the area module and `05` | full | independent verification |
 
@@ -50,6 +50,7 @@ Before the first edit, state the change's level in one line.
 - Never open, display, copy, log, or commit secret values; use the configured secret mechanism, and example files for names and placeholders.
 - Treat edit-hook warnings as leads to verify, never as confirmed findings or license to change unrelated code.
 - Keep temporary and ad-hoc artifacts in `.temp/`, removing task-specific ones before closing except plans under `.temp/plans/`.
+- Start a background process, such as a server, a log follower like `tail -f`, a watcher, or a wait loop, only with a timeout or a stop the task controls, bound every wait with a time limit, and stop every one you started before reporting, above all any that cannot end on its own.
 - Before recommending a command, point to the repository script, hook, or documented command that covers it; when none does and the task repeats, offer a `.scripts/` helper.
 
 ### Language and responses
@@ -75,7 +76,7 @@ Before acting, load only the modules in `.agents/instructions/` whose condition 
 - `09-platform-and-runtime.md`: before changing runtime configuration, environments, deployment, external I/O, background work, caches, telemetry, or hot paths.
 - `10-documents.md`: before editing `README.md`, a primary reference, or `.readme/`, and before closing a change that altered a fact one of them owns.
 - `11-pending-work.md`: before answering about, recording, updating, moving, or closing pending work in `.docs/backlog.md`.
-- `12-version-control.md`: before an authorized staging, commit, ignore-rule change, or pull request.
+- `12-version-control.md`: before an authorized staging, commit, ignore-rule change, or pull request, and before introducing a path that must stay untracked.
 - `13-agent-tooling.md`: before changing client settings, tool servers, hooks, language servers, vendored skills, or declared agents.
 - `14-delegation.md`: before planning a normal or risk change, and before delegating to a subagent.
 - `15-contracts-and-automation.md`: before changing APIs, events, other shared contracts, or automation.

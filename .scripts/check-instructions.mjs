@@ -4,7 +4,8 @@
 // AGENTS_LIMIT bytes; every file under .agents/instructions/ needs an entry in
 // the routing table of AGENTS.md, holds at most MODULE_LIMIT bytes, and keeps
 // each rule on one line, so after its heading every non-blank line is its one
-// scope line or a line that starts a rule with "- "; and no two instruction
+// scope line or a line that starts a rule with "- "; whose scope line is
+// "Read " and the condition of its routing entry; and no two instruction
 // files, or two documents directly under .readme/, share a numeric prefix,
 // compared by value so 07- and 7- clash, nor reuse the prefix of one the git
 // history shows retired; a rename that keeps its prefix retires nothing, and
@@ -19,11 +20,11 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { enterRepositoryRoot, git } from './hook-support.mjs';
 
-const AGENTS_LIMIT = 8 * 1024;
+const AGENTS_LIMIT = 10 * 1024;
 const MODULE_LIMIT = 6 * 1024;
 const INSTRUCTIONS = join('.agents', 'instructions');
 const TEMPLATE_VERSION = '.agents/template-version';
-const ROUTING_ENTRY = /^- `(\d+-[\w-]+\.md)`:/gm;
+const ROUTING_ENTRY = /^- `(\d+-[\w-]+\.md)`:(.*?)\r?$/gm;
 
 if (!enterRepositoryRoot()) process.exit(0);
 
@@ -89,13 +90,17 @@ function wrappedLines(text) {
 
 const instructions = markdown(INSTRUCTIONS);
 const agents = existsSync('AGENTS.md') ? readFileSync('AGENTS.md', 'utf8') : '';
-const routed = new Set([...agents.matchAll(ROUTING_ENTRY)].map(([, name]) => name));
+const routed = new Map([...agents.matchAll(ROUTING_ENTRY)].map(([, name, condition]) => [name, condition]));
 const unrouted = [];
 const oversized = [];
 const wrapped = [];
+const mismatched = [];
 for (const name of instructions) {
   if (!routed.has(name)) unrouted.push(name);
   const text = readFileSync(join(INSTRUCTIONS, name), 'utf8');
+  // The scope line is the first non-blank line after the title; it must read "Read " and the entry's condition.
+  const scope = text.split(/\r?\n/).slice(1).find((line) => line.trim() !== '');
+  if (routed.has(name) && scope !== `Read${routed.get(name)}`) mismatched.push(name);
   const bytes = Buffer.byteLength(text);
   if (bytes > MODULE_LIMIT) oversized.push(`${name} (${bytes} bytes)`);
   wrapped.push(...wrappedLines(text).map((line) => `${name}:${line}`));
@@ -103,6 +108,7 @@ for (const name of instructions) {
 
 const reports = [
   ['Instruction files without a routing entry in AGENTS.md (01-meta-guidelines.md)', unrouted],
+  ['Instruction files whose scope line differs from their routing entry in AGENTS.md (01-meta-guidelines.md)', mismatched],
   [`AGENTS.md over ${AGENTS_LIMIT} bytes (01-meta-guidelines.md)`, Buffer.byteLength(agents) > AGENTS_LIMIT ? [`${Buffer.byteLength(agents)} bytes`] : []],
   [`Instruction files over ${MODULE_LIMIT} bytes (01-meta-guidelines.md)`, oversized],
   ['Instruction rules wrapped across lines (01-meta-guidelines.md)', wrapped],

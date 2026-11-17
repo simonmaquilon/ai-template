@@ -59,17 +59,17 @@ for (const client of ['claude', 'codex']) {
 
   test(`${client}: the instruction hook reports unrouted and oversized instruction files`, (t) => {
     const repo = makeRepo(t);
-    repo.write('AGENTS.md', `- \`01-meta.md\`: meta.\n- \`02-long.md\`: long.\n- \`100-wide.md\`: wide.\n\n${'y'.repeat(8192)}\n`);
-    repo.write('.agents/instructions/100-wide.md', '# Wide\n');
-    repo.write('.agents/instructions/01-meta.md', '# Meta\n');
-    repo.write('.agents/instructions/02-long.md', `# Long\n\nRead when long.\n\n- ${'x'.repeat(6200)}\n`);
+    repo.write('AGENTS.md', `- \`01-meta.md\`: meta.\n- \`02-long.md\`: long.\n- \`100-wide.md\`: wide.\n\n${'y'.repeat(10240)}\n`);
+    repo.write('.agents/instructions/100-wide.md', '# Wide\n\nRead wide.\n');
+    repo.write('.agents/instructions/01-meta.md', '# Meta\n\nRead meta.\n');
+    repo.write('.agents/instructions/02-long.md', `# Long\n\nRead long.\n\n- ${'x'.repeat(6200)}\n`);
     repo.write('.agents/instructions/03-unrouted.md', '# Unrouted\n');
     repo.write('sub/keep.txt', 'kept\n');
     const hook = hookFor(client, 'UserPromptSubmit', 'check-instructions.mjs');
     const result = runClientHook(client, hook, repo, { cwd: join(repo.dir, 'sub') });
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /01-meta-guidelines\.md\): 03-unrouted\.md/);
-    assert.match(result.stdout, /AGENTS\.md over 8192 bytes \(01-meta-guidelines\.md\): \d+ bytes/);
+    assert.match(result.stdout, /AGENTS\.md over 10240 bytes \(01-meta-guidelines\.md\): \d+ bytes/);
     assert.match(result.stdout, /over 6144 bytes \(01-meta-guidelines\.md\): 02-long\.md \(\d+ bytes\)/);
     assert.doesNotMatch(result.stdout, /01-meta\.md|100-wide\.md/);
   });
@@ -77,9 +77,9 @@ for (const client of ['claude', 'codex']) {
   test(`${client}: the instruction hook reports shared prefixes and wrapped rules`, (t) => {
     const repo = makeRepo(t);
     repo.write('AGENTS.md', '- `05-a.md`: a.\n- `05-b.md`: b.\n- `06-c.md`: c.\n');
-    repo.write('.agents/instructions/05-a.md', '# A\n\nRead when a.\n\n- A rule that is\n  wrapped onto a second line.\n');
-    repo.write('.agents/instructions/05-b.md', '# B\n\nRead when b.\n\n- One rule.\n');
-    repo.write('.agents/instructions/06-c.md', '# C\r\n\r\nRead when c.\r\n\r\n- One rule.\r\n- Another rule.\r\n');
+    repo.write('.agents/instructions/05-a.md', '# A\n\nRead a.\n\n- A rule that is\n  wrapped onto a second line.\n');
+    repo.write('.agents/instructions/05-b.md', '# B\n\nRead b.\n\n- One rule.\n');
+    repo.write('.agents/instructions/06-c.md', '# C\r\n\r\nRead c.\r\n\r\n- One rule.\r\n- Another rule.\r\n');
     repo.write('.readme/90-x.md', '# X\n');
     repo.write('.readme/90-y.md', '# Y\n');
     repo.write('.readme/91-z.md', '# Z\n');
@@ -93,7 +93,7 @@ for (const client of ['claude', 'codex']) {
 
   test(`${client}: the instruction hook compares prefixes by value and reports retired prefixes reused`, (t) => {
     const repo = makeRepo(t);
-    const rule = (name) => repo.write(`.agents/instructions/${name}`, `# ${name}\n\nRead when needed.\n\n- One rule.\n`);
+    const rule = (name) => repo.write(`.agents/instructions/${name}`, `# ${name}\n\nRead x.\n\n- One rule.\n`);
     repo.write('AGENTS.md', ['07-a', '7-b', '08-new', '09-kept', '11-moved', '10-new', '12-rewritten', '13-b'].map((name) => `- \`${name}.md\`: x.\n`).join(''));
     for (const name of ['07-a.md', '08-old.md', '09-first.md', '10-moved.md', '13-gone.md', '14-b.md']) rule(name);
     repo.write('.agents/instructions/12-original.md', '# Original\n\nRead when alpha.\n\n- Alpha one.\n- Alpha two.\n');
@@ -104,7 +104,7 @@ for (const client of ['claude', 'codex']) {
     repo.git('mv', '.agents/instructions/10-moved.md', '.agents/instructions/11-moved.md');
     repo.git('rm', '-q', '--', '.agents/instructions/12-original.md', '.agents/instructions/13-gone.md');
     repo.git('mv', '.agents/instructions/14-b.md', '.agents/instructions/13-b.md');
-    repo.write('.agents/instructions/12-rewritten.md', '# Rewritten\n\nRead when omega.\n\n- Omega rule with nothing in common.\n');
+    repo.write('.agents/instructions/12-rewritten.md', '# Rewritten\n\nRead x.\n\n- Omega rule with nothing in common.\n');
     repo.git('add', '--', '.agents/instructions/12-rewritten.md');
     repo.git('commit', '-q', '-m', 'retire');
     for (const name of ['7-b.md', '08-new.md', '10-new.md']) rule(name);

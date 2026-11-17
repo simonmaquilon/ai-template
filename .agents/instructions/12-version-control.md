@@ -1,6 +1,6 @@
 # Version Control
 
-Read before an authorized staging, commit, ignore-rule change, or pull request.
+Read before an authorized staging, commit, ignore-rule change, or pull request, and before introducing a path that must stay untracked.
 
 - Stage only the files of the authorized change, by explicit path, leaving unrelated or pre-existing modifications unstaged; never use bulk-staging or commit-all options, and never stage ignored files, build or dependency output, or local environment files.
 - When a change introduces a path that must stay untracked, cover it with ignore rules instead of selective staging.
