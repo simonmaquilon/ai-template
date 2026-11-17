@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { ROOT, WINDOWS, run } from './support.mjs';
@@ -92,7 +92,7 @@ import { syncBuiltinESMExports } from 'node:module';
 const original = fs.openSync;
 let fired = false;
 fs.openSync = (path, ...rest) => {
-  if (!fired && String(path).endsWith('stack.md') && (rest[0] & 3) === 1) {
+  if (!fired && String(path).includes('stack.md') && (rest[0] & 3) === 1) {
     fired = true;
     fs.rmSync(${JSON.stringify(stack)});
   }
@@ -105,9 +105,10 @@ await import('../.scripts/update-stack-doc.mjs');
   assert.equal(result.status, 0);
   assert.match(result.stdout, /not synced.*ENOENT/);
   assert.equal(existsSync(stack), false);
+  assert.deepEqual(readdirSync(join(repo.dir, '.docs')), []);
 });
 
-// The write opens without O_TRUNC and truncates the descriptor, so a document that shrinks keeps no stale tail.
+// The new content goes to a new file renamed over the document, so a document that shrinks keeps no stale tail.
 test('update-stack-doc leaves no bytes of a longer stale document behind', (t) => {
   const short = fixture(t);
   const long = fixture(t);

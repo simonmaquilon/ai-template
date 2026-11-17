@@ -11,15 +11,21 @@
 // of the checkout, it warns and uses the parent of HEAD, or the empty tree when
 // HEAD has none. A file may hold at most LIMIT lines, and one already over the
 // limit at that revision may change but must not grow. Violations go to stderr
-// with exit status 2, which both clients feed back to the model; a stop that
-// any Stop hook already continued, or a directory outside git or in another
-// repository, passes silently.
+// with exit status 2, which both clients feed back to the model; a directory
+// outside git or in another repository passes silently. A stop that any Stop
+// hook already continued is checked too, since what the agent creates during
+// such continuations counts: stop-brake.mjs bounds the blocks per session and
+// turn, none twice for the same set of violations and at most three; without
+// a session id or a turn marker it keeps no count, and a stop that was
+// continued passes. The reason a stop block gives ends
+// with a token, which keeps a continuation prompt from redoing the turn marker.
 
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { enterRepositoryRoot, git, readHookInput, toPosix } from './hook-support.mjs';
 import { exemptPaths, isSource } from './source-files.mjs';
-import { markTurnStart } from './turn-marker.mjs';
+import { mayBlock } from './stop-brake.mjs';
+import { FILE_LENGTH_TOKEN, isContinuation, markTurnStart } from './turn-marker.mjs';
 
 const LIMIT = 150;
 const PATCH_HEADER = /^\*\*\* (Add File|Update File|Move to): (.+)$/;
@@ -83,7 +89,8 @@ function realPath(full) {
 const input = process.argv.includes('--hook') ? await readHookInput() : {};
 const baseFlag = process.argv.indexOf('--base');
 let revision = baseFlag === -1 ? 'HEAD' : (process.argv[baseFlag + 1] ?? '');
-if (input.stop_hook_active === true) process.exit(0);
+const session = String(input.session_id ?? '').replace(/[^\w-]/g, '_');
+if (input.stop_hook_active === true && !session) process.exit(0);
 const origin = typeof input.cwd === 'string' ? resolve(input.cwd) : process.cwd();
 const root = enterRepositoryRoot();
 if (!root) process.exit(0);
@@ -93,11 +100,10 @@ if (baseFlag !== -1 && git(['rev-parse', '--verify', '--quiet', `${revision}^{co
   revision = parent ?? git(['hash-object', '-t', 'tree', '--stdin'], '').trim();
 }
 
-const session = String(input.session_id ?? '').replace(/[^\w-]/g, '_');
 const marker = session ? join(MARKERS, session) : null;
 if (process.argv.includes('--turn-start')) {
   try {
-    if (marker) markTurnStart(root, MARKERS, session);
+    if (marker && !isContinuation(input.prompt)) markTurnStart(root, MARKERS, session);
   } catch {}
   process.exit(0);
 }
@@ -130,11 +136,13 @@ for (const [path, previous] of candidates) {
   violations.push(`${path} (${lines} lines${baseline === null ? ', new' : `, was ${baseline}`})`);
 }
 
-if (violations.length > 0) {
+// An edit is always reported; a stop is, unless its brake says this turn has heard enough, or cannot keep its count
+// and the client says a Stop hook already continued it.
+if (violations.length > 0 && (input.tool_input || !session || mayBlock(root, MARKERS, session, violations, input.stop_hook_active !== true))) {
   console.error(
     `Source files over ${LIMIT} lines (03-code-authoring.md): ${[...new Set(violations)].join('; ')}. ` +
       'Split each along responsibility boundaries now; a file already over the limit may change but must not grow. ' +
-      'Fix the files this task changed and report any other as user-owned.',
+      `Fix the files this task changed and report any other as user-owned.${input.tool_input ? '' : ` ${FILE_LENGTH_TOKEN}`}`,
   );
   process.exit(2);
 }

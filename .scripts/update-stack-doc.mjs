@@ -8,13 +8,14 @@
 //   node .scripts/update-stack-doc.mjs --check  write nothing; name the blocks that are out of date or cannot be
 //                                               synced and exit 1, or exit 0 when every block is current
 // It writes and reports nothing when .docs/stack.md is already up to date, and a
-// block whose markers or sources are unusable stays as it is.
+// block whose markers or sources are unusable stays as it is. It writes through a temporary copy that it renames
+// over the document, and writes nothing when the document changed between its read and the replacement (safe-fs.mjs).
 
-import { closeSync, constants, existsSync, ftruncateSync, lstatSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readHookInput } from './hook-support.mjs';
-import { inFolder, openRegular } from './safe-fs.mjs';
+import { inFolder, readRegular, replaceRegular } from './safe-fs.mjs';
 import * as sources from './stack-sources.mjs';
 import { toolingRows } from './tool-versions-file.mjs';
 
@@ -79,13 +80,8 @@ function sync(write) {
 function syncStack(write) {
   const path = 'stack.md';
   if (!lstatSync(path).isFile()) return { changed: [], failed: [] };
-  const input = openRegular(path, constants.O_RDONLY);
-  let before;
-  try {
-    before = readFileSync(input, 'utf8');
-  } finally {
-    closeSync(input);
-  }
+  const [bytes, mode] = readRegular(path);
+  const before = bytes.toString('utf8');
   const eol = before.includes('\r\n') ? '\r\n' : '\n';
   const { found, failed } = blocks(before);
   const changed = new Set();
@@ -105,17 +101,8 @@ function syncStack(write) {
     last = stop;
   }
   after += before.slice(last);
-  if (write && after !== before) {
-    // Windows refuses O_TRUNC without O_CREAT (EINVAL), and O_CREAT would recreate a file removed since the read, so
-    // the descriptor is truncated after the open instead.
-    const output = openRegular(path, constants.O_WRONLY);
-    try {
-      ftruncateSync(output, 0);
-      writeFileSync(output, after);
-    } finally {
-      closeSync(output);
-    }
-  }
+  // A document another writer changed meanwhile stays as it is; the next run syncs it.
+  if (write && after !== before && !replaceRegular(path, bytes, after, mode)) return { changed: [], failed: [] };
   return { changed: [...changed], failed: [...new Set(failed)] };
 }
 

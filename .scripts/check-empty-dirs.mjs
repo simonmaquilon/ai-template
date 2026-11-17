@@ -10,6 +10,9 @@
 // even when an ignore rule hides it, and so is the .claude it leaves empty; the one
 // at the root stays, because sessions opened there use it. A non-recursive removal
 // preserves any file added during the scan, including placeholders such as .gitkeep.
+// The ignored directories are listed once, at start, so a directory another hook creates later, such as .temp/ in a
+// fresh clone, is not in that list: before an empty directory is removed, git is asked whether a rule reaches it or
+// an ancestor, and when it cannot answer the directory stays.
 
 import { spawnSync } from 'node:child_process';
 import { readdirSync, rmdirSync } from 'node:fs';
@@ -63,6 +66,11 @@ function clean(path) {
 
 const listedRuled = ruled([...ignored]);
 
+// Whether an empty directory the walk reached as not ignored may go: no rule reaches it, or it is a .cc-writes below
+// the root or the .claude that held only that one.
+const removable = (dir) => dir.endsWith('/.claude/.cc-writes') || (dir.endsWith('/.claude') && removed.includes(`${dir}/.cc-writes`))
+  || !ruled([dir]).has(dir);
+
 // hidden: git lists dir as ignored only because everything in it is, so every directory inside is ignored too.
 function walk(dir, hidden) {
   const entries = list(dir);
@@ -75,7 +83,7 @@ function walk(dir, hidden) {
     else if (!matched.has(path)) walk(path, true);
     else clean(path);
   }
-  if (dir && list(dir)?.length === 0) remove(dir);
+  if (dir && list(dir)?.length === 0 && (hidden || removable(dir))) remove(dir);
 }
 walk('', false);
 

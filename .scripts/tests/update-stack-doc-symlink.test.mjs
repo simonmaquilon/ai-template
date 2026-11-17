@@ -20,7 +20,7 @@ const original = fs.${call};
 let fired = false;
 fs.${call} = (path, ...rest) => {
   const result = ${call === 'lstatSync' ? 'original(path, ...rest)' : 'null'};
-  if (!fired && String(path).replaceAll('\\\\', '/').endsWith('stack.md') && (${when})) {
+  if (!fired && String(path).replaceAll('\\\\', '/').includes('stack.md') && (${when})) {
     fired = true;
     fs.rmSync(${JSON.stringify(join(repo.dir, '.docs', 'stack.md'))});
     fs.symlinkSync(${JSON.stringify(join(repo.dir, 'victim.txt'))}, ${JSON.stringify(join(repo.dir, '.docs', 'stack.md'))});

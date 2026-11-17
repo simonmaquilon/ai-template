@@ -42,5 +42,10 @@ export function fixture(t) {
     stack: () => readFileSync(join(dir, '.docs', 'stack.md'), 'utf8'),
     sync: (input) => run(process.execPath, [join(dir, '.scripts', 'update-stack-doc.mjs'), ...(input ? ['--hook'] : [])],
       { cwd: dir, input: input && JSON.stringify(input) }),
+    // Runs the sync as a hook after `preamble`, which patches node:fs to inject a step at a chosen point.
+    syncWith(preamble) {
+      write('.temp/patched.mjs', `import fs from 'node:fs';\nimport { syncBuiltinESMExports } from 'node:module';\n${preamble}\nsyncBuiltinESMExports();\nawait import('../.scripts/update-stack-doc.mjs');\n`);
+      return run(process.execPath, ['.temp/patched.mjs', '--hook'], { cwd: dir, input: JSON.stringify({ hook_event_name: 'UserPromptSubmit' }) });
+    },
   };
 }

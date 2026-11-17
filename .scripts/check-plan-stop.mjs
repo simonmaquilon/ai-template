@@ -2,8 +2,8 @@
 // Keeps an execution of a prompt-plan plan from ending while it can still go on within what the user authorized
 // (prompt-plan, references/execution.md, Ending an execution): it ends with that work done, or with each item left put
 // to the user as a question or accepted by the user. With --turn-start, on UserPromptSubmit, it writes a marker for the
-// session's turn under .temp/, unless the prompt carries TOKEN, as the continuation this hook causes does; with
-// --agent-start, on SubagentStart, one for the subagent, and records in each plan in execution the open report lines
+// session's turn under .temp/, unless the prompt carries TOKEN or the continuation token of check-file-length.mjs, as
+// the continuation either hook causes does (turn-marker.mjs); with --agent-start, on SubagentStart, one for the subagent, and records in each plan in execution the open report lines
 // the subagent inherits. On Stop and SubagentStop it checks the plans under .temp/plans/ that the turn, or the
 // subagent since it started, wrote, as plan-stop.mjs reads them, and blocks the stop with decision "block" and the open
 // items as the reason, which both clients hand to the agent as its next instruction. Without a turn marker it checks
@@ -17,13 +17,11 @@ import { join } from 'node:path';
 import { enterRepositoryRoot, readHookInput } from './hook-support.mjs';
 import { PLANS, lastTime, openItems, openKeys, opensFragment, planFolders, started, touchedSince } from './plan-stop.mjs';
 import { MAX_WINDOW, WINDOW_MINUTES, count, dropState, readState, writeState } from './plan-stop-state.mjs';
-import { markTurnStart } from './turn-marker.mjs';
+import { PLAN_STOP_TOKEN as TOKEN, isContinuation, markTurnStart } from './turn-marker.mjs';
 
 const MARKERS = '.temp/check-plan-stop';
 const SHOWN = 25;
 const RULE = 'prompt-plan, references/execution.md, Ending an execution';
-// A fixed string no person writes, which tells this hook's continuation prompt wherever the client places the reason.
-const TOKEN = '[check-plan-stop:continuation]';
 const BACKGROUND = new Set(['subagent', 'workflow', 'teammate']);
 const start = process.argv.includes('--turn-start') ? 'turn' : process.argv.includes('--agent-start') ? 'agent' : null;
 const id = (value) => String(value ?? '').replace(/[^\w-]/g, '_');
@@ -38,7 +36,7 @@ function guard(input, root) {
   // A marker's identity is the time it holds, which stays the same if anything moves its modification time.
   const identity = () => (time(marker) === null ? null : `marker ${readFileSync(join(markers, marker), 'latin1').slice(0, 20)}`);
 
-  if (start === 'turn' && marker && !String(input.prompt ?? '').includes(TOKEN)) markTurnStart(root, MARKERS, marker);
+  if (start === 'turn' && marker && !isContinuation(input.prompt)) markTurnStart(root, MARKERS, marker);
   if (start === 'agent' && marker) {
     const turn = session ? time(session) : null;
     markTurnStart(root, MARKERS, marker);
