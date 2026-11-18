@@ -17,6 +17,34 @@ Quien cree el proyecto sin `gh`, copiando el árbol de una versión y con su pro
 
 Abre el agente dentro de la carpeta nueva e invoca `/start` en Claude Code o `$start` en Codex, como explica [Skills de agentes](90-agent-skills.md): prepara el proyecto y completa sus referencias primarias antes de escribir código. El proyecto nuevo es un derivado, con su propio `origin`, y el sello de la plantilla actúa en él en cuanto la limpieza de `start` borra el workflow y el documento de CI de la plantilla, antes de commitear nada, como explica «Archivos sellados».
 
+## Empezar en una carpeta vacía
+
+Abre el agente en una carpeta vacía fuera de cualquier repositorio, o en la raíz de un repositorio propio recién inicializado, sin historial ni archivos en el índice y con solo su directorio `.git/`. Comprueba la ubicación física, que la carpeta superior esté fuera de cualquier árbol de trabajo de Git, y las entradas ocultas, ignoradas y los enlaces simbólicos sin seguirlos. Para invocar `start` antes de que exista el proyecto, usa la instalación personal que explica [Skills de agentes](90-agent-skills.md#preparar-un-proyecto-con-start). Elige adoptar solo la plantilla o empezar desde un mockup. Ambos recorridos de arranque usan una versión publicada que apruebes. Para un árbol con archivos propios, sigue «Adoptar la plantilla en un proyecto existente».
+
+1. Autoriza `git init` si aún no hay repositorio, y la configuración del remoto `plantilla` y la descarga de la etiqueta elegida. La URL canónica es `https://github.com/simonmaquilon/ai-template.git`. Añade el remoto según «Localizar las versiones» si falta y comprueba con `git remote get-url plantilla` que apunta a esa URL. Conserva los remotos existentes.
+2. Consulta la etiqueta exacta con `git ls-remote --exit-code --refs --tags plantilla "refs/tags/$template_version"`, donde `template_version` es la versión aprobada. Guarda el identificador del objeto publicado en `template_oid`. Si `refs/plantilla/$template_version` ya existe, comprueba que apunta a ese objeto. Si falta, descarga el objeto con `git fetch --no-tags --no-prune --no-write-fetch-head --refmap= plantilla "$template_oid"`. Guarda el commit que devuelve `git rev-parse --verify "$template_oid^{commit}"` en `template_commit`. Lee `.agents/template-version` y `.agents/template-manifest.json` con `git show` en ese commit, verifica que ambos declaran la versión elegida y compara las rutas e identificadores de blob del manifiesto con `git ls-tree -r`, sin contar el propio manifiesto ni las seis exclusiones de abajo. Detente ante cualquier discrepancia. Tras esas comprobaciones, crea la referencia si faltaba con `git update-ref --no-deref "refs/plantilla/$template_version" "$template_oid" ""`. El último argumento exige que siga sin existir en el momento de crearla.
+3. Vuelve a comprobar que la raíz está vacía salvo por `.git/`. Ejecuta desde esa raíz y, en Windows, con Git Bash, el modo de desarrollador activado y `export MSYS=winsymlinks:nativestrict`. La extracción conserva el `.gitignore` inicial y excluye las mismas seis rutas que solo validan la plantilla. Primero completa el archivo temporal. Luego `tar -k` impide sobrescribir archivos existentes. Cuando el sandbox bloquee una ruta, usa la confirmación normal de [Sandbox de agentes](91-agent-sandbox.md).
+
+   ```bash
+   (
+     set -eu
+     mkdir .temp
+     archive=
+     trap '[ -z "$archive" ] || rm -f -- "$archive"; rmdir .temp 2>/dev/null || :' EXIT
+     archive=$(mktemp .temp/template-start.XXXXXX)
+     git archive --format=tar --output="$archive" "$template_commit" -- . \
+       ':(exclude).github/workflows/template-checks.yml' ':(exclude).scripts/run-checks.mjs' \
+       ':(exclude).scripts/tests' ':(exclude).scripts/check-security-skill.mjs' \
+       ':(exclude).scripts/security-skill-hash.mjs' ':(exclude).readme/94-template-ci.md'
+     tar -xkf "$archive"
+   )
+   ```
+
+   Si se interrumpe la extracción, conserva lo que haya quedado en disco. Para reanudarla por solicitud expresa, comprueba la raíz, el remoto y la referencia aprobada, e inventaría lo presente y lo que falta respecto al árbol publicado, incluidos los tipos y destinos de los enlaces. Si hay rutas ajenas, modificadas o de origen incierto, detente. Si todas coinciden, extrae solo las rutas comprobadas que falten con la misma protección contra sobrescrituras.
+4. Comprueba que la versión, el manifiesto y los archivos adoptados coinciden con la referencia, que `.claude/skills` conserva su enlace simbólico y que las seis rutas excluidas están ausentes. Si existe `.github/`, comprueba que tenga contenido. Conserva `refs/plantilla/<versión>` para respaldar el sello. En un repositorio nuevo no hace falta crear `.temp/template-adoption`. Ejecuta `node .scripts/update-stack-doc.mjs` para actualizar el inventario generado de workflows tras excluir el CI de la plantilla. Ejecuta los checks de «Después de adoptar». Antes del primer commit, ejecuta el de longitud sin `--base`; el de enlaces simbólicos solo revisa el índice, así que comprueba también los enlaces de la extracción en disco aunque el índice esté vacío. En el recorrido de solo adopción, termina con los esqueletos sin rellenar y sin instalar un stack.
+
+Puedes dejar el proyecto local. Si eliges titular, nombre y visibilidad en GitHub y autorizas la creación, usa `gh repo create <titular>/<nombre>` con la opción de visibilidad acordada. Para vincular el proyecto local, añade `--source=.` y, si hace falta, `--remote=<nombre-libre>` solo con autorización para ese remoto. Conserva los remotos existentes. El commit y el push son operaciones separadas que requieren autorización. [Referencia de `gh repo create`](https://cli.github.com/manual/gh_repo_create).
+
 ## Adoptar la plantilla en un proyecto existente
 
 Un proyecto que ya existe, con o sin código, adopta la plantilla extrayendo sus archivos sobre los suyos; uno que ya guarda `.agents/template-version` la adoptó antes y sigue «Traer los cambios», salvo que su versión venga de una numeración anterior, como explica «Numeración anterior de versiones». Hazlo desde la raíz del proyecto y con el árbol de trabajo limpio, para que `git status` muestre cada archivo que la extracción sustituye y se pueda recuperar. En Windows, usa Git Bash con el modo de desarrollador activado, para que se puedan crear enlaces simbólicos.
