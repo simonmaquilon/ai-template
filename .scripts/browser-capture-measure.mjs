@@ -23,8 +23,16 @@ export function clippedAxes(box) {
 export function horizontalOverflow(data) {
   if (![data.clientWidth, data.scrollWidth, data.wideCount].every(number)) throw new Error('unexpected overflow data');
   const overflows = data.scrollWidth - data.clientWidth > TOLERANCE;
-  return { count: overflows ? 1 : 0, clientWidth: data.clientWidth, scrollWidth: data.scrollWidth, elementCount: data.wideCount,
+  const result = { count: overflows ? 1 : 0, clientWidth: data.clientWidth, scrollWidth: data.scrollWidth, elementCount: data.wideCount,
     elements: overflows ? data.wide.slice(0, MAX_LISTED) : [], truncated: data.truncated === true };
+  if (data.containers !== undefined) {
+    const { count, horizontalCount, elements, truncated } = data.containers;
+    if (!Number.isInteger(count) || !Number.isInteger(horizontalCount) || horizontalCount < 0 || count < horizontalCount || !Array.isArray(elements)) {
+      throw new Error('unexpected container overflow data');
+    }
+    result.containers = { count, horizontalCount, truncated: truncated === true || count > MAX_LISTED, elements: elements.slice(0, MAX_LISTED) };
+  }
+  return result;
 }
 
 export function clippedContent(data) {

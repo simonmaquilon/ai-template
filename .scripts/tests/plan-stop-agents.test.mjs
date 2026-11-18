@@ -32,7 +32,7 @@ for (const client of ['claude', 'codex']) {
     fixture.plan({ 'review/report.md': '✅ AC1 met\n✅ AC2 part one met (02)\n' });
     assert.deepEqual(answer(assert, fixture.fire('SubagentStop', input('agent-1'))), {});
     // The session's own stop still holds the fragment left open.
-    assert.match(answer(assert, fixture.fire('Stop', { stop_hook_active: false })).reason, /fragments pending, with none failed or blocked, that no marked ⏳ line names: 02/);
+    assert.match(answer(assert, fixture.fire('Stop', { stop_hook_active: false })).reason, /fragments pending and missing a final question: 02/);
   });
 
   test(`${client}: of two subagents, only the one that opened a before record answers for it`, (t) => {

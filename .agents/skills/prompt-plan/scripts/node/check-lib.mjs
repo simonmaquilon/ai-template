@@ -40,6 +40,9 @@ export const runKind = process.argv.includes('--baseline') ? 'baseline'
 const evidencePrefix = runKind === 'baseline' || runKind === 'dry-run' ? `${runKind}-` : '';
 const MAX_BUFFER = 1024 ** 3;
 const isWindows = process.platform === 'win32';
+const state = runKind === 'check' && /^\d{2}-check\.mjs$/.test(basename(process.argv[1] ?? '')) && existsSync(join(checkDir, 'state.mjs'))
+  ? await import('./state.mjs') : null;
+const stateBefore = state?.captureState(root, planDir) ?? null;
 
 // Environment for project commands, left as the baseline measured it except for NO_COLOR. isolateHome moves
 // HOME and the npm cache into the plan's .cache/ for tools the sandbox blocks in the real home directory, and on
@@ -108,6 +111,13 @@ function launch(cmd, args) {
   return { file: line, args: [], shell: true, line };
 }
 
+export function captureCommand(cmd, args, options = {}) {
+  const started = launch(cmd, args);
+  const result = spawnSync(started.file, started.args, { cwd: root, encoding: 'utf8', env: toolEnv(options), shell: started.shell, maxBuffer: MAX_BUFFER });
+  return { line: started.line, status: result.error ? null : result.status, signal: result.signal,
+    stdout: result.stdout ?? '', stderr: result.stderr ?? '', error: result.error };
+}
+
 // A path relative to the project root, where lib runs commands, for a tool that refuses absolute paths, such as a
 // browser launcher's --filename.
 export const relativeToRoot = (path) => relative(root, path);
@@ -152,14 +162,13 @@ export function runOnce(id, cmd, args, options = {}) {
     const shared = JSON.parse(readFileSync(file, 'utf8'));
     return { ...shared, output: `(result shared within this all run)\n${shared.output}` };
   }
-  let started;
+  let result;
   try {
-    started = launch(cmd, args);
+    result = captureCommand(cmd, args, options);
   } catch (error) {
     return { status: null, output: `$ ${cmd} ${args.join(' ')}\n${error.message}` };
   }
-  const result = spawnSync(started.file, started.args, { cwd: root, encoding: 'utf8', env: toolEnv(options), shell: started.shell, maxBuffer: MAX_BUFFER });
-  const outcome = { status: result.error ? null : result.status, output: `$ ${started.line}\n${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}` };
+  const outcome = { status: result.status, output: `$ ${result.line}\n${result.stdout}${result.stderr}${result.error?.message ?? ''}` };
   if (file && outcome.status === 0) {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, JSON.stringify(outcome));
@@ -287,26 +296,46 @@ export const redact = (text) => SECRET_SHAPES.reduce((masked, shape) => masked.r
 // runChecks more than once, or throws after a passing group, leaves a failing status in the logs of the passing groups, and a
 // killed process leaves none.
 const logs = [];
-function logExit(file) {
-  if (!logs.length) process.on('exit', (code) => logs.forEach((log) => appendFileSync(log, `## EXIT ${code}\n`)));
-  logs.push(file);
+function logExit(file, checks) {
+  if (!logs.length) process.on('exit', (exit) => {
+    const stateAfter = state?.captureState(root, planDir) ?? null;
+    for (const log of logs) {
+      appendFileSync(log.file, `## EXIT ${exit}\n`);
+      if (state) {
+        const name = basename(log.file);
+        const run = process.env.PROMPT_PLAN_RUN;
+        let digest;
+        try { digest = state.readLog(planDir, `review/${name}`); } catch {}
+        if (!digest) {
+          console.error(`${relativeToRoot(log.file)}: saved output could not be verified for its receipt.`);
+          continue;
+        }
+        const data = { version: 1, run: state.RUN_ID.test(run ?? '') ? run : null, stateBefore, stateAfter, exit,
+          checks: log.checks, sha256: digest.sha256 };
+        writeFileSync(log.file.replace(/\.log$/, '.json'), JSON.stringify(data), { flag: 'wx' });
+      }
+    }
+  });
+  logs.push({ file, checks });
 }
 
 export function runChecks(fragment, checks, extraLines = []) {
   const lines = [`Fragment ${fragment} · ${runKind} run · ${new Date().toISOString()} · ${root}`, ...extraLines];
   let failed = 0;
   let skipped = 0;
+  const outcomes = [];
   for (const check of checks) {
     const { status, output } = evaluate(check);
     if (status === 'FAIL') failed += 1;
     if (status === 'SKIPPED') skipped += 1;
+    outcomes.push({ id: redact(check.id), status });
     lines.push('', `## ${status} ${check.id}: ${check.label}`, String(output).trimEnd());
     console.log(redact(`${status.padEnd(7)} ${check.id}: ${check.label}`));
   }
   mkdirSync(reviewDir, { recursive: true });
   const file = freshPath(() => join(reviewDir, `${fragment}-${runKind}-${utcStamp()}.log`));
   writeFileSync(file, redact(`${lines.join('\n')}\n`));
-  logExit(file);
+  logExit(file, outcomes);
   console.log(redact(`Fragment ${fragment}: ${failed} failing${skipped ? `, ${skipped} skipped` : ''}. Evidence: ${relative(root, file)}`));
   // A failure stays: a script that runs several groups of checks fails when any of them does.
   if (failed) process.exitCode = 1;

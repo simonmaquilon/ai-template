@@ -1,4 +1,4 @@
-// Runs, in order, the checks of every fragment up to the one given (or all): node all.mjs [NN] [--slow]
+// Runs checks in order: node all.mjs [NN] [--slow] or node all.mjs --final.
 // Copied to check/all.mjs; exits non-zero when any check fails. It runs only NN-check scripts: never an NN-measure
 // script, whose run is a fragment's measurement, nor a helpers module the scripts import. Given NN without --slow,
 // the checks of earlier fragments skip their slow lines; without NN, every line runs. A command a check runs through
@@ -13,26 +13,29 @@
 // reads state outside the tree, or when git cannot give the key, as with an untracked nested repository or a tracked
 // one with changes of its own. lib's volatile lists what the key cannot see.
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { reviewDir, root } from './lib.mjs';
+import { planDir, redact, reviewDir, root, utcStamp } from './lib.mjs';
 
 const checkDir = dirname(fileURLToPath(import.meta.url));
 const onceDir = join(dirname(checkDir), '.cache', 'once');
 const passDir = join(dirname(checkDir), '.cache', 'pass');
 const DAY = 24 * 60 * 60 * 1000;
-const slow = process.argv.includes('--slow');
-const rest = process.argv.slice(2).filter((arg) => arg !== '--slow');
+const flags = process.argv.slice(2);
+const final = flags.includes('--final');
+const slow = flags.includes('--slow');
+const rest = flags.filter((arg) => arg !== '--slow' && arg !== '--final');
 const arg = rest[0];
 // Anything but a fragment number from 1, such as --baseline or 00, would compare as text and silently run no check.
-if (rest.length > 1 || (arg !== undefined && !/^(0?[1-9]|[1-9]\d)$/.test(arg))) {
-  console.error('Usage: node all.mjs [NN] [--slow]. Run a single NN-check or NN-measure script directly for a --baseline or --dry-run run.');
+if ((final && flags.length !== 1) || rest.length > 1 || (arg !== undefined && !/^(0?[1-9]|[1-9]\d)$/.test(arg))) {
+  console.error('Usage: node all.mjs [NN] [--slow] or node all.mjs --final. Run a single NN-check or NN-measure script directly for a --baseline or --dry-run run.');
   process.exit(2);
 }
 const upTo = arg ? arg.padStart(2, '0') : '99';
-const run = new Date().toISOString().replace(/[:.]/g, '-');
+const run = `${utcStamp()}-${randomUUID().replaceAll('-', '')}`;
+const fingerprints = existsSync(join(checkDir, 'state.mjs')) ? await import('./state.mjs') : null;
 // Removes the shared results that keep rejects.
 const removeShared = (keep) => {
   if (!existsSync(onceDir)) return;
@@ -69,21 +72,24 @@ const repoDigest = () => {
     return null;
   }
 };
-const REVIEW_LOG = /^\d{2}-(?:check|measure|baseline|dry-run)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.log$/;
+const REVIEW_LOG = /^(?:\d{2}-(?:check|measure|baseline|dry-run|tests-before|final-output)-\d{4}-\d{2}-\d{2}T[\w-]+Z(?:-[a-f0-9]{32})?\.(?:log|json)|final-run\.json)$/;
 const reviewNames = () => (existsSync(reviewDir) ? readdirSync(reviewDir) : []);
 // The files of check/ and of its folders, by path, except run logs.
 const files = (folder = '') => readdirSync(join(checkDir, folder), { withFileTypes: true })
   .flatMap((entry) => (entry.isDirectory() ? files(join(folder, entry.name)) : REVIEW_LOG.test(entry.name) ? [] : [join(folder, entry.name)])).sort();
 // The key of a script's pass, or null when a file that may feed it calls volatile( or the repository cannot be read.
 const passKey = (script) => {
-  const all = files().map((name) => [name, readFileSync(join(checkDir, name), 'utf8')]);
-  const feeds = all.filter(([name]) => name === script || !/^(?:\d{2}-(?:check|measure)|lib|all|evidence)\.mjs$/.test(name));
+  const inputs = fingerprints?.checkFiles(planDir);
+  const all = inputs ? inputs.map(([name, bytes]) => [name.slice('check/'.length), bytes.toString('utf8')])
+    : files().map((name) => [name, readFileSync(join(checkDir, name), 'utf8')]);
+  const feeds = all.filter(([name]) => name === script || !/^(?:\d{2}-(?:check|measure)|lib|all|evidence|state|report)\.mjs$/.test(name));
   if (feeds.some(([, text]) => /\bvolatile\s*\(/.test(text))) return null;
-  const state = repoDigest();
-  return state && digest(script, state, reviewNames().filter((name) => !REVIEW_LOG.test(name)).sort().join('\n'), ...all.flat());
+  const state = fingerprints ? fingerprints.projectFingerprint(fingerprints.captureProject(root, planDir, { cache: true })) : repoDigest();
+  const checks = inputs ? fingerprints.checkFingerprint(planDir, inputs) : digest(...all.flat());
+  return state && digest(script, state, checks, reviewNames().filter((name) => !REVIEW_LOG.test(name)).sort().join('\n'));
 };
-let failed = false;
-try {
+function interim() {
+  let failed = false;
   for (const script of readdirSync(checkDir).filter((name) => /^\d{2}-check\.mjs$/.test(name) && name.slice(0, 2) <= upTo).sort()) {
     const number = script.slice(0, 2);
     const earlier = arg !== undefined && !slow && number < upTo;
@@ -106,13 +112,74 @@ try {
     const status = spawnSync(process.execPath, [join(checkDir, script)], { stdio: 'inherit', env }).status;
     if (status !== 0) failed = true;
     // Only a run that exited with status 0 and wrote its log is a pass to keep, under the key it started with.
-    const log = reviewNames().filter((name) => !known.has(name) && name.startsWith(`${number}-check-`) && REVIEW_LOG.test(name)).sort().at(-1);
+    const log = reviewNames().filter((name) => !known.has(name) && name.startsWith(`${number}-check-`) && name.endsWith('.log') && REVIEW_LOG.test(name)).sort().at(-1);
     if (status === 0 && key && log) {
       mkdirSync(passDir, { recursive: true });
       writeFileSync(passFile, JSON.stringify({ key, log: relative(root, join(reviewDir, log)) }));
     }
   }
+  return failed ? 1 : 0;
+}
+
+async function full() {
+  const { captureIdentity, localEntry, localNames, readLocal, requiredChecks } = fingerprints ?? await import('./state.mjs');
+  const { FINAL_FILE, finalFragmentStatus, readRun, writeAtomic } = await import('./report.mjs');
+  const path = `review/${FINAL_FILE}`;
+  const evidence = { version: 1, run, status: 'running', before: null, after: null, state: { before: null, after: null }, fragments: [] };
+  const save = () => writeAtomic(planDir, path, `${JSON.stringify(evidence, null, 2)}\n`);
+  save();
+  try {
+    evidence.state.before = captureIdentity(root, planDir);
+    evidence.before = evidence.state.before?.combined ?? null;
+    for (const script of requiredChecks(planDir)) {
+      const number = script.slice(0, 2);
+      const fragment = { number, status: 'missing', logs: [] };
+      evidence.fragments.push(fragment);
+      const entry = localEntry(planDir, `check/${script}`);
+      if (!entry?.info.isFile()) {
+        console.error(`Fragment ${number}: missing regular check script.`);
+        continue;
+      }
+      const known = new Set(localNames(planDir, 'review'));
+      const env = { ...process.env, PROMPT_PLAN_RUN: run, PROMPT_PLAN_SKIP_SLOW: '0' };
+      const child = spawnSync(process.execPath, [entry.file], { env, encoding: 'utf8', maxBuffer: 1024 ** 3 });
+      const output = redact(`${child.stdout ?? ''}${child.stderr ?? ''}${child.error?.message ?? ''}`);
+      if (output) {
+        fragment.output = `${number}-final-output-${run}.log`;
+        writeAtomic(planDir, `review/${fragment.output}`, output);
+        process.stdout.write(output);
+      }
+      const logs = localNames(planDir, 'review').filter((name) => !known.has(name) && name.startsWith(`${number}-check-`))
+        .map((name) => ({ name, receipt: readRun(planDir, name) })).filter(({ receipt }) => receipt?.run === run);
+      fragment.logs = logs.map(({ name, receipt }) => ({ name, sha256: receipt.sha256 }));
+      const checkpoints = logs.flatMap(({ receipt }) => receipt.checks);
+      const receiptsMatched = logs.every(({ receipt }) => receipt.exit === child.status
+        && receipt.stateBefore === evidence.before && receipt.stateAfter === evidence.before);
+      fragment.status = child.signal || child.error || child.status === null ? 'interrupted'
+        : receiptsMatched ? finalFragmentStatus(checkpoints, child.status) : 'incomplete';
+      console.log(`Fragment ${number} final evidence: ${fragment.status}.`);
+    }
+    evidence.state.after = captureIdentity(root, planDir);
+    evidence.after = evidence.state.after?.combined ?? null;
+    const results = evidence.fragments.map((fragment) => fragment.status);
+    if (!results.length) console.error('Final run has no checks to verify.');
+    evidence.status = !evidence.before || evidence.after !== evidence.before ? 'stale'
+      : !results.length || results.some((status) => status !== 'passed' && status !== 'failed') ? 'incomplete'
+        : results.includes('failed') ? 'failed' : 'passed';
+  } catch {
+    evidence.status = 'incomplete';
+  }
+  if (JSON.parse(readLocal(planDir, path).toString('utf8')).run !== run) {
+    console.error('Another final attempt superseded this run.');
+    return 1;
+  }
+  save();
+  console.log(`Final run: ${evidence.status}. Evidence: ${relative(root, join(reviewDir, FINAL_FILE))}`);
+  return evidence.status === 'passed' ? 0 : 1;
+}
+
+try {
+  process.exitCode = final ? await full() : interim();
 } finally {
   removeShared((file) => !file.startsWith(`${run}-`));
 }
-process.exit(failed ? 1 : 0);

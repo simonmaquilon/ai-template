@@ -1,4 +1,4 @@
-// Keeps the times of the plan's executions: node time.mjs NN | wait <reason> | table
+// Keeps the times of the plan's executions: node time.mjs NN | work <reason> | wait <reason> | end | table
 // Copied to check/time.mjs; all.mjs never runs it. NN and wait append one line to review/times.log, stamped with the
 // current UTC time to the second: NN when the work on fragment NN starts or resumes, wait when a pause starts, such as
 // a question to the user, a stop, a contention, or the end of an execution. Each line closes the segment the line
@@ -12,13 +12,13 @@ import { join } from 'node:path';
 import { planDir, reviewDir } from './lib.mjs';
 
 const LOG = join(reviewDir, 'times.log');
-const USAGE = 'Usage: node time.mjs NN | wait <reason> | table, where NN is a fragment number from 01 with one build/NN-<slug>.md file and the reason is one line without tabs.';
+const USAGE = 'Usage: node time.mjs NN | work <reason> | wait <reason> | end | table, where NN is a fragment number from 01 with one build/NN-<slug>.md file and the reason is one line without tabs.';
 const refuse = (message) => {
   console.error(message);
   process.exit(2);
 };
 const iso = (ms) => new Date(ms).toISOString().replace('.000Z', 'Z');
-const LINE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\t(\d{2}|wait)\t([^\t]+)$/;
+const LINE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\t(\d{2}|work|wait|end)\t([^\t]+)$/;
 const lines = (existsSync(LOG) ? readFileSync(LOG, 'utf8').split('\n').filter(Boolean) : []).map((line, at, all) => {
   const [, stamp, kind, label] = LINE.exec(line) ?? [];
   const time = Date.parse(stamp);
@@ -33,7 +33,8 @@ const append = (kind, label) => {
   if (lines.length && now < lines.at(-1).time) refuse(`The clock reads ${iso(now)}, earlier than the last line of review/times.log; run again once it reads ${iso(lines.at(-1).time)} or later.`);
   mkdirSync(reviewDir, { recursive: true });
   appendFileSync(LOG, `${iso(now)}\t${kind}\t${label}\n`);
-  console.log(`review/times.log: ${kind === 'wait' ? `a pause, ${label},` : `the work on fragment ${kind}`} starts at ${iso(now)}.`);
+  const activity = kind === 'wait' ? `a pause, ${label},` : kind === 'work' ? label : `the work on fragment ${kind}`;
+  console.log(`review/times.log: ${kind === 'end' ? `execution ended at ${iso(now)}` : `${activity} starts at ${iso(now)}`}.`);
 };
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -53,18 +54,22 @@ function table() {
     return `${days ? `${day(d)} ` : ''}${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   };
   const cell = (text) => text.replace(/\|/g, '\\|');
-  const rows = lines.slice(0, -1).map((line, i) => ({ ...line, length: lines[i + 1].time - line.time, end: lines[i + 1].time }));
+  const rows = lines.slice(0, -1).flatMap((line, i) => line.kind === 'end' ? [] : [{ ...line, length: lines[i + 1].time - line.time, end: lines[i + 1].time }]);
+  if (!rows.length) refuse('review/times.log holds no closed segment yet.');
   const total = (wait) => rows.filter((row) => (row.kind === 'wait') === wait).reduce((sum, row) => sum + row.length, 0);
   console.log([
     '| # | Task | Start | End | Duration |',
     '| --- | --- | --- | --- | --- |',
-    ...rows.map((row) => `| ${row.kind === 'wait' ? `\u2014 | Pause: ${cell(row.label)}` : `${row.kind} | ${cell(row.label)}`} | ${at(row.time)} | ${at(row.end)} | ${duration(row.length)} |`),
+    ...rows.map((row) => `| ${row.kind === 'wait' ? `\u2014 | Pause: ${cell(row.label)}` : `${row.kind === 'work' ? '\u2014' : row.kind} | ${cell(row.label)}`} | ${at(row.time)} | ${at(row.end)} | ${duration(row.length)} |`),
     `| | **Work** | | | **${duration(total(false))}** |`,
     `| | **Pauses** | | | **${duration(total(true))}** |`,
-    `| | **Total** | **${at(first)}** | **${at(last)}** | **${duration(last - first)}** |`,
+    `| | **Total** | **${at(first)}** | **${at(rows.at(-1).end)}** | **${duration(total(false) + total(true))}** |`,
   ].join('\n'));
   const open = lines.at(-1);
-  if (open.kind !== 'wait') console.error(`Warning: fragment ${open.kind}'s segment, open since ${iso(open.time)}, is left out until a wait line closes it.`);
+  if (open.kind !== 'wait' && open.kind !== 'end') {
+    const segment = open.kind === 'work' ? 'the coordination segment' : `fragment ${open.kind}'s segment`;
+    console.error(`Warning: ${segment}, open since ${iso(open.time)}, is left out until another line closes it.`);
+  }
 }
 
 const [verb, ...rest] = process.argv.slice(2);
@@ -76,8 +81,11 @@ if (/^(?:0[1-9]|[1-9]\d)$/.test(verb ?? '') && !rest.length) {
   const slug = files[0].slice(3, -3);
   const heading = readFileSync(join(build, files[0]), 'utf8').split('\n').find((line) => /^#\s/.test(line)) ?? '';
   append(verb, heading.replace(/^#\s+/, '').replace(new RegExp(`^${verb}(?!\\w)[\\s\\W]*`), '').replace(/\s+/g, ' ').trim() || slug);
-} else if (verb === 'wait' && rest.length === 1 && rest[0].trim() && !/[\t\r\n]/.test(rest[0])) {
-  append('wait', rest[0].trim());
+} else if (['wait', 'work'].includes(verb) && rest.length === 1 && rest[0].trim() && !/[\t\r\n]/.test(rest[0])) {
+  append(verb, rest[0].trim());
+} else if (verb === 'end' && !rest.length) {
+  if (!lines.length || lines.at(-1).kind === 'end') refuse('There is no open segment to end in review/times.log.');
+  append('end', 'Execution ended');
 } else if (verb === 'table' && !rest.length) {
   table();
 } else {

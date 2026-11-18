@@ -16,6 +16,7 @@ const OUTPUT = ['.temp', 'playwright-cli'];
 const NOTES = [
   'Sizes are the browser viewport resized to the given width and height: no device pixel ratio, touch or mobile user agent.',
   'A color scheme is emulated with the prefers-color-scheme media feature, not the real switch of the application; no-preference clears the emulation.',
+  'Container overflow records the measured scroll axes. Use the layout and its behavior to decide whether scrolling is intended.',
   'clipped: a heuristic from computed styles; a deliberate crop, such as a carousel track, cannot be told from a defect.',
   'targets: each element is measured by its own box, without its label or the spacing around it; links flowing in a line of text are left out.',
   'focus: a heuristic; it compares computed styles with and without focus, and runs the blur and focus handlers of each element once more.',
@@ -122,8 +123,9 @@ const count = (measured) => (measured === undefined ? '-' : measured.error ? 'er
 
 function summarize(plan, results, left) {
   for (const r of results) {
+    const containerOverflow = r.overflow.error ? 'error' : (r.overflow.containers?.horizontalCount ?? '-');
     console.log(`${r.screenshot} ${r.url}  ${r.viewport ?? 'current-size'} ${r.scheme ?? 'no-emulation'}  overflow=${count(r.overflow)} clipped=${count(r.clipped)} `
-      + `small-targets=${count(r.targets)} console-errors=${count(r.console)} focus-without-style-change=${count(r.focus)}`);
+      + `small-targets=${count(r.targets)} console-errors=${count(r.console)} focus-without-style-change=${count(r.focus)} container-overflow-x=${containerOverflow}`);
   }
   console.log(`report: ${OUTPUT.join('/')}/${plan.name}/report.json (findings do not change the exit status; "-" is not measured, "error" is in the report)`);
   for (const line of left) console.log(`omitted: ${line}`);

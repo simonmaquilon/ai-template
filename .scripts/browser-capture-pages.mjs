@@ -19,21 +19,43 @@ const page = (body) => `() => {${SHARED}${body}}`.replace(/\s*\n\s*/g, ' ');
 export const PAGES = {
   viewport: '() => [window.innerWidth, window.innerHeight]',
   settle: 'async () => { await document.fonts?.ready; await new Promise((resolve) => setTimeout(resolve, 250)); return document.readyState; }',
-  // Document width against the width of its viewport, and the elements that reach past it without a clipping ancestor.
+  // Document width against its viewport, plus the dimensions of visible dialogs and content scrollers.
   overflow: page(`
     const root = document.documentElement;
     const clientWidth = root.clientWidth;
     const clipped = (el) => { for (let p = el.parentElement; p && p !== root; p = p.parentElement) { if (getComputedStyle(p).overflowX !== 'visible') return true; } return false; };
+    const nodes = document.querySelectorAll('*');
+    const elements = Array.prototype.slice.call(nodes, 0, LIMIT);
     const wide = [];
     if (root.scrollWidth > clientWidth) {
-      for (const el of all()) {
+      for (const el of elements) {
         const box = el.getBoundingClientRect();
         if (box.width > 0 && box.height > 0 && box.right > clientWidth + 1 && visible(el) && !clipped(el)) wide.push({ el, right: Math.round(box.right) });
       }
     }
     wide.sort((a, b) => b.right - a.right);
     const listed = wide.slice(0, 20).map(({ el, right }) => ({ selector: name(el), text: text(el), right }));
-    return { clientWidth, scrollWidth: root.scrollWidth, wide: listed, wideCount: wide.length, truncated: document.querySelectorAll('*').length > LIMIT };
+    const scrolls = (value) => value === 'auto' || value === 'scroll';
+    const containers = [];
+    for (const el of elements) {
+      if (el === root || el === document.body) continue;
+      const { clientWidth, scrollWidth, clientHeight, scrollHeight } = el;
+      if (clientWidth <= 1 || clientHeight <= 1) continue;
+      const style = getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') continue;
+      const dialog = el.tagName.toLowerCase() === 'dialog' || ['dialog', 'alertdialog'].includes(el.getAttribute('role'));
+      if (!dialog && !scrolls(style.overflowX) && !scrolls(style.overflowY)) continue;
+      const axes = [];
+      if (scrollWidth - clientWidth > 1) axes.push('x');
+      if (scrollHeight - clientHeight > 1) axes.push('y');
+      containers.push({ selector: name(el), dialog, clientWidth, scrollWidth, clientHeight, scrollHeight, axes });
+    }
+    const horizontal = (item) => Number(item.axes.includes('x'));
+    containers.sort((a, b) => horizontal(b) - horizontal(a) || Number(b.dialog) - Number(a.dialog));
+    const truncated = nodes.length > LIMIT;
+    return { clientWidth, scrollWidth: root.scrollWidth, wide: listed, wideCount: wide.length, truncated,
+      containers: { count: containers.length, horizontalCount: containers.filter(horizontal).length, truncated: truncated || containers.length > 20,
+        elements: containers.slice(0, 20) } };
   `),
   // Boxes whose content is larger than they are while they hide it on that axis; the decision is made outside the page.
   clipped: page(`

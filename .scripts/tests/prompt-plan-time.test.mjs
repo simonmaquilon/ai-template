@@ -79,6 +79,26 @@ test('prompt-plan time: table shows dates when the lines span days, and warns th
   assert.match(table.stderr, /fragment 02's segment, open since 2026-11-12T09:00:05Z, is left out/);
 });
 
+test('prompt-plan time: work records coordination and end freezes it without accruing a gap', (t) => {
+  const { log, time, read } = makePlan(t);
+  assert.equal(time('work', 'Coordinate the next change').status, 0);
+  assert.equal(time('end').status, 0);
+  assert.equal(time('end').status, 2);
+  assert.match(read(), /\twork\tCoordinate the next change\n.*\tend\t/);
+  writeFileSync(log, [
+    ['14:00:00', 'work', 'Coordinate the next change'], ['14:01:00', '01', 'Surface'], ['14:03:00', 'end', 'Execution ended'],
+    ['14:30:00', 'work', 'Integrate review'], ['14:31:00', 'end', 'Execution ended'],
+  ].map(([at, kind, label]) => `2026-11-11T${at}Z\t${kind}\t${label}\n`).join(''));
+  const table = time('table');
+  assert.equal(table.status, 0, table.stderr);
+  assert.equal(table.stderr, '');
+  assert.match(table.stdout, /Coordinate the next change .*1 min 00 s/);
+  assert.match(table.stdout, /Integrate review .*1 min 00 s/);
+  assert.match(table.stdout, /\*\*Work\*\* .*4 min 00 s/);
+  assert.match(table.stdout, /\*\*Total\*\* .*4 min 00 s/);
+  assert.doesNotMatch(table.stdout, /27 min/);
+});
+
 test('prompt-plan time: misuse and refusals exit 2 and write nothing', (t) => {
   const { log, time, read } = makePlan(t);
   for (const args of [[], ['1'], ['04'], ['00'], ['01', 'extra'], ['wait'], ['wait', ' '], ['wait', 'a\tb'], ['wait', 'a\nb'], ['wait', 'a', 'b'], ['table', 'x'], ['stop']]) {

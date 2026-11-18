@@ -1,32 +1,46 @@
 #!/usr/bin/env node
 // Keeps an execution of a prompt-plan plan from ending while it can still go on within what the user authorized
-// (prompt-plan, references/execution.md, Ending an execution): it ends with that work done, or with each item left put
-// to the user as a question or accepted by the user. With --turn-start, on UserPromptSubmit, it writes a marker for the
+// (prompt-plan, references/execution.md, Ending an execution). A matching final question or subagent handoff can pause
+// open work. With --turn-start, on UserPromptSubmit, it writes a marker for the
 // session's turn under .temp/, unless the prompt carries TOKEN or the continuation token of check-file-length.mjs, as
 // the continuation either hook causes does (turn-marker.mjs); with --agent-start, on SubagentStart, one for the subagent, and records in each plan in execution the open report lines
 // the subagent inherits. On Stop and SubagentStop it checks the plans under .temp/plans/ that the turn, or the
 // subagent since it started, wrote, as plan-stop.mjs reads them, and blocks the stop with decision "block" and the open
 // items as the reason, which both clients hand to the agent as its next instruction. Without a turn marker it checks
-// only a plan whose times.log has a fragment's segment open; a subagent without a marker, such as one of the client's
+// only a plan whose times.log has a work segment open; a subagent without a marker, such as one of the client's
 // own, is never checked, nor a stop while a background subagent, workflow, or teammate runs. plan-stop-state.mjs
 // bounds the blocks and lets the stop through, with a warning to the user, at its limits or when it cannot keep its
 // count; it never relies on stop_hook_active. Its own errors never block: it exits 0 with a warning.
 
-import { lstatSync, readFileSync, readdirSync } from 'node:fs';
+import { lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { enterRepositoryRoot, readHookInput } from './hook-support.mjs';
-import { PLANS, lastTime, openItems, openKeys, opensFragment, planFolders, started, touchedSince } from './plan-stop.mjs';
+import { PLANS, hasCurrentEvidence, lastTime, openItems, openKeys, opensWork, planFolders, started, touchedSince } from './plan-stop.mjs';
+import { finalQuestions } from './plan-stop-questions.mjs';
 import { MAX_WINDOW, WINDOW_MINUTES, count, dropState, readState, writeState } from './plan-stop-state.mjs';
 import { PLAN_STOP_TOKEN as TOKEN, isContinuation, markTurnStart } from './turn-marker.mjs';
 
 const MARKERS = '.temp/check-plan-stop';
 const SHOWN = 25;
 const RULE = 'prompt-plan, references/execution.md, Ending an execution';
+const PROVENANCE = 'Approval provenance is unavailable for this client. Open items stay pending, including ones with report marks.';
 const BACKGROUND = new Set(['subagent', 'workflow', 'teammate']);
 const start = process.argv.includes('--turn-start') ? 'turn' : process.argv.includes('--agent-start') ? 'agent' : null;
 const id = (value) => String(value ?? '').replace(/[^\w-]/g, '_');
 
-function guard(input, root) {
+async function statusChecker() {
+  const source = new URL('../.agents/skills/prompt-plan/scripts/node/check-report.mjs', import.meta.url);
+  try {
+    if (lstatSync(source, { throwIfNoEntry: false })?.isFile() && realpathSync.native(source) === fileURLToPath(source)) {
+      const { checkStatus } = await import(source.href);
+      if (typeof checkStatus === 'function') return checkStatus;
+    }
+  } catch {}
+  return null;
+}
+
+function guard(input, root, checkStatus) {
   const session = id(input.session_id);
   const subagent = start === 'agent' || input.hook_event_name === 'SubagentStop';
   const marker = session && (!subagent ? session : id(input.agent_id) && `${session}--${id(input.agent_id)}`);
@@ -42,7 +56,7 @@ function guard(input, root) {
     markTurnStart(root, MARKERS, marker);
     for (const plan of planFolders(root)) {
       try {
-        if (started(root, plan) && (turn === null ? opensFragment(lastTime(root, plan)) : touchedSince(root, plan, turn))) {
+        if (started(root, plan) && (turn === null ? opensWork(lastTime(root, plan)) : touchedSince(root, plan, turn))) {
           writeState(root, plan, actor, { turn: identity(), keys: openKeys(root, plan) });
         }
       } catch {}
@@ -57,19 +71,34 @@ function guard(input, root) {
   const until = subagent ? Math.min(Infinity, ...readdirSync(markers).filter((name) => name.startsWith(`${session}--`) && name !== marker)
     .map(time).filter((other) => other !== null && other > from)) : Infinity;
   const [blocked, notes] = [[], []];
+  const eligible = [];
   for (const plan of planFolders(root)) {
-    const where = `${PLANS}/${plan}`;
     try {
       if (!started(root, plan)) continue;
       const turn = from === null ? `open ${lastTime(root, plan)}` : identity();
       const stored = readState(root, plan, actor);
       const prior = stored?.turn === turn ? stored : null;
       if (prior?.released) continue;
-      if (!(from === null ? opensFragment(lastTime(root, plan)) : touchedSince(root, plan, from) || prior?.fingerprint)) continue;
-      const { items, unreadable } = openItems(root, plan, subagent ? { since: from, until, keys: prior?.keys } : null);
+      if (!(from === null ? opensWork(lastTime(root, plan)) : touchedSince(root, plan, from) || prior?.fingerprint)) continue;
+      eligible.push({ plan, turn, stored, prior });
+    } catch (error) {
+      notes.push(`check-plan-stop: ${PLANS}/${plan} could not be checked (${error?.message ?? error}), so its execution was let through.`);
+    }
+  }
+  const questions = finalQuestions(input, subagent);
+  for (const { plan, turn, stored, prior } of eligible) {
+    const where = `${PLANS}/${plan}`;
+    try {
+      const matching = questions.filter((question) => question.plan ? question.plan === plan : eligible.length === 1);
+      const { items, unreadable } = openItems(root, plan, subagent ? { since: from, until, keys: prior?.keys } : null, matching);
       if (unreadable) {
         notes.push(`check-plan-stop: ${where}: could not read ${unreadable.join(' and ')}, so its execution was not checked.`);
         continue;
+      }
+      if (input.hook_event_name === 'Stop') {
+        const evidence = checkStatus?.(root, join(root, where));
+        if (evidence?.active) items.push(...evidence.diagnostics);
+        if (!checkStatus && hasCurrentEvidence(root, plan)) items.push('Could not load the checked-in evidence evaluator for this plan.');
       }
       if (items.length === 0) {
         if (subagent || !stored?.times?.length) dropState(root, plan, actor);
@@ -79,27 +108,28 @@ function guard(input, root) {
       const result = count(root, plan, actor, stored, turn, items);
       if (result.verdict === 'release') {
         if (subagent) dropState(root, plan, actor);
-        notes.push(`check-plan-stop (${RULE}): ${where} ended with ${items.length} open items that were neither resolved nor put to you as a question`
-          + `${result.lost ? ', and the hook could not keep its count in the plan\'s .cache/, so it let the stop through' : ''}: ${items.slice(0, 5).join('; ')}. Ask the agent to resume them or decide them.`);
+        const brake = result.lost ? 'the hook could not keep its count in the plan’s .cache/' : 'the continuation limit was reached';
+        notes.push(`check-plan-stop (${RULE}): ${where} still has ${items.length} open ${items.length === 1 ? 'item' : 'items'}. The turn may end because ${brake}: ${items.slice(0, 5).join('; ')}. ${PROVENANCE}`);
         continue;
       }
       const shown = items.slice(0, SHOWN).map((item) => `- ${item}`);
       if (items.length > SHOWN) shown.push(`- and ${items.length - SHOWN} more`);
       blocked.push([`${where}, continuation ${result.blocks} of at most ${MAX_WINDOW} in ${WINDOW_MINUTES} minutes${result.last ? ', the last one this hook forces' : ''}:`, ...shown,
-        ...(result.last ? [`If you cannot resolve them now, your reply must end with that question to the user; the next stop${result.window ? '' : ' with these same open items'} goes through.`] : [])].join('\n'));
+        ...(result.last ? [`The next stop${result.window ? '' : ' with these same open items'} goes through with an open-items warning.`] : [])].join('\n'));
     } catch (error) {
       notes.push(`check-plan-stop: ${where} could not be checked (${error?.message ?? error}), so its execution was let through.`);
     }
   }
   const message = notes.length > 0 ? { systemMessage: notes.join('\n') } : {};
   if (blocked.length === 0) return message;
+  const scope = eligible.length > 1 ? ' Add [plan-folder-name] after each item identifier or fragment number when multiple plans are in scope.' : '';
+  const next = subagent
+    ? 'Hand each unresolved decision to the coordinator in your final message with "- Handoff [P-01] Should …?" or "- Handoff fragment 02 Should …?".'
+    : 'Give each open report line a unique [P-01]-style identifier after its status or [partial] marker. For a decision only the user can settle, ask a specific question on its own final-message line as "- [P-01] Should …?" with the options and the recommended one first. Name any related fragment numbers on its ⏳ report line.';
   return {
     decision: 'block',
-    reason: `The plan execution cannot end yet (${RULE}): it ends only with what the user authorized done, or with each item left put to the user as a question or accepted by the user.\n${blocked.join('\n')}\n`
-      + 'Go on with each item within what the user authorized. For one the user did not authorize, such as a fragment beyond those the user asked to run, or one only the user can settle, '
-      + 'ask the user through the question mechanism, with its options and the recommended one first, never assuming the answer, and only then mark its report line "[asked the user YYYY-MM-DD]", '
-      + 'or "[accepted by the user YYYY-MM-DD]" once the user accepts it as it stands; a marked \u23f3 line that names fragments, or a range of them such as 02-04, covers them. A subagent, which cannot ask the user, hands that '
-      + `question to its caller in its final message and marks the line as asked; the fragments outside the part delegated to it are not its own. ${TOKEN}`,
+    reason: `The plan execution has open items (${RULE}).\n${blocked.join('\n')}\n${PROVENANCE} `
+      + `Go on with each item within what the user authorized. ${next}${scope} ${TOKEN}`,
     ...message,
   };
 }
@@ -107,7 +137,8 @@ function guard(input, root) {
 try {
   const raw = await readHookInput();
   const root = enterRepositoryRoot();
-  const output = root ? guard(raw && typeof raw === 'object' ? raw : {}, root) : {};
+  const checker = root && !start && raw?.hook_event_name === 'Stop' ? await statusChecker() : null;
+  const output = root ? guard(raw && typeof raw === 'object' ? raw : {}, root, checker) : {};
   if (Object.keys(output).length > 0) process.stdout.write(`${JSON.stringify(output)}\n`);
 } catch (error) {
   if (!start) process.stdout.write(`${JSON.stringify({ systemMessage: `check-plan-stop: the plan execution could not be checked (${error?.message ?? error}), so the stop goes through.` })}\n`);

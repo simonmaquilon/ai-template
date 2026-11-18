@@ -229,6 +229,18 @@ Cierra la adopción en este orden:
 4. Haz el commit de la adopción con todo lo anterior. Sin `refs/plantilla/<versión-nueva>` en el git local, los archivos adoptados, la versión y el manifiesto van en el mismo commit, porque el sello solo respalda lo que guarda el commit que registró el manifiesto, como explica «Archivos sellados».
 5. Cierra la adopción con `node .scripts/check-template-seal.mjs --adoption-end`, que exige ese commit: se niega y nombra lo pendiente mientras el manifiesto no esté commiteado tal como está, un archivo sellado difiera de él o le falte ese respaldo. Tómalo de la versión nueva o regístralo en la lista, corrige el commit, por ejemplo con `git commit --amend`, y repítelo.
 
+## Migrar planes activos a 7.0.0
+
+Después de adoptar la plantilla, detén la ejecución del plan que quieras actualizar y comprueba que ninguna sesión siga editándolo. Desde la raíz del proyecto, pasa la carpeta de ese plan de forma explícita.
+
+```bash
+node .agents/skills/prompt-plan/scripts/node/migrate.mjs .temp/plans/2026-11-16-ejemplo
+```
+
+El comando compara los helpers copiados con los originales de 6.2.0. Un plan de una versión anterior también puede migrar si sus copias coinciden byte por byte. Si alguna falta o difiere, el comando se detiene antes de sustituir archivos. Conserva los parches, su numeración y sus evidencias. Un plan cuyos fragmentos ya estén todos terminados conserva sus scripts y tablas históricas.
+
+Al reanudar el plan, comprueba sus supuestos, declara los checks requeridos y la corrida de cierre en los fragmentos pendientes, y ejecuta los checks afectados. La sesión coordinadora vuelve a ejecutar `node .temp/plans/2026-11-16-ejemplo/check/all.mjs --final` con el árbol congelado y refresca el informe con `node .temp/plans/2026-11-16-ejemplo/check/report.mjs --refresh`. Las marcas antiguas de pregunta o aceptación siguen como historial. Una aceptación que el cliente no puede acreditar queda pendiente. Consulta el [hook de ejecución de planes](92-agent-hooks.md) para el formato de las preguntas y los relevos.
+
 ## Después de adoptar
 
 - `.temp/template-adoption` ya no existe, y el sello vuelve a restaurar los archivos sellados en cada mensaje.

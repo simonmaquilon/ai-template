@@ -37,8 +37,31 @@ test('the overflow function lists the elements that reach past the viewport with
   const wide = element('div', { id: 'hero', className: 'hero big extra', innerText: '  A  wide\n block ', box: { width: 600, height: 50, right: 700 }, parentElement: root });
   const hidden = element('div', { box: { width: 600, height: 50, right: 800 }, computed: { display: 'none' } });
   const found = run('overflow', [root, track, inside, wide, hidden], { root });
-  assert.deepEqual(found, { clientWidth: 400, scrollWidth: 700, wideCount: 1, truncated: false, wide: [{ selector: 'div#hero.hero.big', text: 'A wide block', right: 700 }] });
+  assert.deepEqual(found, { clientWidth: 400, scrollWidth: 700, wideCount: 1, truncated: false, wide: [{ selector: 'div#hero.hero.big', text: 'A wide block', right: 700 }],
+    containers: { count: 0, horizontalCount: 0, truncated: false, elements: [] } });
   assert.deepEqual(run('overflow', [wide]).wide, [], 'a document that does not overflow lists nothing');
+});
+
+test('the overflow function measures dialogs and inner scrollers independently of the document width', () => {
+  const box = { width: 280, height: 200, right: 320 };
+  const size = { clientWidth: 280, scrollWidth: 280, clientHeight: 200, scrollHeight: 200, box };
+  const dialog = element('dialog', { id: 'edit', ...size });
+  const horizontal = element('div', { id: 'body', ...size, scrollWidth: 510, parentElement: dialog, computed: { overflowX: 'auto' } });
+  const vertical = element('section', { id: 'history', ...size, scrollHeight: 450, parentElement: dialog, computed: { overflowY: 'scroll' } });
+  const hidden = element('aside', { ...size, attributes: { role: 'alertdialog' }, computed: { display: 'none' } });
+  const found = run('overflow', [dialog, horizontal, vertical, hidden]);
+  assert.equal(found.clientWidth, found.scrollWidth);
+  assert.equal(found.wideCount, 0);
+  assert.deepEqual(found.containers, { count: 3, horizontalCount: 1, truncated: false, elements: [
+    { selector: 'div#body', dialog: false, clientWidth: 280, scrollWidth: 510, clientHeight: 200, scrollHeight: 200, axes: ['x'] },
+    { selector: 'dialog#edit', dialog: true, clientWidth: 280, scrollWidth: 280, clientHeight: 200, scrollHeight: 200, axes: [] },
+    { selector: 'section#history', dialog: false, clientWidth: 280, scrollWidth: 280, clientHeight: 200, scrollHeight: 450, axes: ['y'] },
+  ] });
+  const many = run('overflow', Array.from({ length: 25 }, () => vertical)).containers;
+  assert.equal(many.count, 25);
+  assert.equal(many.horizontalCount, 0);
+  assert.equal(many.elements.length, 20);
+  assert.equal(many.truncated, true);
 });
 
 test('the clipped function returns only boxes that hide an overflowing axis, and skips form controls', () => {

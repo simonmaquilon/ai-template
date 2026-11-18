@@ -19,6 +19,7 @@ function makePlan(t) {
   mkdirSync(check, { recursive: true });
   cpSync(join(BUNDLED, 'check-lib.mjs'), join(check, 'lib.mjs'));
   cpSync(join(BUNDLED, 'check-all.mjs'), join(check, 'all.mjs'));
+  for (const name of ['state', 'report']) cpSync(join(BUNDLED, `check-${name}.mjs`), join(check, `${name}.mjs`));
   repo.write('count.mjs', "import { appendFileSync } from 'node:fs';\nappendFileSync(`.temp/${process.argv[2]}.txt`, 'x');\n");
   repo.write('flaky.mjs', "import { appendFileSync, existsSync } from 'node:fs';\n"
     + "const ran = existsSync('.temp/flaky.txt');\nappendFileSync('.temp/flaky.txt', 'x');\nprocess.exit(ran ? 0 : 1);\n");
@@ -73,6 +74,18 @@ test('prompt-plan all: runOnce reuses only a successful result, within one all r
   const env = JSON.parse(leaked.stdout);
   assert.equal(env.PROMPT_PLAN_RUN, undefined);
   assert.equal(env.PROMPT_PLAN_SKIP_SLOW, undefined);
+});
+
+test('prompt-plan all: standalone final runs every slow line and shares runOnce within that run', (t) => {
+  const { node, runs } = makePlan(t);
+  const final = node('all.mjs', ['--final']);
+  assert.equal(final.status, 1, `${final.stdout}${final.stderr}`);
+  assert.match(final.stdout, /skipSlow 01 false/);
+  assert.match(final.stdout, /FAIL\s+S: slow/);
+  assert.match(final.stdout, /skipSlow 02 false/);
+  assert.doesNotMatch(final.stdout, /SKIPPED/);
+  assert.equal(runs('count'), 1);
+  assert.equal(runs('flaky'), 2);
 });
 
 test('prompt-plan lib: commands get their arguments literally, and on Windows lib refuses those cmd.exe cannot pass', (t) => {

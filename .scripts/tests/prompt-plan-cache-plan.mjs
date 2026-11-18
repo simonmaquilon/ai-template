@@ -16,6 +16,10 @@ export function makePlan(t, { volatile = false, scripts = {} } = {}) {
   mkdirSync(check, { recursive: true });
   cpSync(join(BUNDLED, 'check-lib.mjs'), join(check, 'lib.mjs'));
   cpSync(join(BUNDLED, 'check-all.mjs'), join(check, 'all.mjs'));
+  for (const name of ['state', 'report']) {
+    const source = join(BUNDLED, `check-${name}.mjs`);
+    if (existsSync(source)) cpSync(source, join(check, `${name}.mjs`));
+  }
   for (const number of ['01', '02', '03']) {
     const line = `condition('C', 'line', ${number === '01' ? "process.env.BREAK !== 'fail'" : 'true'})`;
     writeFileSync(join(check, `${number}-check.mjs`), scripts[number] ?? `import { appendFileSync } from 'node:fs';\nimport { condition, runChecks${volatile ? ', volatile' : ''} } from './lib.mjs';\n`
@@ -26,11 +30,12 @@ export function makePlan(t, { volatile = false, scripts = {} } = {}) {
   const env = { ...process.env };
   delete env.PROMPT_PLAN_RUN;
   delete env.PROMPT_PLAN_SKIP_SLOW;
-  const all = (args = [], extra = {}) => spawnSync(process.execPath, [join(check, 'all.mjs'), ...args], { cwd: repo.dir, encoding: 'utf8', env: { ...env, ...extra } });
+  const node = (script, args = [], extra = {}) => spawnSync(process.execPath, [join(check, script), ...args], { cwd: repo.dir, encoding: 'utf8', env: { ...env, ...extra } });
+  const all = (args = [], extra = {}) => node('all.mjs', args, extra);
   const runs = () => ['01', '02', '03'].map((number) => {
     const file = join(repo.dir, '.temp', `count-${number}.txt`);
     return existsSync(file) ? readFileSync(file, 'utf8').length : 0;
   });
   const cached = (result) => [...result.stdout.matchAll(CACHED)].map((found) => found[1]);
-  return { repo, check, all, runs, cached, plan: join(repo.dir, '.temp', 'plans', 'p') };
+  return { repo, check, all, node, runs, cached, plan: join(repo.dir, '.temp', 'plans', 'p') };
 }

@@ -20,10 +20,10 @@ for (const client of ['claude', 'codex']) {
     assert.match(stop(fixture).reason, /continuation 2 of at most 20 in 30 minutes:/);
     const last = stop(fixture);
     assert.match(last.reason, /continuation 3 of at most 20 in 30 minutes, the last one this hook forces:/);
-    assert.match(last.reason, /your reply must end with that question to the user; the next stop with these same open items goes through/);
+    assert.match(last.reason, /The next stop with these same open items goes through with an open-items warning/);
     const released = stop(fixture);
     assert.equal(released.decision, undefined);
-    assert.match(released.systemMessage, /ended with 1 open items that were neither resolved nor put to you as a question: review\/report\.md:2: ⏳ Push/);
+    assert.match(released.systemMessage, /still has 1 open item\. The turn may end because the continuation limit was reached: review\/report\.md:2: ⏳ Push/);
     assert.deepEqual(stop(fixture), {}, 'the same turn stays released');
     fixture.old();
     fixture.turn();
@@ -37,7 +37,7 @@ for (const client of ['claude', 'codex']) {
     fixture.turn();
     for (let n = 1; n <= 20; n++) {
       fixture.plan({ 'build/00-index.md': DONE, 'review/report.md': `⏳ item ${n}\n` });
-      assert.match(stop(fixture).reason, new RegExp(`continuation ${n} of at most 20 in 30 minutes${n === 20 ? ', the last one[^]*the next stop goes through' : ':'}`));
+      assert.match(stop(fixture).reason, new RegExp(`continuation ${n} of at most 20 in 30 minutes${n === 20 ? ', the last one[^]*The next stop goes through' : ':'}`));
     }
     fixture.plan({ 'review/report.md': '⏳ item 21\n' });
     assert.ok(stop(fixture).systemMessage);
@@ -95,7 +95,7 @@ for (const client of ['claude', 'codex']) {
     for (let n = 0; n < 4; n++) {
       const passed = stop(fixture);
       assert.equal(passed.decision, undefined);
-      assert.match(passed.systemMessage, /could not keep its count in the plan's \.cache\/, so it let the stop through/);
+      assert.match(passed.systemMessage, /The turn may end because the hook could not keep its count in the plan’s \.cache\//);
     }
     assert.equal(existsSync(join(fixture.repo.dir, '.temp', 'elsewhere', 'stop-guard')), false);
   });

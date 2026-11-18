@@ -2,10 +2,11 @@
 // earlier fragment whose last passing run saw the same scripts, tree, refs, and evidence, and prints where it passed.
 
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { makePlan } from './prompt-plan-cache-plan.mjs';
+import { WINDOWS } from './support.mjs';
 
 test('prompt-plan pass cache: a second all NN reuses the pass of earlier fragments, never the fragment NN itself, and names the log', (t) => {
   const { all, runs, cached } = makePlan(t);
@@ -49,6 +50,19 @@ test('prompt-plan pass cache: an edit of any file in check/ invalidates every pa
   assert.deepEqual(cached(all(['03'])), [], 'a file the scripts import is part of the key');
 });
 
+test('prompt-plan pass cache: binary check inputs and the required inventory share the final fingerprint', (t) => {
+  const { check, all, cached, plan, repo } = makePlan(t);
+  const input = join(check, 'input.bin');
+  writeFileSync(input, Buffer.from([0x80]));
+  assert.equal(all(['03']).status, 0);
+  assert.deepEqual(cached(all(['03'])), ['01', '02']);
+  writeFileSync(input, Buffer.from([0x81]));
+  assert.deepEqual(cached(all(['03'])), []);
+  assert.deepEqual(cached(all(['03'])), ['01', '02']);
+  repo.write(`${plan.slice(repo.dir.length + 1)}/build/04-required.md`, '# 04\n<!-- check: required -->\n');
+  assert.deepEqual(cached(all(['03'])), []);
+});
+
 test('prompt-plan pass cache: the contents of an untracked file are part of the key', (t) => {
   const plan = makePlan(t);
   plan.repo.write('new.txt', 'one\n');
@@ -56,6 +70,21 @@ test('prompt-plan pass cache: the contents of an untracked file are part of the 
   assert.deepEqual(plan.cached(plan.all(['03'])), ['01', '02']);
   plan.repo.write('new.txt', 'two\n');
   assert.deepEqual(plan.cached(plan.all(['03'])), []);
+});
+
+test('prompt-plan pass cache: the index and untracked modes contribute to the shared fingerprint', (t) => {
+  const { all, cached, repo } = makePlan(t);
+  repo.write('new.txt', 'untracked');
+  assert.equal(all(['03']).status, 0);
+  assert.deepEqual(cached(all(['03'])), ['01', '02']);
+  repo.write('kept.txt', 'index-only change');
+  assert.equal(repo.git('add', 'kept.txt').status, 0);
+  repo.write('kept.txt', 'before\n');
+  assert.deepEqual(cached(all(['03'])), []);
+  if (!WINDOWS) {
+    chmodSync(join(repo.dir, 'new.txt'), 0o755);
+    assert.deepEqual(cached(all(['03'])), []);
+  }
 });
 
 test('prompt-plan pass cache: a failed or interrupted run stores nothing', (t) => {

@@ -529,7 +529,7 @@ export const newUntracked = (wasUntracked) => git(['ls-files', '-z', '--others',
 // with it, so they store nothing, and returns the entries of the paths wanted names, and its changes since changesFrom
 // as rawChanges gives them, before that folder goes. It also returns staged, the files left out for having been
 // untracked at the before record, and added, those left out as new.
-export function snapshotTree({ base, adopted = [], untracked, transient = false, wanted = [], leaveNew = false, changesFrom } = {}) {
+export function snapshotTree({ base, adopted = [], untracked, transient = false, wanted = [], leaveNew = false, leftTracked = [], changesFrom } = {}) {
   sweepIndexes();
   const realIndex = git(['rev-parse', '--git-path', 'index']).trim();
   const realIndexPath = isAbsolute(realIndex) ? realIndex : join(root, realIndex);
@@ -581,7 +581,7 @@ export function snapshotTree({ base, adopted = [], untracked, transient = false,
     const added = leaveNew
       ? listed.filter(([mode, path]) => mode !== '160000' && !staged.has(path) && !baseKeys.has(pathKey(path)) && !adoptedKeys.has(pathKey(path))).map(([, path]) => path)
       : [];
-    const dropped = new Set([...staged, ...added]);
+    const dropped = new Set([...staged, ...added, ...leftTracked]);
     if (dropped.size) run(['update-index', '--force-remove', '-z', '--stdin'], nul([...dropped]));
     const tracked = indexed.filter((path) => !dropped.has(path));
     // Naming an ignored path in an exclude pathspec would make git add fail, so the plan is named only when it is not.
@@ -604,6 +604,8 @@ export function snapshotTree({ base, adopted = [], untracked, transient = false,
     // does one under a link, which update-index refuses, or under a file, since no file of the working tree is there.
     const taken = adopted.filter((path) => inRealFolders(path) && !onDisk(path)?.isDirectory());
     if (taken.length) run(['update-index', '--add', '--remove', '-z', '--stdin'], nul(taken));
+    // Preserve the before entries without adding the foreign files' current bytes to any snapshot object.
+    if (leftTracked.length) run(['update-index', '-z', '--index-info'], leftTracked.map((path) => `${baseEntries.get(path)}\t${path}\0`).join(''));
     const tree = run(['write-tree']).trim();
     // An adopted file comes back below, so it is no file left out.
     const entries = wanted.length ? treeEntries(run, tree, wanted) : {};

@@ -1,7 +1,7 @@
 // Records a fragment while it is executed:
 //   node record.mjs <NN> before    before the fragment starts; lists the untracked files that version control does not
 //                                  ignore, which no patch carries and none can be adopted later
-//   node record.mjs <NN> after [--include <path>]... [--leave <path>]...
+//   node record.mjs <NN> after [--include <path>]... [--leave <path>]... [--leave-tracked <file>]...
 //                                  once its checks pass; where the plan has check/NN-check.mjs it refuses, before
 //                                  writing anything, unless the newest review/NN-check log stamped after NN.before shows
 //                                  a passing run; writes NN.patch and NN.state, sets the status of the fragment's row in
@@ -12,14 +12,16 @@
 //                                  later record captures it, never one the working tree held by that name before it;
 //                                  each --leave keeps an untracked file or folder out of the patch on purpose, and every
 //                                  new untracked file that version control does not ignore needs one or the other; it
+//                                  leaves a tracked file of another task out with --leave-tracked; it
 //                                  lists the untracked files of the before record that are gone and that its snapshot
 //                                  does not hold, and the files staged since that it held untracked, or that were created
 //                                  inside a folder it held untracked whole, which no patch carries; where the file system
 //                                  ignores case it refuses, before writing anything, a rename that only changes case made
 //                                  with git mv, of a file or of a folder, which apply and revert cannot replay, and a name
 //                                  it adds or deletes in another case than an earlier fragment's state records it
-//   node record.mjs <NN> restore  puts the tracked and adopted files back to the `before` snapshot of a fragment
-//                                  that has no `after` yet, such as a failed one about to be retried, lists the new
+//   node record.mjs <NN> restore [--leave-tracked <file>]...
+//                                  puts the tracked and adopted files back to the `before` snapshot of a fragment
+//                                  that has no `after` yet, except foreign tracked files named by --leave-tracked; lists the new
 //                                  untracked and staged files, which it leaves in place, and the files it writes back
 //                                  that the index no longer tracks, which stay untracked
 //   Each phase refuses to run while core.ignorecase is false or unset on a file system that ignores case, and, before any
@@ -29,8 +31,9 @@
 //   until git add tracks it again or, in after, the agent deletes one the fragment removed with git rm that a build or
 //   install wrote again. after and restore also refuse a change to a file the index or the before snapshot holds in two
 //   spellings, the deletion of one included, which no patch can replay.
-import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import {
   NAMES, PARTIAL, PATCH, PartialWrite, adoptedFiles, beforeFile, caseOnlyRenames, fragments, git, gitlinks, ignoresCase, inPlan, inRealFolders,
@@ -39,12 +42,13 @@ import {
   planDir, untrackedList, untrackedNow, writePatch,
 } from './common.mjs';
 
-const USAGE = 'Usage: node record.mjs <NN> before|after|restore, where after alone takes --include <path> to adopt a file and --leave <path> to leave a file or folder out, each repeated per path';
+const USAGE = 'Usage: node record.mjs <NN> before|after|restore, where after takes --include <file> and --leave <path>, and after and restore take --leave-tracked <file>, each repeated per path';
 const [arg, phase, ...options] = process.argv.slice(2);
 const [number] = selectFragments(arg, { allowAll: false });
 if (!['before', 'after', 'restore'].includes(phase)) refuse(USAGE);
 requireCaseConfig();
-if (options.length % 2 || options.some((option, i) => (i % 2 === 0 ? !['--include', '--leave'].includes(option) : !option)) || (options.length && phase !== 'after')) refuse(USAGE);
+const flags = phase === 'after' ? ['--include', '--leave', '--leave-tracked'] : phase === 'restore' ? ['--leave-tracked'] : [];
+if (options.length % 2 || options.some((option, i) => (i % 2 === 0 ? !flags.includes(option) : !option))) refuse(USAGE);
 // Each path given as one from the repository's root, through its real folders, which must lie inside it, outside the
 // plan and outside any .git folder, compared without case where the file system ignores it.
 const foldCase = ignoresCase() ? (text) => text.toLowerCase() : (text) => text;
@@ -106,13 +110,78 @@ const report = (heading, lines) => {
   if (lines.length) console.log([`Fragment ${number}: ${heading}:`, ...lines].join('\n  '));
 };
 
+const literalPath = (path) => !/[:\\\x00-\x1f\x7f]/.test(path) && path.split('/').every((part) => part && !['.', '..', '.git'].includes(part.toLowerCase()));
+const overlaps = (path, owned) => path === owned || path.startsWith(`${owned}/`) || owned.startsWith(`${path}/`);
+
+// An exclusion can only leave an existing regular tracked file at the same path, so it cannot split a rename.
+function trackedExclusions(tree) {
+  const paths = given('--leave-tracked');
+  if (!paths.length) return [];
+  requireSnapshot(tree, `Fragment ${number}'s before snapshot`);
+  const build = join(planDir, 'build');
+  const fragment = readdirSync(build).find((name) => name.startsWith(`${number}-`) && name.endsWith('.md'));
+  const declared = [...readFileSync(join(build, fragment), 'utf8').matchAll(/^\s*<!-- write-path: (.+?) -->\s*$/gm)].map(([, path]) => path);
+  const bad = declared.filter((path) => !literalPath(path));
+  if (bad.length) refuse(`--leave-tracked cannot verify the write paths of fragment ${number}:`, bad);
+  const owned = declared.map(pathKey);
+  const previousFiles = fragments().filter((fragment) => fragment < number)
+    .flatMap((fragment) => Object.keys(loadState(fragment)?.files ?? {}).map((path) => [fragment, pathKey(path)]));
+  const indexPaths = new Map();
+  for (const record of git(['ls-files', '--stage', '-z']).split('\0').filter(Boolean)) {
+    const split = record.indexOf('\t');
+    const path = record.slice(split + 1);
+    const key = pathKey(path);
+    indexPaths.set(key, [...(indexPaths.get(key) ?? []), [record.slice(0, split), path]]);
+  }
+  const beforeFiles = git(['ls-tree', '-z', '-r', '--full-tree', tree], { env: storeEnv() }).split('\0').filter(Boolean);
+  const original = new Map(beforeFiles.map((entry) => [entry.slice(entry.indexOf('\t') + 1), entry.slice(0, 6)]));
+  const included = new Set(include.map(pathKey));
+  return paths.map((path) => {
+    const key = pathKey(path);
+    if (!literalPath(path) || (inPlan(planPath) && overlaps(key, pathKey(planPath)))) refuse(`--leave-tracked ${JSON.stringify(path)} must name a literal repository-relative file outside the plan and .git.`);
+    if (owned.some((item) => overlaps(key, item)) || included.has(key)) refuse(`--leave-tracked ${path} overlaps a write path of fragment ${number}.`);
+    const earlier = previousFiles.find(([, item]) => overlaps(key, item));
+    if (earlier) refuse(`--leave-tracked ${path} overlaps a path of earlier fragment ${earlier[0]}.`);
+    const entries = indexPaths.get(key);
+    const [entry, name] = entries?.[0] ?? [];
+    if (entries?.length !== 1 || !/^100(?:644|755) \S+ 0$/.test(entry) || !/^100(?:644|755)$/.test(original.get(name))
+      || !inRealFolders(name) || !onDisk(name)?.isFile()) {
+      refuse(`--leave-tracked ${path} must name the same regular tracked file in the before snapshot, the index, and on disk. Leave a rename outside the plan.`);
+    }
+    return name;
+  }).filter((path, index, all) => all.indexOf(path) === index);
+}
+
+// The first two lines are the patch script's legacy record. New plans also record the project evidence projection.
+async function beforeEvidence() {
+  const helper = join(planDir, 'check', 'state.mjs');
+  if (!lstatSync(helper, { throwIfNoEntry: false })) return '';
+  try {
+    if (lstatSync(helper).isFile() && lstatSync(dirname(helper)).isDirectory()) {
+      const { captureProject, declaredTestPaths } = await import(pathToFileURL(helper).href);
+      const state = captureProject(root, planDir);
+      if (state) return `${JSON.stringify({ ...state, testPaths: declaredTestPaths(planDir, number) })}\n`;
+    }
+  } catch {
+    // Capture failure leaves both before records unwritten.
+  }
+  refuse(`Fragment ${number} cannot record before: project evidence could not be captured.`);
+}
+
 // A plan that checks the fragment records it only after a passing run of that check: the newest check log in review/
 // stamped after the before record, ending with the exit status 0 that lib writes when its process exits, and with no
 // failing or skipped line, which lib writes as one "## FAIL" or "## SKIPPED" heading per line. A killed process leaves
 // no exit status, and a log of an all run for a later fragment skips slow lines. A stamp in the future is no evidence.
-function requirePassingCheck() {
+async function requirePassingCheck() {
   const script = `check/${number}-check.mjs`;
-  if (!existsSync(join(planDir, script))) return;
+  const stateHelper = join(planDir, 'check', 'state.mjs');
+  if (!existsSync(join(planDir, script))) {
+    if (lstatSync(stateHelper, { throwIfNoEntry: false })?.isFile() && lstatSync(dirname(stateHelper)).isDirectory()) {
+      const { buildChecks } = await import(pathToFileURL(stateHelper).href);
+      if (buildChecks(planDir).get(number)?.required) refuse(`Fragment ${number} cannot finish: its required check ${script} is missing.`);
+    }
+    return;
+  }
   const since = Math.floor(statSync(before).mtimeMs);
   const stamp = new RegExp(`^${number}-check-(\\d{4}-\\d{2}-\\d{2})T(\\d{2})-(\\d{2})-(\\d{2})-(\\d{3})Z\\.log$`);
   const reviewDir = join(planDir, 'review');
@@ -121,10 +190,26 @@ function requirePassingCheck() {
     return day ? [{ name, time: Date.parse(`${day}T${hour}:${minute}:${second}.${millis}Z`) }] : [];
   }).filter(({ time }) => time >= since).sort((a, b) => (a.name < b.name ? -1 : 1));
   const latest = stamped.at(-1);
-  const log = latest && readFileSync(join(reviewDir, latest.name), 'utf8');
-  if (log?.startsWith(`Fragment ${number} \u00b7 check run`) && log.endsWith('\n## EXIT 0\n') && !/^## (?:FAIL|SKIPPED) /m.test(log) && latest.time <= Date.now() + 5000) return;
+  const helper = join(planDir, 'check', 'report.mjs');
+  const versioned = lstatSync(helper, { throwIfNoEntry: false });
+  if (latest?.time <= Date.now() + 5000) {
+    if (versioned) {
+      if (versioned.isFile() && lstatSync(dirname(helper)).isDirectory() && lstatSync(stateHelper, { throwIfNoEntry: false })?.isFile()) {
+        const { readRun } = await import(pathToFileURL(helper).href);
+        const { captureState } = await import(pathToFileURL(stateHelper).href);
+        const receipt = readRun(planDir, latest.name);
+        const current = captureState(root, planDir);
+        if (current && receipt?.stateBefore === current && receipt.stateAfter === current && receipt.exit === 0
+          && receipt.checks.every(({ status }) => status === 'PASS')) return;
+      }
+    } else {
+      const log = readFileSync(join(reviewDir, latest.name), 'utf8');
+      if (log.startsWith(`Fragment ${number} \u00b7 check run`) && log.endsWith('\n## EXIT 0\n') && !/^## (?:FAIL|SKIPPED) /m.test(log)) return;
+    }
+  }
   const shown = inPlan(planPath) ? `${planPath}/${script}` : join(planDir, script);
-  refuse(`Refusing to record fragment ${number}: ${latest ? `its latest check run after the before record, ${latest.name}, does not pass, is not complete, or is stamped in the future` : 'no run of its check after the before record passed'}. Run "node ${shown}" from the project root, fix what it reports, and record again.`);
+  const reason = versioned ? 'has stale or incomplete evidence, or did not pass' : 'does not pass, is not complete, or is stamped in the future';
+  refuse(`Refusing to record fragment ${number}: ${latest ? `its latest check run after the before record, ${latest.name}, ${reason}` : 'no run of its check after the before record passed'}. Run "node ${shown}" from the project root, fix what it reports, and record again.`);
 }
 
 // Sets the status of the fragment's row in build/00-index.md, the row whose first cell links NN-<slug>.md, to done; with
@@ -181,16 +266,18 @@ if (phase === 'before') {
   const { applied, mismatched } = prior.length ? position(prior) : { applied: 0 };
   if (applied === null) refuse(`Fragment ${number} cannot start: these files match no recorded fragment state:`, mismatched.length ? mismatched : ['(a mix of states from different fragments)']);
   if (applied < prior.length) refuse(`Fragment ${number} cannot start until the fragments recorded before it are applied: run apply ${prior.slice(applied).join(', ')} first.`);
+  const evidence = await beforeEvidence();
   const { tree } = snapshotTree({ adopted: adoptedFiles(number) });
   writeFileSync(untrackedFile(number), gzipSync(JSON.stringify(untrackedNow())));
-  writeFileSync(before, `${tree}\n${root}\n`);
+  writeFileSync(before, `${tree}\n${root}\n${evidence}`);
   console.log(`Fragment ${number}: initial state recorded.`);
   // Files earlier fragments adopted are carried by their patches, so they are no part of this listing.
   const adoptedKeys = new Set(adoptedFiles(number).map(pathKey));
   report('untracked files that version control does not ignore, which no patch carries and which cannot be adopted later', newUntracked((path) => adoptedKeys.has(pathKey(path))));
 } else if (phase === 'after') {
   const { tree: from, untracked } = beforeRecord();
-  requirePassingCheck();
+  await requirePassingCheck();
+  const leftTracked = trackedExclusions(from);
   const twoSpellings = requireOneSpelling(`Refusing to record fragment ${number}`, from, 'its before snapshot');
   requireIndexed(from, `Refusing to record fragment ${number}`, 'its before snapshot',
     `${TRACK_AGAIN}; delete instead each one the fragment removed with git rm, from the index and the disk, that a build or install wrote again, never one taken out of the index alone`);
@@ -280,7 +367,7 @@ if (phase === 'before') {
       refuse(`Refusing to record fragment ${number}: a rename that only changes case, of a file or of a folder, cannot be recorded on this file system, since apply and revert cannot replay it. Renamed only in case:\n  ${[...within, ...across].join('\n  ')}\nTo record it, ${advice}. Report every pair above as \u26a0\ufe0f outside every patch.`);
     }
   };
-  const snapshot = { base: from, adopted: [...adoptedFiles(number), ...include], untracked };
+  const snapshot = { base: from, adopted: [...adoptedFiles(number), ...include], untracked, leftTracked };
   // Both entries of a file the index or the before snapshot holds in two spellings read the one file on disk, so a change
   // shows twice, and apply and revert would write the file twice over, or find it deleted under one spelling only.
   const refuseDoubled = (changes) => {
@@ -299,7 +386,8 @@ if (phase === 'before') {
   checks(files);
   // The patch is written as bytes; a fragment that changes no file gets an empty patch and a state that lists no file.
   writeFileSync(patchFile(number), Object.keys(files).length ? git([...PATCH, from, to], { binary: true, env: storeEnv() }) : Buffer.alloc(0));
-  writeFileSync(stateFile(number), `${JSON.stringify({ root, beforeTree: from, afterTree: to, files, included: include, left: leave }, null, 2)}\n`);
+  const exclusions = leftTracked.length ? { leftTracked } : {};
+  writeFileSync(stateFile(number), `${JSON.stringify({ root, beforeTree: from, afterTree: to, files, included: include, left: leave, ...exclusions }, null, 2)}\n`);
   rmSync(before);
   rmSync(untrackedFile(number));
   console.log(`Fragment ${number}: ${Object.keys(files).length} file(s) in ${number}.patch and ${number}.state.`);
@@ -308,6 +396,7 @@ if (phase === 'before') {
   report('nested repositories with uncommitted work of their own, which no patch carries', dirtyNested(to));
   report('renamed only in case, which git does not record on this file system, so no patch carries the new names', caseOnlyRenames(to));
   report('files staged since its before record that the working tree held untracked then, or created inside a folder it held untracked whole, which no patch carries', staged);
+  report('foreign tracked files left outside the patch', leftTracked);
   // A folder entry stands for files never listed one by one, so only the names that are files come. The before snapshot
   // holds an adopted file, so the patch records its deletion and revert brings it back. A name under a link reads another file, one of the link's target, so it is no file of the working tree and is gone.
   report('files untracked at the before record that are gone now, which no patch carries, so revert cannot bring them back',
@@ -316,11 +405,12 @@ if (phase === 'before') {
 } else if (phase === 'restore') {
   if (existsSync(stateFile(number))) refuse(`Fragment ${number} is already recorded; use revert.mjs instead.`);
   const { tree: initial, untracked } = beforeRecord();
+  const leftTracked = trackedExclusions(initial);
   const twoSpellings = requireOneSpelling(`Refusing to restore fragment ${number}`, initial, 'its before snapshot');
   requireIndexed(initial, `Refusing to restore fragment ${number}`, 'its before snapshot',
     'track each again with git add -- <file>, with -f for an ignored one, after keeping a copy of any that holds work that is not the fragment\'s, since the restore then writes the before snapshot\'s contents over it');
   // A file staged during the fragment is as much left in place as an untracked one, since a restore writes nothing to it.
-  const { tree: now, added, staged } = snapshotTree({ base: initial, adopted: adoptedFiles(number), untracked, leaveNew: true });
+  const { tree: now, added, staged } = snapshotTree({ base: initial, adopted: adoptedFiles(number), untracked, leaveNew: true, leftTracked });
   requireSnapshot(initial, `Fragment ${number}'s before snapshot`);
   const changes = rawChanges(now, initial);
   // Both entries of such a file read the one file on disk, so the way back would write it twice over.
@@ -369,4 +459,5 @@ if (phase === 'before') {
   // file it wrote back where git rm or git mv had taken it out of the index and off the disk.
   report('files written back that the index no longer tracks, as after git rm or git mv during the fragment, so they stay untracked; track each again with git add -- <file>, with -f for an ignored one',
     outsideIndex(initialPaths));
+  report('foreign tracked files left as they are', leftTracked);
 }
