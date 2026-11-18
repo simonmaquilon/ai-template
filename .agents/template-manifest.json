@@ -1,5 +1,5 @@
 {
-  "version": "6.1.0",
+  "version": "6.1.1",
   "files": {
     ".agents/instructions/01-meta-guidelines.md": "255420c5c4826772392994dd48873122b3b1d96b",
     ".agents/instructions/02-change-workflow.md": "1fb15f5af5bdf13ffd8298a7eb3fd49fa93deefd",
@@ -67,7 +67,7 @@
     ".agents/skills/start/agents/openai.yaml": "5b1f887a9138416870f64ba2fe21602e4a59cfa7",
     ".agents/skills/start/references/documents.md": "87a0e736c07ce6787cef876cc5a874d4e6113d19",
     ".agents/skills/start/references/tooling.md": "b50722cd281db4db10db3ae2376e4a26481eac7b",
-    ".agents/template-version": "dfda3e0b4f011bb0ab65e8585ae0ba122cf8f120",
+    ".agents/template-version": "f3b5af39e430ec7c408661a8e8e671abca51a3ca",
     ".agents/tool-versions.json": "79dc80d9e0578b1f1fec5fc4b38803a8f941a51b",
     ".claude/agents/copilot-haiku.md": "9ca9da743fd99f38a027a6d6d7ae1ad8a28f8649",
     ".claude/agents/copilot-opus.md": "4f34c8e0c538b1d6f0aeb9ba39fb534d1906ac3b",
