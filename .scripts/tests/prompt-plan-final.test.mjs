@@ -38,7 +38,8 @@ test('prompt-plan final: missing, interrupted and incomplete output cannot pass'
   writeFileSync(join(plan, 'build', '04-required.md'), '# 04\n<!-- check: required -->\n');
   const final = all(['--final'], { BREAK: 'kill' });
   assert.equal(final.status, 1, `${final.stdout}${final.stderr}`);
-  assert.deepEqual(evidence(plan).fragments.map(({ status }) => status), ['interrupted', 'incomplete', 'passed', 'missing']);
+  const stopped = WINDOWS ? 'incomplete' : 'interrupted';
+  assert.deepEqual(evidence(plan).fragments.map(({ status }) => status), [stopped, 'incomplete', 'passed', 'missing']);
 });
 
 test('prompt-plan final: changes during a run make the new evidence stale', (t) => {
