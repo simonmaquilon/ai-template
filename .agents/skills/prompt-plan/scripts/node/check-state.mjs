@@ -236,10 +236,15 @@ export function declaredTestPaths(planDir, number) {
   return paths.sort();
 }
 
+// The checks the final run needs: each NN-check script present, each fragment marked required, and each fragment that
+// keeps its build file and has a saved run of its check, so a check deleted without a mark still counts as missing.
 export function requiredChecks(planDir) {
   const scripts = localNames(planDir, 'check').filter((name) => /^\d{2}-check\.mjs$/.test(name) && NUMBER.test(name.slice(0, 2)));
-  const marked = [...buildChecks(planDir)].filter(([, fragment]) => fragment.required).map(([number]) => `${number}-check.mjs`);
-  return [...new Set([...scripts, ...marked])].sort();
+  const fragments = buildChecks(planDir);
+  const marked = [...fragments].filter(([, fragment]) => fragment.required).map(([number]) => `${number}-check.mjs`);
+  const ran = new Set(localNames(planDir, 'review').filter((name) => CHECK_LOG.test(name)).map((name) => name.slice(0, 2)));
+  const deleted = [...fragments.keys()].filter((number) => ran.has(number)).map((number) => `${number}-check.mjs`);
+  return [...new Set([...scripts, ...marked, ...deleted])].sort();
 }
 
 class InputLimitError extends Error {}

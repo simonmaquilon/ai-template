@@ -12,7 +12,7 @@ const RULES = [
   '.agents/skills/prompt/references/coding-and-ui-prompts.md',
 ];
 
-test('finding 20: repository instructions and generated-prompt guidance require every new-view check', () => {
+test('finding 20: guidance requires every new-view check in the repository instructions and the generated-prompt rules', () => {
   for (const path of RULES) {
     const rules = readFileSync(join(ROOT, path), 'utf8');
     const view = rules.split('\n').find((line) => /For (a )?new views? (or|and) dialogs?/.test(line)) ?? '';
@@ -26,7 +26,7 @@ test('finding 20: repository instructions and generated-prompt guidance require 
   }
 });
 
-test('finding 20: native component import fails when missing and resolves when present', (t) => {
+test('finding 20: a simulated view module fails to import a missing native component and resolves it when present', (t) => {
   const scratch = join(ROOT, '.temp');
   mkdirSync(scratch, { recursive: true });
   const dir = mkdtempSync(join(scratch, 'closure-ui-'));

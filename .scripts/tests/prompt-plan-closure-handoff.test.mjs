@@ -81,7 +81,7 @@ await runChecks('01', [condition('AC1', 'read kept.txt', readFileSync('kept.txt'
   assert.deepEqual(Object.keys(state.files), handoff.paths);
 });
 
-test('finding 15: the executor checks the written handoff before resuming the same record', () => {
+test('finding 15: guidance requires the executor to check the written handoff before resuming the same record', () => {
   assert.match(EXECUTION, /written handoff with the base revision, paths changed, decisions by ID, check commands and evidence, and the next exact check/);
   const replacement = EXECUTION.split('\n').find((line) => line.startsWith('- A replacement executor')) ?? '';
   assert.match(replacement, /reads the written handoff.*confirms its base revision, paths, decisions, and recorded evidence.*then starts with the next check/);
@@ -112,7 +112,7 @@ test('finding 16: a consecutive coordinator block keeps E2E and protected-script
   }
 });
 
-test('finding 19: a replacement reviewer receives the unfinished pass and the original correction limit', () => {
+test('finding 19: guidance requires a replacement reviewer to receive the unfinished pass and the original correction limit', () => {
   const handoff = { diff: '42d00d', criteria: ['AC1', 'AC2'], findings: ['AC1 met'], checks: ['build passed'], spent: 2, pending: 'AC2' };
   const rule = REVIEW.split('\n').find((line) => line.startsWith('- Reviewer handoff:')) ?? '';
   for (const [field, phrase] of Object.entries({ diff: /same diff/, criteria: /same diff and criteria/, findings: /completed findings/,

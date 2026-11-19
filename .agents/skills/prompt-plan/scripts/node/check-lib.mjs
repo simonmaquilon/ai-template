@@ -5,8 +5,9 @@
 // is delivered or a fragment added later runs. It writes only to review/ and to the plan's .cache/, when a check isolates a
 // tool or an all run shares a command's result or keeps a pass.
 // runChecks masks values shaped like secrets, through redact, in everything it writes to the review/ log and prints to
-// the console. The result runOnce shares within an all run is temporary, removed by all, and parsed by checks, so it
-// stays whole, as do the evidence files a script writes itself: a script never puts a secret in either.
+// the console, and keeps the output runOnce shares within an all run redacted too, so a later call of the run reads the
+// masked text; the call that ran the command returns it whole, for the check to parse. The evidence files a script writes
+// itself stay whole: a script never puts a secret in one.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
@@ -158,7 +159,8 @@ export const volatile = (check) => ({ ...check, volatile: true });
 // A command several checks of one all run need, such as a build: once it succeeds, the later checks of the run reuse
 // its result, which all.mjs removes when the run ends; a failed run of it, or a run outside all, is not reused.
 // The same id with another command, arguments, or options runs again. Returns { status, output }; a reused output
-// starts with a line that says so, which the log shows when a line's detail carries that output.
+// starts with a line that says so, which the log shows when a line's detail carries that output, and is the redacted
+// text, so a check that parses what a command prints should parse it in the call that ran it.
 export function runOnce(id, cmd, args, options = {}) {
   if (!/^[\w-]+$/.test(id)) throw new Error(`A runOnce id holds only letters, digits, "-" and "_": ${id}`);
   const run = process.env.PROMPT_PLAN_RUN;
@@ -177,7 +179,7 @@ export function runOnce(id, cmd, args, options = {}) {
   const outcome = { status: result.status, output: `$ ${result.line}\n${result.stdout}${result.stderr}${result.error?.message ?? ''}` };
   if (file && outcome.status === 0) {
     mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, JSON.stringify(outcome));
+    writeFileSync(file, JSON.stringify({ ...outcome, output: redact(outcome.output) }));
   }
   return outcome;
 }
@@ -284,9 +286,12 @@ export async function withServer(cmd, args, url, fn, options = {}) {
 }
 
 // Masks values shaped like secrets with [REDACTED], keeping the key or prefix: key/value pairs such as Password=x,
-// "api_key": "x", or --password=x, a flag followed by its value, the password of a URL, and authorization credentials.
+// "api_key": "x", or --password=x, a flag followed by its value, the password of a URL, and authorization credentials;
+// and, with no key before them, tokens by their prefix (GitHub ghp_ and github_pat_, sk- keys such as sk-ant- and
+// sk-proj-, AWS AKIA and ASIA key ids, Slack xox tokens, JWTs) and the body of a private key block, closed or not.
 // A key starts after anything but a letter or digit, so DB_PASSWORD and User Password match and PASSWORD_HASH_ALGO and
-// secretary do not. Every repeat is bounded or stops at a character the next part never matches, so each runs in linear time.
+// secretary do not; a token prefix starts the same way, so task-1234 does not match. Every repeat is bounded or stops at a
+// character the next part never matches, and a lookbehind keeps a run from being rescanned from inside, so each runs in linear time.
 const KEY = '(?:password|passwd|pwd|secret|token|(?:api|access|private|secret)[_-]?key)';
 const VALUE = String.raw`(?:"(?:[^"\\\r\n]|\\.)*"?|'(?:[^'\\\r\n]|\\.)*'?|[^\s;,&"']+)`;
 const SECRET_SHAPES = [
@@ -295,6 +300,13 @@ const SECRET_SHAPES = [
   /([a-z][a-z0-9+.-]{0,31}:\/\/[^\s/@:"']*:)[^\s/"']+(?=@)/gi,
   /(?<![a-z0-9])(Authorization["']?[ \t]*[:=][ \t]*["']?Basic[ \t]+)[^\s"']+/gi,
   /(?<![a-z0-9])(Bearer[ \t]+)[a-z0-9._~+/=-]+/gi,
+  /(?<![A-Za-z0-9])(gh[pousr]_)[A-Za-z0-9]{20,}/g,
+  /(?<![A-Za-z0-9])(github_pat_)[A-Za-z0-9_]{20,}/g,
+  /(?<![A-Za-z0-9-])(sk-)[A-Za-z0-9_-]{20,}/g,
+  /(?<![A-Za-z0-9])(A[KS]IA)[A-Z0-9]{16}(?![A-Z0-9])/g,
+  /(?<![A-Za-z0-9])(xox[bpars]-)[A-Za-z0-9-]{10,}/g,
+  /(?<![A-Za-z0-9_-])(eyJ)[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+/g,
+  /(-----BEGIN [A-Z ]{0,30}PRIVATE KEY-----)[\s\S]*?(?=-----END [A-Z ]{0,30}PRIVATE KEY-----|$)/g,
 ];
 export const redact = (text) => SECRET_SHAPES.reduce((masked, shape) => masked.replace(shape, '$1[REDACTED]'), String(text));
 

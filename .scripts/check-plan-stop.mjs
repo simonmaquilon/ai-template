@@ -69,7 +69,11 @@ function guard(input, root, checkStatus) {
       const turn = from === null ? `open ${lastTime(root, plan)}` : identity();
       const stored = readState(root, plan, actor);
       const prior = stored?.turn === turn ? stored : null;
-      if (prior?.released) continue;
+      if (prior?.released) {
+        // Without a turn marker the release lasts as long as the open segment, so only a marked turn repeats the notice.
+        if (from !== null) notes.push(`check-plan-stop (${RULE}): ${PLANS}/${plan} was let through earlier in this turn with open items, which stay pending.`);
+        continue;
+      }
       if (!(from === null ? opensWork(lastTime(root, plan)) : touchedSince(root, plan, from) || prior?.fingerprint)) continue;
       eligible.push({ plan, turn, stored });
     } catch (error) {

@@ -237,7 +237,7 @@ Después de adoptar la plantilla, detén la ejecución del plan que quieras actu
 node .agents/skills/prompt-plan/scripts/node/migrate.mjs .temp/plans/2026-11-16-ejemplo
 ```
 
-El comando compara los helpers copiados con los originales de 6.2.0 y de 7.0.0, de modo que un plan creado o migrado con cualquiera de las dos versiones puede migrar. Un plan de una versión anterior también puede migrar si sus copias coinciden byte por byte. Si alguna falta o difiere, el comando se detiene antes de sustituir archivos. Conserva los parches, su numeración y sus evidencias. Un plan cuyos fragmentos ya estén todos terminados conserva sus scripts y tablas históricas.
+El comando compara los helpers copiados con los originales de 6.2.0, de 7.0.0 y de 7.0.1, de modo que un plan creado o migrado con cualquiera de las tres versiones puede migrar. Un plan de una versión anterior también puede migrar si sus copias coinciden byte por byte. Si alguna falta o difiere, el comando se detiene antes de sustituir archivos. Conserva los parches, su numeración y sus evidencias. Un plan cuyos fragmentos ya estén todos terminados conserva sus scripts y tablas históricas.
 
 Al reanudar el plan, comprueba sus supuestos, declara los checks requeridos y la corrida de cierre en los fragmentos pendientes, y ejecuta los checks afectados. La sesión coordinadora vuelve a ejecutar `node .temp/plans/2026-11-16-ejemplo/check/all.mjs --final` con el árbol congelado y refresca el informe con `node .temp/plans/2026-11-16-ejemplo/check/report.mjs --refresh`. Las marcas antiguas de pregunta o aceptación siguen como historial. Una aceptación que el cliente no puede acreditar queda pendiente. Consulta el [hook de ejecución de planes](92-agent-hooks.md) para el formato de las preguntas y los relevos.
 

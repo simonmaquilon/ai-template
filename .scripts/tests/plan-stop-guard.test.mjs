@@ -24,7 +24,9 @@ for (const client of ['claude', 'codex']) {
     const released = stop(fixture);
     assert.equal(released.decision, undefined);
     assert.match(released.systemMessage, /still has 1 open item\. The turn may end because the continuation limit was reached: review\/report\.md:2: ⏳ Push/);
-    assert.deepEqual(stop(fixture), {}, 'the same turn stays released');
+    const again = stop(fixture);
+    assert.equal(again.decision, undefined, 'the same turn stays released');
+    assert.match(again.systemMessage, /was let through earlier in this turn with open items, which stay pending/);
     fixture.old();
     fixture.turn();
     assert.deepEqual(stop(fixture), {}, 'a later turn that writes nothing in the plan');

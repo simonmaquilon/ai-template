@@ -9,7 +9,7 @@ import {
 const read = (path) => readFileSync(path, 'utf8');
 const rule = (guidance, start) => guidance.split('\n').find((line) => line.startsWith(`- ${start}`)) ?? '';
 
-test('closure counts are quoted from cited command output', (t) => {
+test('guidance requires closure counts quoted from cited command output, and a simulated audit of a claim against the saved output', (t) => {
   for (const guidance of [rule(evidenceGuidance(), 'Save evidence'), rule(implementationGuidance(), 'Corrections:')]) {
     assert.match(guidance, /quote\b[^.]*\bcounts?\b[^.]*\bsaved command output/i);
   }
@@ -31,7 +31,7 @@ test('closure counts are quoted from cited command output', (t) => {
   assert.throws(() => auditClaim(claim(47, 9)), /claim differs/);
 });
 
-test('consumer migration rehearses in disposable state and awaits review and authorization before applying', (t) => {
+test('guidance requires a consumer migration rehearsed in disposable state and held for review and authorization, and a simulated migration follows it', (t) => {
   const execution = rule(evidenceGuidance(), 'Save evidence');
   assert.match(execution, /rehearse migrations in isolated disposable state.*review them independently/i);
   assert.match(execution, /only after that review passes and the user has authorized it/i);
@@ -65,7 +65,7 @@ test('consumer migration rehearses in disposable state and awaits review and aut
   assert.deepEqual(JSON.parse(read(stored)), applied);
 });
 
-test('consumer migration history allows a later migration and rejects missing, duplicate, or reordered IDs', (t) => {
+test('guidance requires migration history checks of presence, uniqueness, and order, and a simulated check allows a later migration and rejects missing, duplicate, or reordered IDs', (t) => {
   const migration = rule(implementationGuidance(), 'Migrations:');
   assert.match(migration, /presence, uniqueness, and order relative to declared dependencies/i);
   assert.match(migration, /require last position only when the criterion explicitly needs it/i);
