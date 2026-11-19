@@ -1,29 +1,8 @@
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { makePlan } from './prompt-plan-cache-plan.mjs';
-import { ROOT, run } from './support.mjs';
-
-function recorded(t, { change = true } = {}) {
-  const context = makePlan(t);
-  const { check, plan, repo } = context;
-  const source = join(ROOT, '.agents', 'skills', 'prompt-plan', 'scripts', 'node');
-  mkdirSync(join(plan, 'patch'));
-  mkdirSync(join(plan, 'build'));
-  for (const name of ['common', 'record']) cpSync(join(source, `${name}.mjs`), join(plan, 'patch', `${name}.mjs`));
-  cpSync(join(source, 'check-evidence.mjs'), join(check, 'evidence.mjs'));
-  writeFileSync(join(plan, 'build', '01-step.md'), '# 01\n<!-- test-path: behavior.test.mjs -->\n');
-  const before = run(process.execPath, [join(plan, 'patch', 'record.mjs'), '01', 'before'], { cwd: repo.dir });
-  assert.equal(before.status, 0, `${before.stdout}${before.stderr}`);
-  if (change) repo.write('behavior.test.mjs', "console.log('BEGIN full stdout\\ntoken=synthetic-red-token');\nconsole.error('EXPECTED behavior assertion\\nEND full stderr');\nprocess.exitCode = 1;\n");
-  const red = (expected = 'EXPECTED behavior assertion', testPath = 'behavior.test.mjs') => context.node('evidence.mjs', [
-    '01', 'red', '--test-path', testPath, '--expect', expected, '--', process.execPath, 'behavior.test.mjs',
-  ]);
-  const names = () => existsSync(join(plan, 'review')) ? readdirSync(join(plan, 'review')) : [];
-  const outcome = () => JSON.parse(readFileSync(join(plan, 'review', names().find((name) => name.endsWith('.json'))), 'utf8'));
-  return { red, names, outcome, plan, repo, node: context.node };
-}
+import { recorded } from './prompt-plan-red-fixture.mjs';
 
 test('prompt-plan red: tests-only work matches the before state and preserves full redacted process output', (t) => {
   const { names, outcome, plan, red } = recorded(t);
@@ -41,12 +20,12 @@ test('prompt-plan red: tests-only work matches the before state and preserves fu
 });
 
 test('prompt-plan record: cannot finish a fragment whose required check is missing', (t) => {
-  const { plan, repo } = recorded(t, { change: false });
+  const { after, plan } = recorded(t, { change: false });
   writeFileSync(join(plan, 'build', '01-step.md'), '# 01\n<!-- check: required -->\n');
   rmSync(join(plan, 'check', '01-check.mjs'));
-  const after = run(process.execPath, [join(plan, 'patch', 'record.mjs'), '01', 'after'], { cwd: repo.dir });
-  assert.notEqual(after.status, 0);
-  assert.match(after.stderr, /required check.*missing/);
+  const result = after();
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /required check.*missing/);
   assert.equal(existsSync(join(plan, 'patch', '01.state')), false);
 });
 
@@ -78,8 +57,9 @@ test('prompt-plan red: a test declaration added after record before cannot exclu
 });
 
 test('prompt-plan record: an earlier passing check cannot mark an edited tree done with versioned evidence', (t) => {
-  const { node, plan, repo } = recorded(t, { change: false });
-  const after = () => run(process.execPath, [join(plan, 'patch', 'record.mjs'), '01', 'after'], { cwd: repo.dir });
+  const { after, node, plan, repo } = recorded(t, { change: false });
+  // The declared test path is no part of this test, so the fragment declares none and needs no red receipt.
+  writeFileSync(join(plan, 'build', '01-step.md'), '# 01\n');
   assert.equal(node('01-check.mjs').status, 0);
   repo.write('kept.txt', 'changed after the check');
   const stale = after();

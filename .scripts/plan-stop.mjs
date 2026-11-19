@@ -3,11 +3,10 @@
 // (prompt-plan, references/execution.md). Every file is read without following a symlink, since a sandboxed command
 // can write .temp/ while the hook runs outside the sandbox.
 
-import { createHash } from 'node:crypto';
 import { closeSync, constants, fstatSync, lstatSync, readdirSync, readSync } from 'node:fs';
 import { join } from 'node:path';
 import { inFolder, openRegular } from './safe-fs.mjs';
-import { namedFragments, openLine, withoutMarks } from './plan-stop-questions.mjs';
+import { namedFragments, openLines, withoutMarks } from './plan-stop-questions.mjs';
 
 export const PLANS = '.temp/plans';
 export const UNREADABLE = Symbol('unreadable');
@@ -75,15 +74,6 @@ export const opensWork = (line) => /^\S+\t(?:\d{2}|work)\t/.test(line);
 export const hasCurrentEvidence = (root, plan) => ['check/report.mjs', 'review/final-run.json']
   .some((path) => readPlanFile(root, plan, path) !== null);
 
-// A key for a report line that ignores where it stands, so that moving it changes nothing.
-const lineKey = (line) => createHash('sha256').update(withoutMarks(line).trim()).digest('hex').slice(0, 16);
-
-// The keys of the open lines of the plan's report, which a subagent inherits when it starts.
-export function openKeys(root, plan) {
-  const report = readPlanFile(root, plan, 'review/report.md');
-  return typeof report === 'string' ? report.split('\n').filter(openLine).map(lineKey) : [];
-}
-
 // The fragments whose patch/NN.before, which record NN after removes, was written at or after `since` and before `until`.
 function openedBetween(root, plan, since, until) {
   const patch = planPath(root, plan, 'patch');
@@ -98,8 +88,8 @@ const clip = (line) => {
 };
 
 // What keeps the plan's execution from ending, one line each, or the paths that could not be read. For a subagent,
-// `agent` gives when it started, when the next subagent of its session started, and the keys of the open report lines
-// it inherited: only the fragments whose before record it opened between the two and the lines it wrote count.
+// `agent` gives when it started and when the next subagent of its session started: only the fragments whose before
+// record it opened between the two count, never the report's lines, since the coordinator alone writes the report.
 export function openItems(root, plan, agent, questions) {
   const index = readPlanFile(root, plan, 'build/00-index.md');
   const report = readPlanFile(root, plan, 'review/report.md');
@@ -111,19 +101,14 @@ export function openItems(root, plan, agent, questions) {
   });
   const ids = new Set(questions.map(({ id }) => id).filter(Boolean));
   const named = new Set(questions.map(({ fragment }) => fragment).filter(Boolean));
-  const lines = (report ?? '').split('\n').flatMap((line, at) => {
-    const open = openLine(line);
-    return open ? [{ ...open, line, at }] : [];
-  });
+  const lines = openLines(report ?? '');
   const idCounts = new Map();
   for (const { id } of lines) idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
-  const inherited = agent && new Set(agent.keys ?? []);
   const unasked = [];
   for (const { id, pending, line, at } of lines) {
-    if (agent && (!agent.keys || inherited.has(lineKey(line)))) continue;
     if (ids.has(id) && idCounts.get(id) === 1) {
       if (pending) for (const number of namedFragments(line)) named.add(number);
-    } else {
+    } else if (!agent) {
       unasked.push(`review/report.md:${at + 1}: ${clip(line)}`);
     }
   }

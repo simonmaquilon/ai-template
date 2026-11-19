@@ -1,25 +1,27 @@
-// Upgrade a selected 6.2.0 plan after its writers have stopped. An interrupted copy can be retried because
-// each file must match either the original bundle or the complete replacement before any copy begins.
+// Upgrade a selected plan of 6.2.0 or 7.0.0 after its writers have stopped. An interrupted copy can be retried because
+// each file must match either a known original or the complete replacement before any copy begins.
 import { createHash, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { lstatSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const LEGACY = {
-  'check/all.mjs': ['check-all.mjs', '00dad88d9430516c87502e54203186abeeb20df599b9038e7dd38c54daee5330'],
-  'check/evidence.mjs': ['check-evidence.mjs', '24faf4111306de56e84c240461665fa4ff2f797bf924c6c2549032ac5eaf1836'],
-  'check/lib.mjs': ['check-lib.mjs', '9ca5d7deff33c1d343a1283e3e22b16f6acd6358865c8bd1c5e74fc2cb78e357'],
-  'check/time.mjs': ['check-time.mjs', '74ce3e8b7f919abb36358c5ff1da65326b8acd36bf5ac9d2d3213ce3518e2996'],
-  'patch/apply.mjs': ['apply.mjs', 'a46fa1fd533414f5931c2769ed1ecf2e9efe3ac57f3ece31661ec0e7cf5d6e66'],
-  'patch/common.mjs': ['common.mjs', '577a3ea24b3b38f9257cb6e9a1bcd490c3df5911f52ab118d8aac20dfd08570f'],
-  'patch/record.mjs': ['record.mjs', 'c75ed8b21d87c0593d37c6ff7ce6b9b0fd863f05ad78b41cd956bcbcf1452673'],
-  'patch/revert.mjs': ['revert.mjs', '416426fc23b0532ffbf0f4fadb0356ad313fc5a241105781968d17c95500423c'],
+// Each helper by its bundled name and the SHA-256 of the copies 6.2.0 and 7.0.0 gave a plan, the first of them absent
+// where 6.2.0 had no such helper.
+const KNOWN = {
+  'check/all.mjs': ['check-all.mjs', ['00dad88d9430516c87502e54203186abeeb20df599b9038e7dd38c54daee5330', '05f6229d8ad66beba52545fb5add8753e2cc57acaba356e464a0625e5dae8371']],
+  'check/evidence.mjs': ['check-evidence.mjs', ['24faf4111306de56e84c240461665fa4ff2f797bf924c6c2549032ac5eaf1836', '90b8160561a304aef6d76298aa6db6e4b0219ed72e4dda9f94cf56de91d5b486']],
+  'check/lib.mjs': ['check-lib.mjs', ['9ca5d7deff33c1d343a1283e3e22b16f6acd6358865c8bd1c5e74fc2cb78e357', 'd462d5a615d1026916f4670e39e04bc54fba653b44bb61ac632f06357982890f']],
+  'check/time.mjs': ['check-time.mjs', ['74ce3e8b7f919abb36358c5ff1da65326b8acd36bf5ac9d2d3213ce3518e2996', 'e98352dca8d338623835006f19f70d2fb5d70ff6460cc035043d7fc4cfc8cfbd']],
+  'patch/apply.mjs': ['apply.mjs', ['a46fa1fd533414f5931c2769ed1ecf2e9efe3ac57f3ece31661ec0e7cf5d6e66']],
+  'patch/common.mjs': ['common.mjs', ['577a3ea24b3b38f9257cb6e9a1bcd490c3df5911f52ab118d8aac20dfd08570f', '2209d482b47c02c6014ba8adb2fa2a642aa5cc0fb34c0f4db38e70469be9a198']],
+  'patch/record.mjs': ['record.mjs', ['c75ed8b21d87c0593d37c6ff7ce6b9b0fd863f05ad78b41cd956bcbcf1452673', '1fb0c849d29b44332356b5125e9e181616af53a23240bab418a91fd2fa658974']],
+  'patch/revert.mjs': ['revert.mjs', ['416426fc23b0532ffbf0f4fadb0356ad313fc5a241105781968d17c95500423c']],
+  'check/report.mjs': ['check-report.mjs', ['709c3fff1a58a5e7f70a9595852e55d7509974489fc82501ef9efa991ad67c47']],
+  'check/state.mjs': ['check-state.mjs', ['04a3b7a898210309a3bd69613b0a81c6821d54c476f787166b1112bab8987d8d']],
+  'check/validation.mjs': ['check-validation.mjs', ['e66af95e7588bc0da7e0b0eaf53626c8534fbdc572ee04df11ff17f4c584f670']],
 };
-const ADDED = {
-  'check/report.mjs': ['check-report.mjs'],
-  'check/state.mjs': ['check-state.mjs'],
-  'check/validation.mjs': ['check-validation.mjs'],
-};
+// The helpers 6.2.0 did not have, which a plan of that version may lack.
+const ADDED = new Set(['check/report.mjs', 'check/state.mjs', 'check/validation.mjs']);
 
 function regular(path) {
   const stat = lstatSync(path, { throwIfNoEntry: false });
@@ -63,13 +65,13 @@ function migrate(location, extra) {
   if (states.every((row) => row[1] === 'done')) {
     throw new Error('A completed plan keeps its original scripts and time tables.');
   }
-  const helpers = Object.entries({ ...LEGACY, ...ADDED }).flatMap(([name, [bundled, legacy]]) => {
+  const helpers = Object.entries(KNOWN).flatMap(([name, [bundled, hashes]]) => {
     if (!hasPatch && name.startsWith('patch/')) return [];
     const path = join(plan, name);
     const contents = readFileSync(new URL(bundled, import.meta.url));
     const original = regular(path);
     if (original?.equals(contents)) return [];
-    if (original ? createHash('sha256').update(original).digest('hex') !== legacy : legacy !== undefined) {
+    if (original ? !hashes.includes(createHash('sha256').update(original).digest('hex')) : !ADDED.has(name)) {
       throw new Error(`Missing or customized helper: ${name}. No helper was replaced.`);
     }
     return [{ path, original, contents }];

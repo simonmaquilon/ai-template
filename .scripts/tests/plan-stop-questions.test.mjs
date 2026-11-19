@@ -81,7 +81,8 @@ for (const client of ['claude', 'codex']) {
     const incomplete = handoff(reportLine);
     assert.match(incomplete.reason, /fragment 02 \(pending\)/);
     assert.doesNotMatch(incomplete.reason, /report\.md:2:/);
-    assert.equal(handoff(`- Handoff [P-03] Should we retry live verification?\n${fragmentLine}`).decision, 'block');
+    assert.equal(handoff('- Handoff [P-03] Should we retry live verification?').decision, 'block');
+    assert.deepEqual(handoff(fragmentLine), {}, 'the report line needs no handoff');
     assert.deepEqual(handoff(`${reportLine}\n${fragmentLine}`), {});
     const coordinator = stop(fixture, { last_assistant_message: `${reportLine}\n${fragmentLine}` });
     assert.match(coordinator.reason, /pending.*02, 03/);

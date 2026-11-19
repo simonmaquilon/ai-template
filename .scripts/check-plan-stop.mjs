@@ -3,9 +3,10 @@
 // (prompt-plan, references/execution.md, Ending an execution). A matching final question or subagent handoff can pause
 // open work. With --turn-start, on UserPromptSubmit, it writes a marker for the
 // session's turn under .temp/, unless the prompt carries TOKEN or the continuation token of check-file-length.mjs, as
-// the continuation either hook causes does (turn-marker.mjs); with --agent-start, on SubagentStart, one for the subagent, and records in each plan in execution the open report lines
-// the subagent inherits. On Stop and SubagentStop it checks the plans under .temp/plans/ that the turn, or the
-// subagent since it started, wrote, as plan-stop.mjs reads them, and blocks the stop with decision "block" and the open
+// the continuation either hook causes does (turn-marker.mjs); with --agent-start, on SubagentStart, one for the
+// subagent. On Stop and SubagentStop it checks the plans under .temp/plans/ that the turn, or the
+// subagent since it started, wrote, as plan-stop.mjs reads them (a subagent answers only for the fragments it opened,
+// never for the report's lines), and blocks the stop with decision "block" and the open
 // items as the reason, which both clients hand to the agent as its next instruction. Without a turn marker it checks
 // only a plan whose times.log has a work segment open; a subagent without a marker, such as one of the client's
 // own, is never checked, nor a stop while a background subagent, workflow, or teammate runs. plan-stop-state.mjs
@@ -16,7 +17,7 @@ import { lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { enterRepositoryRoot, readHookInput } from './hook-support.mjs';
-import { PLANS, hasCurrentEvidence, lastTime, openItems, openKeys, opensWork, planFolders, started, touchedSince } from './plan-stop.mjs';
+import { PLANS, hasCurrentEvidence, lastTime, openItems, opensWork, planFolders, started, touchedSince } from './plan-stop.mjs';
 import { finalQuestions } from './plan-stop-questions.mjs';
 import { MAX_WINDOW, WINDOW_MINUTES, count, dropState, readState, writeState } from './plan-stop-state.mjs';
 import { PLAN_STOP_TOKEN as TOKEN, isContinuation, markTurnStart } from './turn-marker.mjs';
@@ -51,17 +52,7 @@ function guard(input, root, checkStatus) {
   const identity = () => (time(marker) === null ? null : `marker ${readFileSync(join(markers, marker), 'latin1').slice(0, 20)}`);
 
   if (start === 'turn' && marker && !isContinuation(input.prompt)) markTurnStart(root, MARKERS, marker);
-  if (start === 'agent' && marker) {
-    const turn = session ? time(session) : null;
-    markTurnStart(root, MARKERS, marker);
-    for (const plan of planFolders(root)) {
-      try {
-        if (started(root, plan) && (turn === null ? opensWork(lastTime(root, plan)) : touchedSince(root, plan, turn))) {
-          writeState(root, plan, actor, { turn: identity(), keys: openKeys(root, plan) });
-        }
-      } catch {}
-    }
-  }
+  if (start === 'agent' && marker) markTurnStart(root, MARKERS, marker);
   if (start) return {};
 
   const from = marker ? time(marker) : null;
@@ -80,17 +71,17 @@ function guard(input, root, checkStatus) {
       const prior = stored?.turn === turn ? stored : null;
       if (prior?.released) continue;
       if (!(from === null ? opensWork(lastTime(root, plan)) : touchedSince(root, plan, from) || prior?.fingerprint)) continue;
-      eligible.push({ plan, turn, stored, prior });
+      eligible.push({ plan, turn, stored });
     } catch (error) {
       notes.push(`check-plan-stop: ${PLANS}/${plan} could not be checked (${error?.message ?? error}), so its execution was let through.`);
     }
   }
   const questions = finalQuestions(input, subagent);
-  for (const { plan, turn, stored, prior } of eligible) {
+  for (const { plan, turn, stored } of eligible) {
     const where = `${PLANS}/${plan}`;
     try {
       const matching = questions.filter((question) => question.plan ? question.plan === plan : eligible.length === 1);
-      const { items, unreadable } = openItems(root, plan, subagent ? { since: from, until, keys: prior?.keys } : null, matching);
+      const { items, unreadable } = openItems(root, plan, subagent ? { since: from, until } : null, matching);
       if (unreadable) {
         notes.push(`check-plan-stop: ${where}: could not read ${unreadable.join(' and ')}, so its execution was not checked.`);
         continue;

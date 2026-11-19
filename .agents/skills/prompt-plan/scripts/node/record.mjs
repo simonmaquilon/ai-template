@@ -120,7 +120,9 @@ function trackedExclusions(tree) {
   requireSnapshot(tree, `Fragment ${number}'s before snapshot`);
   const build = join(planDir, 'build');
   const fragment = readdirSync(build).find((name) => name.startsWith(`${number}-`) && name.endsWith('.md'));
-  const declared = [...readFileSync(join(build, fragment), 'utf8').matchAll(/^\s*<!-- write-path: (.+?) -->\s*$/gm)].map(([, path]) => path);
+  const declared = fragment ? [...readFileSync(join(build, fragment), 'utf8').matchAll(/^\s*<!-- write-path: (.+?) -->\s*$/gm)].map(([, path]) => path) : [];
+  // Without declared write paths nothing says which tracked files the fragment owns, so an owned one could be left out.
+  if (!declared.length) refuse(`--leave-tracked needs fragment ${number} to declare the paths its work writes, as <!-- write-path: path --> lines in its build file; declare them and run again.`);
   const bad = declared.filter((path) => !literalPath(path));
   if (bad.length) refuse(`--leave-tracked cannot verify the write paths of fragment ${number}:`, bad);
   const owned = declared.map(pathKey);
@@ -209,7 +211,53 @@ async function requirePassingCheck() {
   }
   const shown = inPlan(planPath) ? `${planPath}/${script}` : join(planDir, script);
   const reason = versioned ? 'has stale or incomplete evidence, or did not pass' : 'does not pass, is not complete, or is stamped in the future';
-  refuse(`Refusing to record fragment ${number}: ${latest ? `its latest check run after the before record, ${latest.name}, ${reason}` : 'no run of its check after the before record passed'}. Run "node ${shown}" from the project root, fix what it reports, and record again.`);
+  // A file of check/ or build/ over its limit leaves every run stale, which the helper can name.
+  const usable = versioned && lstatSync(stateHelper, { throwIfNoEntry: false })?.isFile() && lstatSync(dirname(stateHelper)).isDirectory();
+  const problem = usable ? (await import(pathToFileURL(stateHelper).href)).inputProblem?.(planDir) : null;
+  const why = problem ? `its evidence inputs cannot be fingerprinted, so no check run is current: ${problem}`
+    : latest ? `its latest check run after the before record, ${latest.name}, ${reason}` : 'no run of its check after the before record passed';
+  refuse(`Refusing to record fragment ${number}: ${why}. Run "node ${shown}" from the project root, fix what it reports, and record again.`);
+}
+
+// A fragment that declares test paths records only once review/ holds the red receipt that check/evidence.mjs wrote for
+// its before record: status red, a log that matches the receipt's hash, the declared test paths, and the project
+// snapshot of NN.before as the project it ran on. A fragment that declares none, a plan without the state helper, and a
+// before record older than the project snapshot, which has no third line, have no such gate.
+async function requireRedEvidence() {
+  const helper = join(planDir, 'check', 'state.mjs');
+  if (!lstatSync(helper, { throwIfNoEntry: false })?.isFile() || !lstatSync(dirname(helper)).isDirectory()) return;
+  const project = readFileSync(before, 'utf8').split('\n')[2];
+  if (!project) return;
+  const { HASH, STAMP, declaredTestPaths, localNames, projectFingerprint, readLocal, readLog } = await import(pathToFileURL(helper).href);
+  let declared;
+  let expected;
+  try {
+    declared = declaredTestPaths(planDir, number);
+    expected = projectFingerprint(JSON.parse(project), declared);
+  } catch (error) {
+    refuse(`Refusing to record fragment ${number}: its test path declarations or its before record cannot be read: ${error.message}`);
+  }
+  if (!declared.length) return;
+  const pattern = new RegExp(`^${number}-tests-before-${STAMP}\\.json$`);
+  let names = [];
+  try {
+    names = localNames(planDir, 'review').filter((name) => pattern.test(name));
+  } catch {
+    // An unreadable review/ holds no receipt, which the refusal below reports.
+  }
+  const valid = names.some((name) => {
+    try {
+      const receipt = JSON.parse(readLocal(planDir, `review/${name}`).toString('utf8'));
+      const log = readLog(planDir, `review/${name.replace(/\.json$/, '.log')}`);
+      return receipt.version === 1 && receipt.status === 'red' && HASH.test(receipt.sha256 ?? '') && log?.sha256 === receipt.sha256
+        && JSON.stringify(receipt.testPaths) === JSON.stringify(declared) && Boolean(expected) && receipt.projectBefore === expected;
+    } catch {
+      return false;
+    }
+  });
+  if (valid) return;
+  const shown = inPlan(planPath) ? `${planPath}/check/evidence.mjs` : join(planDir, 'check', 'evidence.mjs');
+  refuse(`Refusing to record fragment ${number}: it declares test paths and review/ holds no red receipt for its before record. Before the implementation, run from the project root "node ${shown} ${number} red ${declared.map((path) => `--test-path ${path}`).join(' ')} --expect <failure text> -- <command> <args>", which writes ${number}-tests-before-<UTC timestamp>.log and its .json receipt; a receipt that is not red, whose log changed, or taken for other test paths or another before record does not count.`);
 }
 
 // Sets the status of the fragment's row in build/00-index.md, the row whose first cell links NN-<slug>.md, to done; with
@@ -276,6 +324,7 @@ if (phase === 'before') {
   report('untracked files that version control does not ignore, which no patch carries and which cannot be adopted later', newUntracked((path) => adoptedKeys.has(pathKey(path))));
 } else if (phase === 'after') {
   const { tree: from, untracked } = beforeRecord();
+  await requireRedEvidence();
   await requirePassingCheck();
   const leftTracked = trackedExclusions(from);
   const twoSpellings = requireOneSpelling(`Refusing to record fragment ${number}`, from, 'its before snapshot');

@@ -52,7 +52,7 @@ async function verifyRed(number, flags) {
     : result.status === 0 || !matched ? 'unverified' : 'red';
   const log = redact(`$ ${result.line}\nexit status: ${result.status ?? result.signal ?? 'interrupted'}\n`
     + `\n## stdout\n${result.stdout}\n## stderr\n${result.stderr}${result.error ? `\n${result.error.message}` : ''}\n`);
-  const file = evidenceFile(number, 'tests-before', 'log');
+  const file = evidenceFile(number, 'tests-before', 'log', { reserved: true });
   const local = `review/${basename(file)}`;
   const receipt = { version: 1, status, before, after, projectBefore: prepared, testPaths, exit: result.status,
     signal: result.signal, expected: expected.map(redact), sha256: hashBytes(log) };

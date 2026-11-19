@@ -122,7 +122,7 @@ function interim() {
 }
 
 async function full() {
-  const { captureIdentity, localEntry, localNames, readLocal, requiredChecks } = fingerprints ?? await import('./state.mjs');
+  const { captureIdentity, inputProblem, localEntry, localNames, readLocal, requiredChecks } = fingerprints ?? await import('./state.mjs');
   const { FINAL_FILE, finalFragmentStatus, readRun, writeAtomic } = await import('./report.mjs');
   const path = `review/${FINAL_FILE}`;
   const evidence = { version: 1, run, status: 'running', before: null, after: null, state: { before: null, after: null }, fragments: [] };
@@ -161,6 +161,9 @@ async function full() {
     }
     evidence.state.after = captureIdentity(root, planDir);
     evidence.after = evidence.state.after?.combined ?? null;
+    // A run that could not fingerprint its inputs is stale; say why when a file of check/ or build/ is over its limit.
+    const problem = !evidence.before || !evidence.after ? inputProblem?.(planDir) : null;
+    if (problem) console.error(`Final run cannot fingerprint its inputs: ${problem}`);
     const results = evidence.fragments.map((fragment) => fragment.status);
     if (!results.length) console.error('Final run has no checks to verify.');
     evidence.status = !evidence.before || evidence.after !== evidence.before ? 'stale'

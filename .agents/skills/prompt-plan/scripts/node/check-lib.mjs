@@ -62,17 +62,23 @@ export function toolEnv({ isolateHome = false } = {}) {
 }
 
 // A name that is or starts like a baseline or dry run's log or evidence would be read as that run's, or that run's
-// as it, and one that is check or measure would be read as such a run's log, which latestEvidence would return.
-function checkName(name) {
+// as it, and one that is check or measure would be read as such a run's log, which latestEvidence would return. The
+// names tests-before and final-output belong to the red evidence and to the final run, whose logs record NN after and
+// the report read as such, so a name that is or starts like them is never manual evidence.
+function checkName(name, reserved = false) {
   if (/^(baseline|dry-run)(-|$)|^(check|measure)$/.test(name)) {
     throw new Error(`Evidence names never are or start with baseline or dry-run, and never are check or measure: ${name}`);
+  }
+  if (!reserved && /^(tests-before|final-output)(-|$)/.test(name)) {
+    throw new Error(`Evidence names never are or start with the reserved tests-before or final-output: ${name}`);
   }
 }
 
 // Path in review/ for a check's own evidence, such as a screenshot: NN-<name>-<UTC stamp>.<ext>, or
-// NN-baseline-<name>-… and NN-dry-run-<name>-… on a --baseline or --dry-run run.
-export function evidenceFile(fragment, name, ext) {
-  checkName(name);
+// NN-baseline-<name>-… and NN-dry-run-<name>-… on a --baseline or --dry-run run. Only evidence.mjs passes reserved, for
+// the red log it writes itself.
+export function evidenceFile(fragment, name, ext, { reserved = false } = {}) {
+  checkName(name, reserved);
   mkdirSync(reviewDir, { recursive: true });
   return freshPath(() => join(reviewDir, `${fragment}-${evidencePrefix}${name}-${utcStamp()}.${ext}`));
 }

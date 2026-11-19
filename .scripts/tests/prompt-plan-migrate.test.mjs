@@ -64,6 +64,26 @@ test('refuse a custom helper or a completed plan before replacing any helper', (
   assert.deepEqual(readFileSync(join(plan, 'check', 'all.mjs')), original);
 });
 
+test('migrate a plan created or migrated with the 7.0.0 helpers, and refuse one of them customized', (t) => {
+  const { repo, plan, migrate } = setup(t);
+  const helpers = { ...LEGACY, 'check/report.mjs': 'check-report.mjs', 'check/state.mjs': 'check-state.mjs', 'check/validation.mjs': 'check-validation.mjs' };
+  for (const [path, bundled] of Object.entries(helpers)) {
+    const read = run('git', ['show', `a370d08:${BUNDLE}/${bundled}`], { cwd: ROOT });
+    assert.equal(read.status, 0, read.stderr);
+    writeFileSync(join(plan, path), read.stdout);
+  }
+  repo.write('.temp/plans/example/check/state.mjs', `${readFileSync(join(plan, 'check', 'state.mjs'), 'utf8')}// customized\n`);
+  const custom = migrate();
+  assert.notEqual(custom.status, 0);
+  assert.match(custom.stderr, /customized.*check\/state\.mjs/i);
+  const read = run('git', ['show', `a370d08:${BUNDLE}/check-state.mjs`], { cwd: ROOT });
+  writeFileSync(join(plan, 'check', 'state.mjs'), read.stdout);
+  const result = migrate();
+  assert.equal(result.status, 0, result.stderr);
+  for (const [path, bundled] of Object.entries(helpers)) assert.deepEqual(readFileSync(join(plan, path)), readFileSync(join(ROOT, BUNDLE, bundled)), path);
+  assert.equal(migrate().status, 0);
+});
+
 test('migrate a plan without a patch directory and reopen a legacy check citation', (t) => {
   const { repo, plan, local, migrate } = setup(t);
   rmSync(join(plan, 'patch'), { recursive: true });

@@ -53,12 +53,11 @@ export function count(root, plan, actor, stored, turn, items) {
   const prior = stored?.turn === turn ? stored : null;
   const times = (Array.isArray(stored?.times) ? stored.times : []).filter((time) => now - time < WINDOW_MINUTES * 60_000);
   const stale = prior?.fingerprint === fingerprint ? prior.stale + 1 : 1;
-  const keys = stored?.keys && prior ? { keys: stored.keys } : {};
   if (stale > MAX_STALE || times.length >= MAX_WINDOW) {
-    writeState(root, plan, actor, { ...keys, turn, released: true, times });
+    writeState(root, plan, actor, { turn, released: true, times });
     return { verdict: 'release' };
   }
   const blocks = times.length + 1;
-  if (!writeState(root, plan, actor, { ...keys, turn, fingerprint, stale, times: [...times, now] })) return { verdict: 'release', lost: true };
+  if (!writeState(root, plan, actor, { turn, fingerprint, stale, times: [...times, now] })) return { verdict: 'release', lost: true };
   return { verdict: 'block', blocks, last: stale === MAX_STALE || blocks === MAX_WINDOW, window: blocks === MAX_WINDOW };
 }

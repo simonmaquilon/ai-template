@@ -119,7 +119,7 @@ test('prompt-plan check library: measure, baseline, and dry runs name their logs
     assert.throws(() => lib.latestEvidence('02', name, 'log'), /never are check or measure/, name);
   }
   // The records the plan stores in review/ under their own kinds, such as a check script's correction, may come from lib.
-  for (const name of ['checkout', 'measurement', 'check-fix', 'measure-fix', 'tests-before', 'record-fix', 'helpers-fix']) {
+  for (const name of ['checkout', 'measurement', 'check-fix', 'measure-fix', 'record-fix', 'helpers-fix']) {
     assert.doesNotThrow(() => lib.evidenceFile('02', name, 'log'), name);
   }
 });

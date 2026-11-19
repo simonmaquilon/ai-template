@@ -61,7 +61,7 @@ for (const client of ['claude', 'codex']) {
     assert.match(stop(fixture).reason, /fragment 03 is blocked and missing a final question/);
   });
 
-  test(`${client}: a subagent answers only for the fragments it opened and the report lines it wrote`, (t) => {
+  test(`${client}: a subagent answers only for the fragments it opened and never for report lines`, (t) => {
     const fixture = planRepo(t, client);
     fixture.turn();
     fixture.plan({ 'build/00-index.md': index('done', 'pending', 'pending'), 'review/report.md': '⏳ Fragments 02 and 03 still to run\n' });
@@ -78,8 +78,7 @@ for (const client of ['claude', 'codex']) {
     fixture.plan({ 'patch/03.before': 'tree\n', 'review/report.md': '✅ AC2 met (02)\n⏳ Fragments 02 and 03 still to run\n⚠️ AC3 not measured (03)\n' });
     const blocked = answer(assert, fixture.fire('SubagentStop', input));
     assert.match(blocked.reason, /fragment 03 \(pending\), whose before record this subagent opened, is not done/);
-    assert.match(blocked.reason, /report\.md:3: ⚠️ AC3 not measured/);
-    assert.doesNotMatch(blocked.reason, /still to run/);
+    assert.doesNotMatch(blocked.reason, /report\.md|still to run/);
     assert.match(blocked.reason, /Hand each unresolved decision to the coordinator in your final message/);
     if (client === 'claude') {
       const background = [{ id: 'task-1', type: 'subagent', status: 'running', agent_type: 'general-purpose' }];

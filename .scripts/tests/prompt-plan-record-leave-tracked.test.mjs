@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { holds, patchPlan, startRepo } from './support.mjs';
@@ -13,6 +13,7 @@ const refused = (result, pattern) => {
 test('record after leaves a tracked foreign file out of its patch and retains staged and unstaged changes through revert and apply', (t) => {
   const repo = startRepo(t, { 'mine.txt': 'before\n', '[foreign].txt': 'original\n' });
   const { plan, patch } = patchPlan(repo, ['01', '02']);
+  writeFileSync(join(plan, 'build', '01-step.md'), '# 01\n\n<!-- write-path: mine.txt -->\n');
   ok(patch('record', '01', 'before'));
   repo.write('mine.txt', 'fragment work\n');
   repo.write('[foreign].txt', 'staged foreign work\n');
@@ -42,6 +43,7 @@ test('record after leaves a tracked foreign file out of its patch and retains st
 test('record restore reinstates fragment work while leaving a foreign tracked edit on disk and in the index', (t) => {
   const repo = startRepo(t, { 'mine.txt': 'before\n', 'foreign.txt': 'original\n' });
   const { plan, patch } = patchPlan(repo, ['01']);
+  writeFileSync(join(plan, 'build', '01-step.md'), '# 01\n\n<!-- write-path: mine.txt -->\n');
   ok(patch('record', '01', 'before'));
   repo.write('mine.txt', 'fragment work\n');
   repo.write('foreign.txt', 'staged foreign work\n');
@@ -80,4 +82,26 @@ test('tracked exclusions refuse owned paths, unsafe paths, and either endpoint o
   assert.equal(readFileSync(join(repo.dir, 'new.txt'), 'utf8'), 'old\n');
   assert.equal(existsSync(join(plan, 'patch', '02.state')), false);
   assert.deepEqual(readFileSync(join(repo.dir, '.git', 'index')), index);
+});
+
+test('tracked exclusions are refused before writing by a fragment that declares no write path, and accepted once it declares them', (t) => {
+  const repo = startRepo(t, { 'mine.txt': 'before\n', 'foreign.txt': 'original\n' });
+  const { plan, patch } = patchPlan(repo, ['01']);
+  ok(patch('record', '01', 'before'));
+  repo.write('mine.txt', 'fragment work\n');
+  repo.write('foreign.txt', 'foreign work\n');
+  const index = readFileSync(join(repo.dir, '.git', 'index'));
+
+  for (const phase of ['after', 'restore']) {
+    // An owned file would be accepted as foreign while nothing says what the fragment owns.
+    for (const name of ['mine.txt', 'foreign.txt']) refused(patch('record', '01', phase, '--leave-tracked', name), /write-path/);
+  }
+  assert.equal(readFileSync(join(repo.dir, 'mine.txt'), 'utf8'), 'fragment work\n');
+  assert.equal(readFileSync(join(repo.dir, 'foreign.txt'), 'utf8'), 'foreign work\n');
+  assert.deepEqual(readdirSync(join(plan, 'patch')).filter((name) => /^01\.(patch|state)$/.test(name)), []);
+  assert.deepEqual(readFileSync(join(repo.dir, '.git', 'index')), index);
+
+  writeFileSync(join(plan, 'build', '01-step.md'), '# 01\n\n<!-- write-path: mine.txt -->\n');
+  ok(patch('record', '01', 'after', '--leave-tracked', 'foreign.txt'));
+  assert.deepEqual(Object.keys(JSON.parse(readFileSync(join(plan, 'patch', '01.state'), 'utf8')).files), ['mine.txt']);
 });

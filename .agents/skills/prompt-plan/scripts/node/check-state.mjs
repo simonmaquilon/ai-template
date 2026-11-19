@@ -176,8 +176,11 @@ export function captureProject(root, planDir, { cache = false } = {}) {
   try {
     if (resolve(git(root, ['rev-parse', '--show-toplevel']).trimEnd()) !== resolve(root)) return null;
     const revision = git(root, ['rev-parse', '--verify', '-q', 'HEAD'], true).trim() || null;
-    const basis = fingerprint([revision, git(root, ['symbolic-ref', '-q', 'HEAD'], true),
-      git(root, ['for-each-ref', '--format=%(refname)%00%(objectname)%00%(symref)'])]);
+    // Remote-tracking refs and the stash move with a fetch or a stash that leaves the working tree as it was, so they are
+    // no part of the identity; HEAD, its symbolic ref, local branches, tags and any other ref are.
+    const refs = git(root, ['for-each-ref', '--format=%(refname)%00%(objectname)%00%(symref)']).split('\n')
+      .filter((line) => !line.startsWith('refs/remotes/') && !line.startsWith('refs/stash\0')).join('\n');
+    const basis = fingerprint([revision, git(root, ['symbolic-ref', '-q', 'HEAD'], true), refs]);
     const names = indexedPaths(root);
     const files = [];
     for (const name of [...names.keys()].sort()) {
@@ -185,12 +188,14 @@ export function captureProject(root, planDir, { cache = false } = {}) {
       const index = names.get(name);
       const entry = localEntry(root, name.replace(/\/$/, ''), { obstructedIsMissing: true });
       let working = null;
-      if (entry?.info.isDirectory() && index.some((value) => value.startsWith('160000 '))) {
+      // A folder with no index entry reaches here from ls-files --others only as an untracked nested repository, which
+      // counts by its own project fingerprint, like a tracked one, so its commits and its edits move the identity.
+      if (entry?.info.isDirectory() && (index.length === 0 || index.some((value) => value.startsWith('160000 ')))) {
         const nested = captureProject(entry.file, planDir, { cache });
         if (!nested) return null;
         // Interim caching keeps its existing restriction against reusing a dirty nested repository.
         if (cache && git(entry.file, ['status', '--porcelain', '--untracked-files=all'])) return null;
-        working = ['submodule', projectFingerprint(nested)];
+        working = [index.length ? 'submodule' : 'repository', projectFingerprint(nested)];
       } else if (entry && (!entry.info.isDirectory() || index.length === 0)) {
         working = fileState(entry.file, entry.info);
       }
@@ -237,13 +242,31 @@ export function requiredChecks(planDir) {
   return [...new Set([...scripts, ...marked])].sort();
 }
 
+class InputLimitError extends Error {}
+
 export function checkFiles(planDir, path = 'check') {
   return localNames(planDir, path).flatMap((name) => {
     const child = `${path}/${name}`;
     if (child === 'build/00-index.md') return [];
     const { info } = localEntry(planDir, child);
-    return info.isDirectory() ? checkFiles(planDir, child) : [[child, readLocal(planDir, child), info.mode & 0o777]];
+    if (info.isDirectory()) return checkFiles(planDir, child);
+    if (info.isFile() && info.size > METADATA_LIMIT) {
+      throw new InputLimitError(`${child} is over the 1 MiB limit (${METADATA_LIMIT} bytes) for the files of check/ and build/ that the evidence fingerprints; shrink it or keep it outside them.`);
+    }
+    return [[child, readLocal(planDir, child), info.mode & 0o777]];
   });
+}
+
+// Why the check inputs cannot be fingerprinted when a file is over its limit, or null: the identity itself stays null
+// for any failure, so a caller that reports stale evidence asks here for the reason it can name.
+export function inputProblem(planDir) {
+  try {
+    checkFiles(planDir);
+    checkFiles(planDir, 'build');
+  } catch (error) {
+    return error instanceof InputLimitError ? error.message : null;
+  }
+  return null;
 }
 
 export function checkFingerprint(planDir, files = checkFiles(planDir)) {

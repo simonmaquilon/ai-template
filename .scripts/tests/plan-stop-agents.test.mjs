@@ -8,7 +8,7 @@ const input = (id) => ({ agent_id: id, agent_type: 'general-purpose', stop_hook_
 const guards = (fixture, plan = fixture.folder) => (existsSync(join(plan, '.cache', 'stop-guard')) ? readdirSync(join(plan, '.cache', 'stop-guard')) : []);
 
 for (const client of ['claude', 'codex']) {
-  test(`${client}: a subagent keeps state only in plans in execution and drops it when it ends`, (t) => {
+  test(`${client}: a subagent keeps no state when it starts and none after it ends without open items`, (t) => {
     const fixture = planRepo(t, client);
     fixture.plan({ 'build/00-index.md': index('done', 'pending') }, '2026-11-01-old');
     fixture.plan({ 'review/times.log': '2026-11-16T10:00:00Z\t02\tStep\n2026-11-16T10:01:00Z\twait\tEnd\n' }, '2026-11-01-old');
@@ -16,7 +16,7 @@ for (const client of ['claude', 'codex']) {
     fixture.turn();
     fixture.plan({ 'build/00-index.md': index('done', 'pending'), 'review/report.md': '⏳ Fragment 02 still to run\n' });
     fixture.agent('agent-1');
-    assert.deepEqual(guards(fixture), [`agent-session-${client}--agent-1.json`]);
+    assert.deepEqual(guards(fixture), []);
     assert.deepEqual(guards(fixture, join(fixture.repo.dir, '.temp', 'plans', '2026-11-01-old')), []);
     fixture.plan({ 'review/report.md': '⏳ Fragment 02 still to run\n✅ AC1 checked again (01)\n' });
     assert.deepEqual(answer(assert, fixture.fire('SubagentStop', input('agent-1'))), {});
@@ -51,14 +51,28 @@ for (const client of ['claude', 'codex']) {
     assert.match(answer(assert, fixture.fire('SubagentStop', input('second'))).reason, /fragment 03 \(pending\), whose before record this subagent opened/);
   });
 
-  test(`${client}: a subagent in a plan without patch/ answers for the report lines it wrote`, (t) => {
+  test(`${client}: a subagent never answers for report lines, whoever wrote them`, (t) => {
     const fixture = planRepo(t, client);
     fixture.turn();
     fixture.plan({ 'build/00-index.md': index('done', 'pending'), 'review/report.md': '⏳ Fragment 02 still to run\n' });
     fixture.agent('agent-1');
-    fixture.plan({ 'review/report.md': '⏳ Fragment 02 still to run\n⚠️ AC2 not measured (02)\n' });
-    const blocked = answer(assert, fixture.fire('SubagentStop', input('agent-1')));
-    assert.match(blocked.reason, /report\.md:2: ⚠️ AC2 not measured/);
-    assert.doesNotMatch(blocked.reason, /still to run|whose before record/);
+    fixture.plan({ 'review/report.md': '⏳ Fragment 02 still to run\n⚠️ AC2 not measured (02)\n> ⏳ [P-01] The coordinator waits for a decision\n' });
+    assert.deepEqual(answer(assert, fixture.fire('SubagentStop', input('agent-1'))), {});
+    // The coordinator's own stop still holds every one of them.
+    assert.match(answer(assert, fixture.fire('Stop', { stop_hook_active: false })).reason, /report\.md:2: ⚠️ AC2 not measured/);
+  });
+
+  test(`${client}: a subagent whose fragment is done ends although the report gained a pending line`, (t) => {
+    const fixture = planRepo(t, client);
+    fixture.turn();
+    fixture.plan({ 'build/00-index.md': index('done', 'pending'), 'review/report.md': '✅ AC1 met\n' });
+    fixture.agent('agent-1');
+    fixture.plan({ 'patch/02.before': 'tree\n', 'build/00-index.md': index('done', 'done'), 'review/report.md': '✅ AC1 met\n⏳ [P-01] The coordinator waits on an authorization\n' });
+    assert.deepEqual(answer(assert, fixture.fire('SubagentStop', input('agent-1'))), {});
+    assert.deepEqual(guards(fixture), []);
+    fixture.plan({ 'build/00-index.md': index('done', 'pending') });
+    const open = answer(assert, fixture.fire('SubagentStop', input('agent-1')));
+    assert.match(open.reason, /fragment 02 \(pending\), whose before record this subagent opened/);
+    assert.doesNotMatch(open.reason, /report\.md/);
   });
 }
