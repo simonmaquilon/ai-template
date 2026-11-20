@@ -10,6 +10,7 @@ const row = (event, script, matcher, spec) => [`${event} ${script} ${tools(match
 const FLAGS = new Map([
   row('PreToolUse', 'check-bulk-staging.mjs', 'Bash', { own: ['--hook'], win: true }),
   row('PreToolUse', 'check-destructive-push.mjs', 'Bash', { own: ['--hook'], codex: ['--deny'], win: true }),
+  row('PreToolUse', 'check-release-ci.mjs', 'Bash', { own: ['--hook'], codex: ['--deny'], win: true }),
   row('PreToolUse', 'check-write-scope.mjs', 'Bash', { codex: ['--no-ask'], win: true }),
   row('PreToolUse', 'check-write-scope.mjs', 'apply_patch', { codex: ['--no-ask'] }),
   row('PreToolUse', 'check-protected-paths.mjs', 'Bash', { codex: ['--deny'], win: true }),
