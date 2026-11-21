@@ -27,6 +27,7 @@ for (const client of ['claude', 'codex']) {
     assert.equal(paths.status, 0, paths.stderr);
     assert.equal(paths.stderr, '');
     assert.match(paths.stdout, /^Instruction routing \(AGENTS\.md\): apply its core rules on every turn; before acting, /);
+    assert.match(paths.stdout, /^[^\n]* run yourself at most two tool calls on a known target; hand [^\n]* to a subagent before a third call, starting at the fast tier/);
     assert.match(paths.stdout, /^\.agents\/instructions\/05-layout\.md$/m);
     assert.match(paths.stdout, /^\.agents\/instructions\/06-commands\.md$/m);
     assert.doesNotMatch(paths.stdout, /when moving code|before running or recommending/);

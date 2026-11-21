@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Reminds the model, on every turn, to apply the core rules of AGENTS.md, and
+// Reminds the model, on every turn, to apply the core rules of AGENTS.md, restates
+// its working rule on what the session runs itself and what it delegates, and
 // lists the paths of the instruction modules its routing table routes to, so
 // the rule to load each one whose condition matches the request stays in view;
 // AGENTS.md itself states when each applies. Reads AGENTS.md on every run, so the reminder never
@@ -21,4 +22,7 @@ if (entries.length === 0) process.exit(0);
 
 const paths = entries.map(([, name]) => `.agents/instructions/${name}`);
 console.log('Instruction routing (AGENTS.md): apply its core rules on every turn; before acting, load every module '
-  + `below whose condition matches this request; AGENTS.md states when each applies.\n${paths.join('\n')}`);
+  + 'below whose condition matches this request; AGENTS.md states when each applies. Delegation (AGENTS.md working '
+  + 'rules): when the client offers subagents, run yourself at most two tool calls on a known target; hand any '
+  + 'search, exploration, longer read, command sequence, or edit to a subagent before a third call, starting at the '
+  + `fast tier, except what the delegation module keeps in the session.\n${paths.join('\n')}`);

@@ -45,6 +45,7 @@ Before the first edit, state the change's level in one line.
 
 ### Working rules
 
+- When the client offers subagents, run in the session only a task of at most two tool calls on a known target with short output, and hand a task to a subagent as soon as it needs a third call; delegate every other search, exploration, read, command, edit, or version-control operation, starting at the fast tier.
 - Implement the simplest solution that meets the request: no speculative features, options, or abstractions, no handling for unreachable failures, and no code the change leaves dead.
 - Never bypass or weaken checks, tests, coverage thresholds, or gates to pass, and never report a check that did not run as passing.
 - Never open, display, copy, log, or commit secret values; use the configured secret mechanism, and example files for names and placeholders.
@@ -78,5 +79,5 @@ Before acting, load only the modules in `.agents/instructions/` whose condition 
 - `11-pending-work.md`: before answering about, recording, updating, moving, or closing pending work in `.docs/backlog.md`.
 - `12-version-control.md`: before an authorized staging, commit, ignore-rule change, or pull request, and before introducing a path that must stay untracked.
 - `13-agent-tooling.md`: before changing client settings, tool servers, hooks, language servers, vendored skills, or declared agents.
-- `14-delegation.md`: before planning a normal or risk change, and before delegating to a subagent.
+- `14-delegation.md`: before planning a normal or risk change, before work that needs a search or more than two tool calls, and before delegating to a subagent.
 - `15-contracts-and-automation.md`: before changing APIs, events, other shared contracts, or automation.

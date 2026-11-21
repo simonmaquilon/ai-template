@@ -1,6 +1,6 @@
 ---
 name: copilot-opus
-description: Strong-tier agent on Opus at medium effort for implementation beyond the standard tier, architecture, reviews, difficult decisions, specialized security, data, or contract design, and independent verification.
+description: Strong-tier agent on Opus at medium effort, only for implementation beyond the standard tier, architecture, reviews, difficult decisions, specialized security, data, or contract design, independent verification, or a task the standard tier failed; never for searches, fact gathering, or mechanical edits.
 model: opus
 effort: medium
 disallowedTools: Agent

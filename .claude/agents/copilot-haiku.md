@@ -1,6 +1,6 @@
 ---
 name: copilot-haiku
-description: Fast-tier agent on Haiku at high effort for exploration, search, fact gathering that needs no judgment, and mechanical or fully specified edits whose brief spells out every change; use it proactively.
+description: Fast-tier agent on Haiku at high effort and the default for every delegated task, such as creating or moving files, searches, exploration, reads that confirm a claim, mechanical or fully specified edits whose brief spells out every change, single commands, documents updated from given facts, and version-control operations whose brief states the user's authorization; use it proactively.
 model: haiku
 effort: high
 disallowedTools: Agent
