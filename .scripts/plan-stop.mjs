@@ -84,7 +84,8 @@ function openedBetween(root, plan, since, until) {
 
 const clip = (line) => {
   const text = withoutMarks(line).trim().replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ');
-  return text.length > 200 ? `${text.slice(0, 199)}\u2026` : text;
+  const points = [...text];
+  return points.length > 200 ? `${points.slice(0, 199).join('')}\u2026` : text;
 };
 
 // What keeps the plan's execution from ending, one line each, or the paths that could not be read. For a subagent,

@@ -85,7 +85,7 @@ Recompute it on every run from the repository itself; keep no state file.
 
 ## Report
 
-In the user's language, one line per applicable item: adoption version and fixed ref, local or GitHub repository, cleanup, remote, each changed document, deferred decisions with their backlog.md identifiers, starter base and its verification, skills, tool servers, language-server binary, the Codex hook-trust notice, and the checks. Start each line with ✅, ❌, ⚠️, ⏳, or ℹ️, grouping the lines in that order. For empty adoption report that the skeletons are ready with no application or selected stack. The ordinary derived-project report may name the first commit as the next step, made only if the user asks (`12`, or `/commit`). Scaffolding belongs only to the explicit mockup build.
+In the user's language, one line per applicable item: adoption version and fixed ref, local or GitHub repository, cleanup, remote, each changed document, deferred decisions with their backlog.md identifiers, starter base and its verification, skills, tool servers, language-server binary, the Codex hook-trust notice, and the checks. Start each line with ✅, ❌, ⚠️, 🚫, ⏳, or ℹ️, grouping the lines in that order. For empty adoption report that the skeletons are ready with no application or selected stack. The ordinary derived-project report may name the first commit as the next step, made only if the user asks (`12`, or `/commit`). Scaffolding belongs only to the explicit mockup build.
 
 ## Client bindings
 

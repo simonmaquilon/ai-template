@@ -50,3 +50,35 @@ for (const client of ['claude', 'codex']) {
     for (const at of [1, 3, 9]) assert.doesNotMatch(reason, new RegExp(`report\\.md:${at}: `));
   });
 }
+
+test('openLine opens a not-verified line and cell as an open line that is not pending, and not a mark in mid-text', () => {
+  const forms = {
+    'plain': '🚫 AC2 not measured, no browser', 'list': '- 🚫 AC2 not measured, no browser', 'quote': '> 🚫 AC2 not measured, no browser',
+    'task': '- [ ] 🚫 AC2 not measured', 'bold': '- **🚫 AC2 not measured**', 'cell': '| C1 | 🚫 | text |', 'first cell': '| 🚫 | C1 | text |',
+  };
+  for (const [name, line] of Object.entries(forms)) assert.deepEqual(open(line), { id: undefined, pending: false }, name);
+  assert.equal(open('- 🚫 [P-08] AC2 not measured').id, 'P-08');
+  assert.equal(open('| [P-09] | C1 | **🚫** | text |').id, 'P-09');
+  for (const line of ['✅ AC1 met, the 🚫 before was resolved', '- ✅ AC1 met after 🚫 AC2', '> ℹ️ note about 🚫', 'Plain 🚫 text', '| C1 | done 🚫 | text |', '-🚫 no space after the bullet']) {
+    assert.equal(open(line), null, line);
+  }
+});
+
+test('openLines skips a not-verified mark inside fenced code and keeps the other marks', () => {
+  const text = ['🚫 one', '```md', '🚫 in a fence', '| C1 | 🚫 |', '```', '⏳ two', '⚠ three', '| C1 | 🚫 | four |'].join('\n');
+  assert.deepEqual(openLines(text).map(({ at, pending }) => [at, pending]), [[0, false], [5, true], [6, false], [7, false]]);
+});
+
+for (const client of ['claude', 'codex']) {
+  test(`${client}: the hook blocks on a not-verified line and cell, and never cuts a surrogate pair of a long line`, (t) => {
+    const fixture = planRepo(t, client);
+    fixture.turn();
+    const long = `⚠️ ${'a'.repeat(195)}🚫 tail of a long line`;
+    fixture.plan({ 'build/00-index.md': index('done'), 'review/report.md': `✅ met\n- 🚫 AC2 not measured, no browser\n| C1 | 🚫 | table |\n${long}\n✅ cleared the 🚫 before\n` });
+    const { reason } = answer(assert, fixture.fire('Stop', { stop_hook_active: false }));
+    for (const at of [2, 3]) assert.match(reason, new RegExp(`report\\.md:${at}: `));
+    for (const at of [1, 5]) assert.doesNotMatch(reason, new RegExp(`report\\.md:${at}: `));
+    assert.doesNotMatch(reason, /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/);
+    assert.match(reason, /report\.md:4: ⚠️ a+🚫…/);
+  });
+}

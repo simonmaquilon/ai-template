@@ -64,7 +64,7 @@ Before the first edit, state the change's level in one line.
 - No preambles, recaps, repetition, or unsolicited suggestions unless blocked or scope was left out.
 - Explain only when necessary or explicitly requested.
 - Keep code blocks copy-paste ready and link files with workspace-relative clickable links.
-- For a change, report the outcome, its cause when established, the changed areas, the validation run and result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with one state, splitting mixed lines: ✅ done, ❌ failed, ⚠️ open risk or gap, ⏳ pending, or ℹ️ stateless note, a resolved ⚠️ becoming ✅; group lines in that order and use those markers nowhere else.
+- For a change, report the outcome, its cause when established, the changed areas, the validation run and result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with one state, splitting mixed lines: ✅ done, ❌ failed, ⚠️ open risk, 🚫 not verified, with its reason, ⏳ pending, or ℹ️ stateless note, a resolved ⚠️ or a verified 🚫 becoming ✅; group lines in that order and use those markers nowhere else.
 
 ## Instruction routing
 

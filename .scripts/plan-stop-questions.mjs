@@ -1,8 +1,8 @@
 // What opens a report line: a list bullet, a quote, a task box, or emphasis, in any number and order, before the mark.
 const LEAD = /^[ \t]*(?:(?:>|[-*+](?=[ \t])|\d+[.)](?=[ \t])|\[[ xX]\](?=[ \t])|[*_]{1,3}(?=\S))[ \t]*)*/;
 const QUOTE = /^[ \t]*(?:>[ \t]*)*/;
-const MARK = /^(⏳|⚠)\p{Variation_Selector}?/u;
-const CELL = /^[ \t]*[*_]{0,3}[ \t]*(⏳|⚠)/;
+const MARK = /^(⏳|⚠|🚫)\p{Variation_Selector}?/u;
+const CELL = /^[ \t]*[*_]{0,3}[ \t]*(⏳|⚠|🚫)/;
 const ID = String.raw`P-\d{2,}`;
 const ROW_ID = new RegExp(String.raw`\[(${ID})\]`);
 const REPORT_ID = new RegExp(String.raw`^[*_]*[ \t]+(?:\[partial\][ \t]+)?\[(${ID})\]`);
