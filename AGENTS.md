@@ -51,6 +51,7 @@ Before the first edit, state the change's level in one line.
 - Never open, display, copy, log, or commit secret values; use the configured secret mechanism, and example files for names and placeholders.
 - Treat edit-hook warnings as leads to verify, never as confirmed findings or license to change unrelated code.
 - Keep temporary and ad-hoc artifacts in `.temp/`, removing task-specific ones before closing except plans under `.temp/plans/`.
+- Never delete `.temp/` as a whole or empty it with a wildcard.
 - Start a background process, such as a server, a log follower like `tail -f`, a watcher, or a wait loop, only with a timeout or a stop the task controls, bound every wait with a time limit, and stop every one you started before reporting, above all any that cannot end on its own.
 - Before recommending a command, point to the repository script, hook, or documented command that covers it; when none does and the task repeats, offer a `.scripts/` helper.
 
@@ -58,7 +59,10 @@ Before the first edit, state the change's level in one line.
 
 - Write code, identifiers, filenames, comments, operational messages, commits, this file, the instruction modules, `.docs/stack.md`, and `.docs/security.md` in English, and the rest of `.docs/`, `README.md`, and `.readme/` in Spanish.
 - Write everything else the user sees, subagent briefs included, in the language of the user's latest own words, using `.docs/product.md` domain terminology without synonyms.
-- Lead with the answer, code, or command, as short as a technical reader needs, without preambles, recaps, or unasked offers or next steps unless blocked or scope was left out.
+- Lead with the answer, code, or command, directly and concisely.
+- Include only essential information, keeping the context needed to follow it.
+- No preambles, recaps, repetition, or unsolicited suggestions unless blocked or scope was left out.
+- Explain only when necessary or explicitly requested.
 - Keep code blocks copy-paste ready and link files with workspace-relative clickable links.
 - For a change, report the outcome, its cause when established, the changed areas, the validation run and result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with one state, splitting mixed lines: ✅ done, ❌ failed, ⚠️ open risk or gap, ⏳ pending, or ℹ️ stateless note, a resolved ⚠️ becoming ✅; group lines in that order and use those markers nowhere else.
 

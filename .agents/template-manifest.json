@@ -1,5 +1,5 @@
 {
-  "version": "8.0.0",
+  "version": "8.1.0",
   "files": {
     ".agents/instructions/01-meta-guidelines.md": "255420c5c4826772392994dd48873122b3b1d96b",
     ".agents/instructions/02-change-workflow.md": "1fb15f5af5bdf13ffd8298a7eb3fd49fa93deefd",
@@ -71,7 +71,7 @@
     ".agents/skills/start/agents/openai.yaml": "5b1f887a9138416870f64ba2fe21602e4a59cfa7",
     ".agents/skills/start/references/documents.md": "87a0e736c07ce6787cef876cc5a874d4e6113d19",
     ".agents/skills/start/references/tooling.md": "b50722cd281db4db10db3ae2376e4a26481eac7b",
-    ".agents/template-version": "ae9a76b9249ada6741bd54810f9e944f1c7aaf74",
+    ".agents/template-version": "8104cabd36fb592bf6961f09c7f25c00b93a952f",
     ".agents/tool-versions.json": "79dc80d9e0578b1f1fec5fc4b38803a8f941a51b",
     ".claude/agents/copilot-haiku.md": "d16b1ef527fea01e4a2846bb14ceadda66801c47",
     ".claude/agents/copilot-opus.md": "ff5820dd44b271f4bb409e4b49e5e58c99aef638",
@@ -196,7 +196,7 @@
     ".scripts/write-scope-template-only.mjs": "caeb8a5e69983666e40b947cb0143ad12a9b005d",
     ".scripts/write-scope.mjs": "1528658695dfae0220afda28ca43618068fc2295",
     ".temp/.gitignore": "d6b7ef32c8478a48c3994dcadc86837f4371184d",
-    "AGENTS.md": "706673c768c3370cceaebc075993af1096b9fc16",
+    "AGENTS.md": "a1c9a11b89c8bb6a95232c0b19106e704219ba6d",
     "README.md": "cdcc1587811bb70e9387f3717d02ccef18cd3090",
     "skills-lock.json": "3fa7efe08f92443265d91e28b31b4df218cd1265"
   }
