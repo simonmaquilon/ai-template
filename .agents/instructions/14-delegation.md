@@ -20,6 +20,7 @@ Read before planning a normal or risk change, before work that needs a search or
 - Run tasks at the same time in one working tree only when they write disjoint files, and give a task an isolated working tree only when it starts from the revision and the uncommitted changes the task needs.
 - Keep each brief as short as the task allows: the complete task, what the session has already ruled out, its constraints, acceptance criteria, and paths, pointing to the files and lines that give context instead of copying them.
 - Require in each brief a final message of a stated maximum length with concise findings, file paths, the path and line behind each conclusion, changes made, and open issues.
+- Quote in a brief each sandbox-exempt command in its exact exempt form, with where to read its output, never redirected, piped, chained, or prefixed.
 - Require in each brief that the subagent bounds and stops every background process it starts and lists in its final message any it started that still runs; stop each one listed before accepting the result.
 - Delegating never widens authorization: a version-control write, a deploy, or a destructive operation a subagent runs needs the user's explicit authorization for it, stated in its brief.
 - When the client does not let the session wait for a subagent, continue with work that does not depend on it, and neither report nor assume its result until it arrives.

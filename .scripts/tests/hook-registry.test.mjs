@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { CLAUDE_ONLY, read, scriptOf } from './hook-registry-fixture.mjs';
+import { CLAUDE_ONLY, CLAUDE_ONLY_SCRIPTS, claudeOnly, hookList, hooksOf, read, scriptOf } from './hook-registry-fixture.mjs';
 
 // Per event, the sorted script names a client file registers through one way of launching them, so a script
 // registered twice for the same event counts twice.
@@ -21,13 +21,22 @@ function documented() {
   });
 }
 
-const shared = Object.fromEntries(Object.entries(claude).filter(([event]) => !(event in CLAUDE_ONLY)));
+const shared = Object.fromEntries(Object.entries(claude).filter(([event]) => !(event in CLAUDE_ONLY))
+  .map(([event, names]) => [event, names.filter((name) => !claudeOnly(event, name))]));
 
 test('Claude Code, Codex command and Codex commandWindows register the same scripts for every event', () => {
   assert.ok(Object.keys(shared).length > 0);
   assert.deepEqual(registered('.codex/hooks.json', (hook) => scriptOf(hook.command)), shared);
   assert.deepEqual(registered('.codex/hooks.json', (hook) => scriptOf(hook.commandWindows)), shared);
   for (const [event, names] of Object.entries(CLAUDE_ONLY)) assert.deepEqual(claude[event], names, event);
+});
+
+test('the exemption hook is registered for the Claude Code shell tools and has no Codex entry', () => {
+  const [script] = CLAUDE_ONLY_SCRIPTS.PreToolUse;
+  const own = hookList(hooksOf('.claude/settings.json'), true).filter((hook) => hook.script === script);
+  assert.deepEqual(own.map(({ event, matcher }) => `${event} ${matcher}`), ['PreToolUse Bash|Monitor|PowerShell']);
+  assert.ok(claudeOnly('PreToolUse', script));
+  assert.deepEqual(hookList(hooksOf('.codex/hooks.json'), false).filter((hook) => hook.script === script), []);
 });
 
 test('the registry table in 92-agent-hooks.md lists exactly the scripts the clients register for each event', () => {

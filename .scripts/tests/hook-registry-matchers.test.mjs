@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { CLAUDE_ONLY, hookList, hooksOf, key, mapped, tools } from './hook-registry-fixture.mjs';
+import { claudeOnly, hookList, hooksOf, key, mapped, tools } from './hook-registry-fixture.mjs';
 
 // The Claude Code and Codex hooks as (event, script, Codex matcher) lines, which must be the same lines.
 function matcherLines(claudeHooks, codexHooks) {
-  const lines = (list) => list.filter(({ event }) => !(event in CLAUDE_ONLY)).map(key).sort();
+  const lines = (list) => list.filter(({ event, script }) => !claudeOnly(event, script)).map(key).sort();
   return [lines(hookList(claudeHooks, true).map(mapped)), lines(hookList(codexHooks, false))];
 }
 

@@ -360,6 +360,14 @@
               "${CLAUDE_PROJECT_DIR}/.scripts/check-protected-paths.mjs"
             ],
             "statusMessage": "Checking shell writes to protected paths"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-exempt-command.mjs"
+            ],
+            "statusMessage": "Checking calls that would confine an exempt command"
           }
         ]
       },

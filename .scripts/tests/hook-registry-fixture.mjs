@@ -20,6 +20,10 @@ export function scriptOf(command) {
 // PostToolUse already runs for a Bash command that exits with an error.
 export const CLAUDE_ONLY = { PostToolUseFailure: ['check-protected-paths.mjs'] };
 
+// Scripts only Claude Code registers inside an event both clients have: Codex has no list of sandbox exemptions.
+export const CLAUDE_ONLY_SCRIPTS = { PreToolUse: ['check-exempt-command.mjs'] };
+export const claudeOnly = (event, script) => event in CLAUDE_ONLY || (CLAUDE_ONLY_SCRIPTS[event] ?? []).includes(script);
+
 // The tools of a matcher, in order, so that a reordered matcher is the same one and no matcher is no tools.
 export const tools = (matcher) => String(matcher ?? '').split('|').filter(Boolean).sort().join('|');
 
