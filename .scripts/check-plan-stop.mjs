@@ -1,45 +1,38 @@
 #!/usr/bin/env node
 // Keeps an execution of a prompt-plan plan from ending while it can still go on within what the user authorized
 // (prompt-plan, references/execution.md, Ending an execution). A matching final question or subagent handoff can pause
-// open work. With --turn-start, on UserPromptSubmit, it writes a marker for the
-// session's turn under .temp/, unless the prompt carries TOKEN or the continuation token of check-file-length.mjs, as
-// the continuation either hook causes does (turn-marker.mjs); with --agent-start, on SubagentStart, one for the
-// subagent. On Stop and SubagentStop it checks the plans under .temp/plans/ that the turn, or the
-// subagent since it started, wrote, as plan-stop.mjs reads them (a subagent answers only for the fragments it opened,
-// never for the report's lines), and blocks the stop with decision "block" and the open
-// items as the reason, which both clients hand to the agent as its next instruction. Without a turn marker it checks
+// open work. With --turn-start, on UserPromptSubmit, it writes a marker for the session's turn under .temp/, unless the
+// prompt carries TOKEN or the continuation token of check-file-length.mjs, as the continuation either hook causes does
+// (turn-marker.mjs), and unless it is an automatic turn it marks the session's question receipts answered
+// (plan-stop-receipts.mjs); with --agent-start, on SubagentStart, one marker for the subagent; with --question, after the
+// client's question tool, it records the receipt of an answered question that names [P-01] in a plan the turn touched. On
+// Stop and SubagentStop it checks the plans under .temp/plans/ that the turn, or the subagent since it started, wrote, as
+// plan-stop.mjs reads them (a subagent answers only for the fragments it opened, never for the report's lines), and
+// blocks the stop with decision "block" and the open items as the reason, which both clients hand to the agent as its
+// next instruction; a stop that does not block for a plan records the questions it shows as presented. Without a turn marker it checks
 // only a plan whose times.log has a work segment open; a subagent without a marker, such as one of the client's
 // own, is never checked, nor a stop while a background subagent, workflow, or teammate runs. plan-stop-state.mjs
 // bounds the blocks and lets the stop through, with a warning to the user, at its limits or when it cannot keep its
 // count; it never relies on stop_hook_active. Its own errors never block: it exits 0 with a warning.
 
-import { lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
+import { lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { enterRepositoryRoot, readHookInput } from './hook-support.mjs';
+import { statusChecker } from './plan-stop-evidence.mjs';
 import { PLANS, hasCurrentEvidence, lastTime, openItems, opensWork, planFolders, started, touchedSince } from './plan-stop.mjs';
 import { finalQuestions } from './plan-stop-questions.mjs';
+import { answerPresented, answeredIds, fromTool, present } from './plan-stop-receipts.mjs';
 import { MAX_WINDOW, WINDOW_MINUTES, count, dropState, readState, writeState } from './plan-stop-state.mjs';
-import { PLAN_STOP_TOKEN as TOKEN, isContinuation, markTurnStart } from './turn-marker.mjs';
+import { PLAN_STOP_TOKEN as TOKEN, isAutomatic, isContinuation, markTurnStart } from './turn-marker.mjs';
 
 const MARKERS = '.temp/check-plan-stop';
 const SHOWN = 25;
 const RULE = 'prompt-plan, references/execution.md, Ending an execution';
-const PROVENANCE = 'Approval provenance is unavailable for this client. Open items stay pending, including ones with report marks.';
+const RECEIPTS = 'A line the user answered closes only with its [answered YYYY-MM-DD P-01] mark and the receipt the hook recorded for that ID: its question shown in a final message and followed by a later user turn, or answered through the client’s question tool with the ID in its text. A mark without a receipt stays pending.';
 const BACKGROUND = new Set(['subagent', 'workflow', 'teammate']);
-const start = process.argv.includes('--turn-start') ? 'turn' : process.argv.includes('--agent-start') ? 'agent' : null;
+const flag = (name) => process.argv.includes(name);
+const start = flag('--turn-start') ? 'turn' : flag('--agent-start') ? 'agent' : flag('--question') ? 'question' : null;
 const id = (value) => String(value ?? '').replace(/[^\w-]/g, '_');
-
-async function statusChecker() {
-  const source = new URL('../.agents/skills/prompt-plan/scripts/node/check-report.mjs', import.meta.url);
-  try {
-    if (lstatSync(source, { throwIfNoEntry: false })?.isFile() && realpathSync.native(source) === fileURLToPath(source)) {
-      const { checkStatus } = await import(source.href);
-      if (typeof checkStatus === 'function') return checkStatus;
-    }
-  } catch {}
-  return null;
-}
 
 function guard(input, root, checkStatus) {
   const session = id(input.session_id);
@@ -51,9 +44,12 @@ function guard(input, root, checkStatus) {
   // A marker's identity is the time it holds, which stays the same if anything moves its modification time.
   const identity = () => (time(marker) === null ? null : `marker ${readFileSync(join(markers, marker), 'latin1').slice(0, 20)}`);
 
-  if (start === 'turn' && marker && !isContinuation(input.prompt)) markTurnStart(root, MARKERS, marker);
+  if (start === 'turn' && marker && !isContinuation(input.prompt)) {
+    markTurnStart(root, MARKERS, marker);
+    if (!isAutomatic(input.prompt)) answerPresented(root, session);
+  }
   if (start === 'agent' && marker) markTurnStart(root, MARKERS, marker);
-  if (start) return {};
+  if (start && start !== 'question') return {};
 
   const from = marker ? time(marker) : null;
   if (subagent && from === null) return {};
@@ -69,7 +65,7 @@ function guard(input, root, checkStatus) {
       const turn = from === null ? `open ${lastTime(root, plan)}` : identity();
       const stored = readState(root, plan, actor);
       const prior = stored?.turn === turn ? stored : null;
-      if (prior?.released) {
+      if (prior?.released && start !== 'question') {
         // Without a turn marker the release lasts as long as the open segment, so only a marked turn repeats the notice.
         if (from !== null) notes.push(`check-plan-stop (${RULE}): ${PLANS}/${plan} was let through earlier in this turn with open items, which stay pending.`);
         continue;
@@ -80,12 +76,17 @@ function guard(input, root, checkStatus) {
       notes.push(`check-plan-stop: ${PLANS}/${plan} could not be checked (${error?.message ?? error}), so its execution was let through.`);
     }
   }
+  if (start === 'question') {
+    fromTool(root, input, session, eligible.map(({ plan }) => plan));
+    return {};
+  }
   const questions = finalQuestions(input, subagent);
   for (const { plan, turn, stored } of eligible) {
     const where = `${PLANS}/${plan}`;
     try {
       const matching = questions.filter((question) => question.plan ? question.plan === plan : eligible.length === 1);
-      const { items, unreadable } = openItems(root, plan, subagent ? { since: from, until } : null, matching);
+      const show = () => !subagent && present(root, plan, matching, session);
+      const { items, unreadable } = openItems(root, plan, subagent ? { since: from, until } : null, matching, answeredIds(root, plan));
       if (unreadable) {
         notes.push(`check-plan-stop: ${where}: could not read ${unreadable.join(' and ')}, so its execution was not checked.`);
         continue;
@@ -98,13 +99,15 @@ function guard(input, root, checkStatus) {
       if (items.length === 0) {
         if (subagent || !stored?.times?.length) dropState(root, plan, actor);
         else writeState(root, plan, actor, { turn, times: stored.times });
+        show();
         continue;
       }
       const result = count(root, plan, actor, stored, turn, items);
       if (result.verdict === 'release') {
         if (subagent) dropState(root, plan, actor);
         const brake = result.lost ? 'the hook could not keep its count in the plan’s .cache/' : 'the continuation limit was reached';
-        notes.push(`check-plan-stop (${RULE}): ${where} still has ${items.length} open ${items.length === 1 ? 'item' : 'items'}. The turn may end because ${brake}: ${items.slice(0, 5).join('; ')}. ${PROVENANCE}`);
+        notes.push(`check-plan-stop (${RULE}): ${where} still has ${items.length} open ${items.length === 1 ? 'item' : 'items'}. The turn may end because ${brake}: ${items.slice(0, 5).join('; ')}. ${RECEIPTS}`);
+        show();
         continue;
       }
       const shown = items.slice(0, SHOWN).map((item) => `- ${item}`);
@@ -120,10 +123,10 @@ function guard(input, root, checkStatus) {
   const scope = eligible.length > 1 ? ' Add [plan-folder-name] after each item identifier or fragment number when multiple plans are in scope.' : '';
   const next = subagent
     ? 'Hand each unresolved decision to the coordinator in your final message with "- Handoff [P-01] Should …?" or "- Handoff fragment 02 Should …?".'
-    : 'Give each open report line a unique [P-01]-style identifier after its status or [partial] marker. For a decision only the user can settle, ask a specific question on its own final-message line as "- [P-01] Should …?" with the options and the recommended one first. Name any related fragment numbers on its ⏳ report line.';
+    : 'Give each open report line a unique [P-01]-style identifier after its status or [partial] marker. For a decision only the user can settle, ask a specific question on its own final-message line as "- [P-01] Should …?" with the options and the recommended one first. Name any related fragment numbers on its ⏳ report line. Once the user answers, add [answered YYYY-MM-DD P-01] to that line.';
   return {
     decision: 'block',
-    reason: `The plan execution has open items (${RULE}).\n${blocked.join('\n')}\n${PROVENANCE} `
+    reason: `The plan execution has open items (${RULE}).\n${blocked.join('\n')}\n${RECEIPTS} `
       + `Go on with each item within what the user authorized. ${next}${scope} ${TOKEN}`,
     ...message,
   };

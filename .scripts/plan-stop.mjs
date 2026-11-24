@@ -6,7 +6,7 @@
 import { closeSync, constants, fstatSync, lstatSync, readdirSync, readSync } from 'node:fs';
 import { join } from 'node:path';
 import { inFolder, openRegular } from './safe-fs.mjs';
-import { namedFragments, openLines, withoutMarks } from './plan-stop-questions.mjs';
+import { answeredMarks, namedFragments, openLines, withoutMarks } from './plan-stop-questions.mjs';
 
 export const PLANS = '.temp/plans';
 export const UNREADABLE = Symbol('unreadable');
@@ -91,7 +91,7 @@ const clip = (line) => {
 // What keeps the plan's execution from ending, one line each, or the paths that could not be read. For a subagent,
 // `agent` gives when it started and when the next subagent of its session started: only the fragments whose before
 // record it opened between the two count, never the report's lines, since the coordinator alone writes the report.
-export function openItems(root, plan, agent, questions) {
+export function openItems(root, plan, agent, questions, answered = new Set()) {
   const index = readPlanFile(root, plan, 'build/00-index.md');
   const report = readPlanFile(root, plan, 'review/report.md');
   const unreadable = [['build/00-index.md', index], ['review/report.md', report]].filter(([, text]) => text === UNREADABLE);
@@ -102,15 +102,24 @@ export function openItems(root, plan, agent, questions) {
   });
   const ids = new Set(questions.map(({ id }) => id).filter(Boolean));
   const named = new Set(questions.map(({ fragment }) => fragment).filter(Boolean));
-  const lines = openLines(report ?? '');
+  // A line closes with the mark of its own identifier, when the hook holds an answered receipt for it; a line with no
+  // identifier of its own closes with none.
+  const closes = ({ id, line }) => id !== undefined && answeredMarks(line).some((mark) => id === mark && answered.has(mark));
+  const lines = openLines(report ?? '').filter((open) => !closes(open));
   const idCounts = new Map();
   for (const { id } of lines) idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
+  // Lines that share an identifier are one item: the first is listed, with how many more repeat it.
   const unasked = [];
+  const first = new Map();
   for (const { id, pending, line, at } of lines) {
     if (ids.has(id) && idCounts.get(id) === 1) {
       if (pending) for (const number of namedFragments(line)) named.add(number);
+    } else if (!agent && first.has(id)) {
+      first.get(id).more++;
     } else if (!agent) {
-      unasked.push(`review/report.md:${at + 1}: ${clip(line)}`);
+      const item = { id, more: 0, text: `review/report.md:${at + 1}: ${clip(line)}` };
+      unasked.push(item);
+      if (id) first.set(id, item);
     }
   }
   const items = [];
@@ -128,5 +137,6 @@ export function openItems(root, plan, agent, questions) {
       if (status !== 'pending') items.push(`build/00-index.md: fragment ${number} is ${status} and missing a final question`);
     }
   }
-  return { items: [...items, ...unasked] };
+  const repeats = ({ id, more, text }) => (more > 0 ? `${text} (and ${more} more open ${more === 1 ? 'line' : 'lines'} repeat ${id})` : text);
+  return { items: [...items, ...unasked.map(repeats)] };
 }

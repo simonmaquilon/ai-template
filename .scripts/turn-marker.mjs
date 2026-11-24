@@ -17,6 +17,16 @@ export const FILE_LENGTH_TOKEN = '[check-file-length:continuation]';
 // Whether a UserPromptSubmit prompt is the continuation of either stop hook, whatever text the client puts before it.
 export const isContinuation = (prompt) => typeof prompt === 'string' && [PLAN_STOP_TOKEN, FILE_LENGTH_TOKEN].some((token) => prompt.includes(token));
 
+// The beginnings of the prompts a client delivers to UserPromptSubmit on its own, with no person typing: background task
+// notifications, reports of subagents, messages of other sessions, scheduled tasks, and the like. Claude Code documents
+// that the event "also fires on turns Claude Code starts on its own" without listing them, so this is the known list;
+// an automatic origin it does not hold counts as a turn of the user.
+const AUTOMATIC = ['<task-notification>', '<system-reminder>', '<agent-message', '<cross-session-message', '<side-sessions-event>', '<ci-monitor-event>',
+  '<webhook-payload>', '<wake', '<child-session-event>', '[SYSTEM NOTIFICATION', 'Another Claude session sent a message', '[Artifact comment sent to Claude]'];
+
+// Whether a UserPromptSubmit prompt, after spaces, begins with one of those machine wrappers.
+export const isAutomatic = (prompt) => typeof prompt === 'string' && AUTOMATIC.some((beginning) => prompt.trimStart().startsWith(beginning));
+
 // Whether `name` is a regular file of at most 80 bytes that holds a time in digits, and after it only the fingerprint
 // lines of a brake state, and has not changed for a week.
 function isIdleMarker(name) {

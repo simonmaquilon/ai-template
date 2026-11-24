@@ -557,6 +557,20 @@
             "statusMessage": "Checking protected paths after the command"
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.scripts/check-plan-stop.mjs",
+              "--question"
+            ],
+            "statusMessage": "Recording the answer to a plan question"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [

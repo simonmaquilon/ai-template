@@ -39,6 +39,16 @@ test('the exemption hook is registered for the Claude Code shell tools and has n
   assert.deepEqual(hookList(hooksOf('.codex/hooks.json'), false).filter((hook) => hook.script === script), []);
 });
 
+test('the question receipt hook is registered for the Claude Code question tool only, as the declared Codex exclusion', () => {
+  const [script] = CLAUDE_ONLY_SCRIPTS.PostToolUse;
+  const own = (file, isClaude) => hookList(hooksOf(file), isClaude).filter((hook) => hook.script === script && hook.event === 'PostToolUse');
+  assert.deepEqual(own('.claude/settings.json', true).map(({ matcher, flags }) => `${matcher} ${flags}`), ['AskUserQuestion --question']);
+  assert.deepEqual(own('.codex/hooks.json', false), []);
+  assert.ok(claudeOnly('PostToolUse', script));
+  assert.ok(!claudeOnly('Stop', script), 'the script keeps its Codex entries for the other events');
+  assert.match(read('.readme/92-agent-hooks.md'), /request_user_input/);
+});
+
 test('the registry table in 92-agent-hooks.md lists exactly the scripts the clients register for each event', () => {
   const pairs = Object.entries(claude).flatMap(([event, names]) => names.map((name) => `${event} ${name}`));
   assert.deepEqual([...new Set(documented())].sort(), [...new Set(pairs)].sort());

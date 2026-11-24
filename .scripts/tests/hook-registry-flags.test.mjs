@@ -22,6 +22,7 @@ const FLAGS = new Map([
   row('PostToolUse', 'check-markdown.mjs', 'Edit|Write|apply_patch', { own: ['--hook'] }),
   row('PostToolUse', 'update-stack-doc.mjs', 'Edit|Write|apply_patch|Bash', { own: ['--hook'] }),
   row('PostToolUse', 'check-protected-paths.mjs', 'Bash', { own: ['--after'] }),
+  row('PostToolUse', 'check-plan-stop.mjs', 'AskUserQuestion', { own: ['--question'] }),
   row('PostToolUseFailure', 'check-protected-paths.mjs', 'Bash', { own: ['--after'] }),
   row('Stop', 'check-file-length.mjs', '', { own: ['--hook'] }),
   row('SubagentStart', 'check-plan-stop.mjs', '', { own: ['--agent-start'] }),

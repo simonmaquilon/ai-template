@@ -20,8 +20,10 @@ export function scriptOf(command) {
 // PostToolUse already runs for a Bash command that exits with an error.
 export const CLAUDE_ONLY = { PostToolUseFailure: ['check-protected-paths.mjs'] };
 
-// Scripts only Claude Code registers inside an event both clients have: Codex has no list of sandbox exemptions.
-export const CLAUDE_ONLY_SCRIPTS = { PreToolUse: ['check-exempt-command.mjs'] };
+// Scripts only Claude Code registers inside an event both clients have: Codex has no list of sandbox exemptions, and its
+// hook documentation does not list its question tool (request_user_input) among the tools PostToolUse covers, so the
+// receipt of an answered question (check-plan-stop.mjs --question) has no Codex entry.
+export const CLAUDE_ONLY_SCRIPTS = { PreToolUse: ['check-exempt-command.mjs'], PostToolUse: ['check-plan-stop.mjs'] };
 export const claudeOnly = (event, script) => event in CLAUDE_ONLY || (CLAUDE_ONLY_SCRIPTS[event] ?? []).includes(script);
 
 // The tools of a matcher, in order, so that a reordered matcher is the same one and no matcher is no tools.
@@ -31,7 +33,7 @@ export const tools = (matcher) => String(matcher ?? '').split('|').filter(Boolea
 // runs a command in the Bash shell, against Codex's Bash, and its file tools are apply_patch in Codex.
 const CODEX_OF = new Map(Object.entries({
   'Bash|PowerShell|Monitor': 'Bash', 'Bash|Monitor': 'Bash', 'Write|Edit|NotebookEdit': 'apply_patch', 'Edit|Write': 'Edit|Write|apply_patch',
-  'Edit|Write|Bash|PowerShell': 'Edit|Write|apply_patch|Bash', '': '',
+  'Edit|Write|Bash|PowerShell': 'Edit|Write|apply_patch|Bash', '': '', AskUserQuestion: 'AskUserQuestion',
 }).map(([claudeSide, codexSide]) => [tools(claudeSide), tools(codexSide)]));
 
 // Every hook of a client as { event, script, matcher, flags } plus, for Codex, the flags of its commandWindows form.

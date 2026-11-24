@@ -17,7 +17,7 @@ for (const client of ['claude', 'codex']) {
     fixture.plan({});
     const result = stop(fixture, { tool_response: { answers: { 'P-01': 'Accept', 'P-02': 'Accept' } }, decision: 'accept' });
     assert.equal(result.decision, 'block');
-    assert.match(result.reason, /approval provenance/i);
+    assert.match(result.reason, /mark without a receipt stays pending/);
     assert.match(result.reason, /fragments pending.*02/);
     assert.match(result.reason, /report\.md:1: ⏳ \[P-01\]/);
     assert.match(result.reason, /report\.md:2: ⚠️ \[P-02\]/);
@@ -66,7 +66,7 @@ for (const client of ['claude', 'codex']) {
     fixture.plan({ 'build/00-index.md': DONE, [path]: '⏳ [P-01] Which timeout should we use?\n⚠️ [P-01] Baseline unavailable\n' });
     const result = stop(fixture, { last_assistant_message: '- [P-01] Should the timeout be 30 seconds or a minute?' });
     assert.match(result.reason, /report\.md:1: ⏳ \[P-01\]/);
-    assert.match(result.reason, /report\.md:2: ⚠️ \[P-01\]/);
+    assert.match(result.reason, /report\.md:1: ⏳ \[P-01\].*\(and 1 more open line repeat P-01\)/);
   });
 
   test(`${client}: a subagent's final handoff defers only its own obligations`, (t) => {

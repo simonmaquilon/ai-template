@@ -6,11 +6,16 @@ const CELL = /^[ \t]*[*_]{0,3}[ \t]*(⏳|⚠|🚫)/;
 const ID = String.raw`P-\d{2,}`;
 const ROW_ID = new RegExp(String.raw`\[(${ID})\]`);
 const REPORT_ID = new RegExp(String.raw`^[*_]*[ \t]+(?:\[partial\][ \t]+)?\[(${ID})\]`);
-const MARKS = /\[(?:asked the user|accepted by the user) \d{4}-\d{2}-\d{2}\]/g;
+const DATE = String.raw`\d{4}-\d{2}-\d{2}`;
+const MARKS = new RegExp(String.raw`\[(?:asked the user|accepted by the user) ${DATE}\]|\[answered ${DATE} ${ID}\]`, 'g');
+const ANSWERED = new RegExp(String.raw`\[answered ${DATE} (${ID})\]`, 'g');
 const NUMBER = String.raw`(?<![\p{L}\p{N}])(\d{2})(?![\p{L}\p{N}])`;
 const FINAL = new RegExp(String.raw`^ {0,3}[-*+][ \t]+(Handoff )?(?:\[(${ID})\]|fragment (\d{2}))(?:[ \t]+\[([^\]]+)\])?[ \t]+(.+[?？])[ \t]*$`, 'u');
 
 export const withoutMarks = (line) => line.replace(MARKS, '').trimEnd();
+
+// The identifiers a line marks as answered with `[answered YYYY-MM-DD P-01]`; the mark closes nothing without a receipt.
+export const answeredMarks = (line) => [...line.matchAll(ANSWERED)].map(([, id]) => id);
 
 // Whether a report line is open, and its identifier: the mark opens a line of text, or a cell of a table row, which the
 // identifier may stand anywhere in. A mark in mid-text, and a table separator, open nothing.

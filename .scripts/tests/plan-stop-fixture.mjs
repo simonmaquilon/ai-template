@@ -9,6 +9,7 @@ export const DONE = '| [01](01-step.md) | Step | AC1 | | done |\n';
 // A fixed date for the marks, so that every test reads the same report whatever day it runs.
 export const ASKED = '[asked the user 2026-01-05]';
 export const ACCEPTED = '[accepted by the user 2026-01-05]';
+export const answered = (id = 'P-01') => `[answered 2026-01-05 ${id}]`;
 
 export function index(...statuses) {
   const rows = statuses.map((status, i) => `| [0${i + 1}](0${i + 1}-step.md) | Step ${i + 1} | AC${i + 1} | | ${status} |`);
