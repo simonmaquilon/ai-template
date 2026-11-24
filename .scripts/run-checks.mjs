@@ -12,7 +12,7 @@
 // source-file limit, which receives the arguments given here, such as --base <revision>. Exits with status 1 when any
 // step fails, and with status 3 when the only problem is a step the environment
 // blocked, such as a sandbox that denies writes under .git or .temp, which never
-// ran and so neither passed nor failed (04-validation-and-testing.md).
+// ran and so neither passed nor failed (16-command-execution.md).
 
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';

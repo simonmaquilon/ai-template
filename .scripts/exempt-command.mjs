@@ -1,11 +1,12 @@
 // Reads a shell call the way the client's sandbox exemption does, for the exempt-command hook
-// (04-validation-and-testing.md): which simple commands it holds and which forms keep it confined even when every
+// (16-command-execution.md): which simple commands it holds and which forms keep it confined even when every
 // command matches an exemption. Those forms are a redirection other than one that only duplicates a descriptor, as
 // 2>&1 does, a pipe, chaining with && || ; & or a line end, a leading variable assignment, a cd, pushd or popd, a
 // sudo, eval or xargs prefix, a command substitution, a subshell and a control block, whose keywords (if, then, do,
-// {, !...) are removed from the start of a command (.readme/91-agent-sandbox.md, "Claude Code"). Quoted text, escaped
-// characters, comments and here-document bodies are not commands or operators. It reads only text.
+// {, !...) are removed from the start of a command (.readme/91-agent-sandbox.md, "Claude Code"), plus the two of
+// exempt-shapes.mjs. Quoted text, escaped characters, comments and here-document bodies are not commands or operators.
 
+import { expand, leavesTree, remember } from './exempt-shapes.mjs';
 import { HEREDOC, readBodies } from './shell-spans.mjs';
 
 const ENV = /^[A-Za-z_][A-Za-z0-9_]*=/;
@@ -20,6 +21,7 @@ export function splitCommand(text, { powershell = false } = {}) {
   const forms = new Set();
   const segments = [];
   const awaiting = new Set();
+  const vars = new Map();
   const heredocs = [];
   let words = [];
   let word = null;
@@ -50,10 +52,18 @@ export function splitCommand(text, { powershell = false } = {}) {
         rest.shift();
       }
     };
+    const assigned = [];
     strip((first) => KEYWORDS.has(first), 'block');
-    strip((first) => ENV.test(first), 'env');
+    strip((first) => ENV.test(first) && assigned.push(first), 'env');
+    if (rest.length === 0 || rest[0] === 'export') remember(vars, rest.length === 0 ? assigned : rest);
     const evaluated = rest[0] === 'eval';
     strip((first) => PREFIXES.has(first), 'prefix');
+    const named = expand(rest[0] ?? '', vars);
+    if (named !== null) {
+      rest[0] = named;
+      forms.add('variable');
+    }
+    if (leavesTree(rest)) forms.add('path');
     if (DIRECTORY.has(rest[0])) forms.add('cd');
     else if (evaluated && rest.length === 1 && /^(["']).*\1$/s.test(rest[0])) nest(rest[0].slice(1, -1));
     else if (rest.length > 0) segments.push(rest.join(' '));

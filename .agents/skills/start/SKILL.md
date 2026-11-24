@@ -10,7 +10,7 @@ Start from an empty folder or a new, empty repository, or prepare a project that
 
 ## Precedence
 
-- Where present, `AGENTS.md` and the instructions it routes govern every step. Before adoption follow the safety and approval rules here and the canonical adoption guide in the approved release. Load `01` and `10` at the start of the derived-project workflow, `03` before deleting files, `06` before stack.md, `11` before the first backlog.md entry, `06` and `13` before changing tooling, and `12` for staging or a commit, plus every other module `AGENTS.md` routes for the step at hand, such as `08` for secrets, `07` for design tokens, `04` for checks, and `15` for the CI workflow.
+- Where present, `AGENTS.md` and the instructions it routes govern every step. Before adoption follow the safety and approval rules here and the canonical adoption guide in the approved release. Load `01` and `10` at the start of the derived-project workflow, `03` before deleting files, `06` before stack.md, `11` before the first backlog.md entry, `06` and `13` before changing tooling, and `12` for staging or a commit, plus every other module `AGENTS.md` routes for the step at hand, such as `08` for secrets, `07` for design tokens, `04` and `16` for checks, and `15` for the CI workflow.
 - The skeletons are the checklist: each section's heading and guide line say what it holds. [references/documents.md](references/documents.md) groups them into topics and lists the cross-document pitfalls; [references/tooling.md](references/tooling.md) covers the tooling step.
 - Never rewrite a skeleton's headings, except the title placeholders that take the project name (the README H1 and design.md's `# Design System:`), its guide text, or design.md's frontmatter keys. The documents live in `.docs/`, and this skill writes them itself in their skeleton's structure.
 
@@ -90,6 +90,6 @@ In the user's language, one line per applicable item: adoption version and fixed
 ## Client bindings
 
 - Invocation: `/start` in Claude Code, `$start` in Codex. Before a project exists, a user can copy this entire skill directory to `~/.claude/skills/start` or `~/.agents/skills/start` respectively. Questions are plain chat text in every client.
-- When a client's sandbox blocks a step, such as `git remote add` writing `.git/config` or `skills add` writing `.agents/skills/`, retry that one command through the client's approval or escalation prompt, or give the user the exact command; never widen sandbox settings. A blocked command never ran (`04`).
+- When a client's sandbox blocks a step, such as `git remote add` writing `.git/config` or `skills add` writing `.agents/skills/`, retry that one command through the client's approval or escalation prompt, or give the user the exact command; never widen sandbox settings. A blocked command never ran (`16`).
 - Deleting the template-only files under `.scripts/` differs by client: in Claude Code the protected-paths hook asks for confirmation, so run the deletion once the user approves it; in Codex that hook runs with `--deny` and rejects the command whether or not the agent escalates, so give the user the exact command to run themselves and keep the step ⏳ until they say it ran.
 - Non-interactive sessions, such as `claude -p` or `codex exec`, stop at the first missing answer or authorization and report the progress state.

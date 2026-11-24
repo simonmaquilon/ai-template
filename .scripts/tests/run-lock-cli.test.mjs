@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, utimesSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { acquire } from '../run-lock.mjs';
@@ -8,7 +8,7 @@ import { scratch } from './scratch-fixture.mjs';
 import { WINDOWS } from './support.mjs';
 
 const BUSY = 75;
-const lockScratch = (t) => scratch(t, ['run-lock.mjs', 'run-lock-store.mjs', 'run-lock-command.mjs']);
+const lockScratch = (t) => scratch(t, ['run-lock.mjs', 'run-lock-store.mjs', 'run-lock-reclaim.mjs', 'run-lock-command.mjs']);
 // The repository's own lock folder, which the copied script reads, and a command that runs the Node of this process.
 const folder = (repo) => join(repo.dir, '.temp', 'run-locks');
 const wrap = (repo, name, ...child) => repo.script('run-lock.mjs', [name, '--', process.execPath, ...child]);
@@ -96,6 +96,17 @@ for (const signal of ['SIGTERM', 'SIGHUP']) {
     assert.deepEqual(readdirSync(folder(repo)), []);
   });
 }
+
+// The only place where the path through cmd.exe of run-lock-command.mjs runs for real: Node refuses to start a .cmd file itself.
+test('on Windows a .cmd file runs through the wrapper with its arguments, and its exit code comes out', { skip: WINDOWS ? false : 'needs cmd.exe, which only Windows has' }, (t) => {
+  const repo = lockScratch(t);
+  const file = join(repo.dir, 'show args.cmd');
+  writeFileSync(file, '@echo off\r\necho first=%1 second=%2 third=%3\r\nexit /b 7\r\n');
+  const result = repo.script('run-lock.mjs', ['e2e', '--', file, 'one', 'two words', 'a&b']);
+  assert.equal(result.status, 7, result.stderr);
+  assert.equal(result.stdout.trim(), 'first=one second="two words" third="a&b"');
+  assert.deepEqual(readdirSync(folder(repo)), []);
+});
 
 test('the wrapper warns on stderr when its lock file stops carrying its token, and leaves the other run alone', (t) => {
   const repo = lockScratch(t);

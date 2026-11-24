@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { BEAT_MS, EXPIRY_MS, acquire, commandLine, inspect, keepAlive, release } from '../run-lock.mjs';
@@ -72,17 +72,6 @@ test('the heartbeat renews the modification time of the lock file', async (t) =>
   assert.equal(inspect('e2e', { dir }).state, 'busy');
   stop();
   release(lock);
-});
-
-test('a reclaim guard left by a dead process expires, and a fresh one holds the recovery back', (t) => {
-  const dir = lockDir(t);
-  acquire('e2e', { dir, command: 'dead' });
-  age(join(dir, 'e2e.json'), EXPIRY_MS + 1000);
-  writeFileSync(join(dir, 'e2e.reclaim'), '');
-  assert.equal(acquire('e2e', { dir }).ok, false);
-  age(join(dir, 'e2e.reclaim'), EXPIRY_MS + 1000);
-  assert.equal(acquire('e2e', { dir }).ok, true);
-  assert.deepEqual(readdirSync(dir), ['e2e.json']);
 });
 
 test('the heartbeat reports once that the file no longer carries its token', async (t) => {

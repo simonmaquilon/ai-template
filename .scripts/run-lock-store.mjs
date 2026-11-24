@@ -2,20 +2,18 @@
 // repository root holds the pid, start and command of the holder, and its modification time is the heartbeat the holder
 // renews. A lock whose last beat is older than EXPIRY_MS is expired, whoever wrote it, so no process or port is ever
 // inspected, which a sandbox can blank. Creation is exclusive, so only one acquirer wins, and the lock file is never
-// renamed: an expired one is removed by the acquirer that holds the guard <name>.reclaim, created exclusively, which
-// looks at the file again inside the guard and removes it only if it is still expired. A guard older than GUARD_MS was
-// left by a dead process and is removed by whoever finds it, which can race with another remover only then. A process
-// suspended for longer than EXPIRY_MS can lose its lock to another, and a removal still races narrowly with a renewal;
-// both are why the expiry is several beats.
+// renamed: an expired one is removed by the one claimant that run-lock-reclaim.mjs lets through, whose guards a dead
+// claimant cannot leave behind for good. A process suspended for longer than EXPIRY_MS can lose its lock to another,
+// and a removal still races narrowly with a renewal; both are why the expiry is several beats.
 
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { reclaim, taken } from './run-lock-reclaim.mjs';
 
 export const BEAT_MS = 5000;
 export const EXPIRY_MS = 6 * BEAT_MS;
-const GUARD_MS = BEAT_MS;
 const ATTEMPTS = 100;
 const WAIT_MS = 5;
 export const LOCK_DIR = join(resolve(dirname(fileURLToPath(import.meta.url)), '..'), '.temp', 'run-locks');
@@ -57,36 +55,7 @@ export function locks({ dir = LOCK_DIR } = {}) {
   }
 }
 
-const ageOf = (file) => Date.now() - statSync(file).mtimeMs;
 const pause = () => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, WAIT_MS);
-
-// Removes an expired lock file while holding the reclaim guard; true when this process held the guard, and false when
-// another did, or left one that is not yet old enough to be dead.
-function reclaim(file) {
-  const guard = `${file.slice(0, -'.json'.length)}.reclaim`;
-  try {
-    writeFileSync(guard, '', { flag: 'wx' });
-  } catch (error) {
-    if (error.code !== 'EEXIST') throw error;
-    try {
-      if (ageOf(guard) > GUARD_MS) unlinkSync(guard);
-    } catch {
-      // The holder just released it.
-    }
-    return false;
-  }
-  try {
-    if (ageOf(file) > EXPIRY_MS) unlinkSync(file);
-  } catch {
-    // Already gone.
-  }
-  try {
-    unlinkSync(guard);
-  } catch {
-    // Taken as dead by another process.
-  }
-  return true;
-}
 
 // { ok: true, lock } when this process now holds the lock, or { ok: false, holder } naming the live holder.
 export function acquire(name, { dir = LOCK_DIR, command = '' } = {}) {
@@ -94,18 +63,23 @@ export function acquire(name, { dir = LOCK_DIR, command = '' } = {}) {
   mkdirSync(dir, { recursive: true });
   const lock = { name, file, token: randomUUID() };
   const body = JSON.stringify({ pid: process.pid, started: new Date().toISOString(), command, token: lock.token });
+  let denied;
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     try {
       writeFileSync(file, body, { flag: 'wx' });
       return { ok: true, lock };
     } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
+      if (!taken(error)) throw error;
+      denied = error.code === 'EEXIST' ? undefined : error;
     }
     const held = inspect(name, { dir });
     if (held.state === 'busy') return { ok: false, holder: held };
-    if (held.state === 'expired' && !reclaim(file)) pause();
+    if (held.state === 'expired' && !reclaim(file, EXPIRY_MS)) pause();
   }
-  return { ok: false, holder: inspect(name, { dir }) };
+  const holder = inspect(name, { dir });
+  // A denial that outlasts the attempts with nobody holding the lock is not a busy lock.
+  if (denied && holder.state === 'free') throw new Error(`run-lock: cannot create ${file}: ${denied.code}`);
+  return { ok: false, holder };
 }
 
 const owns = (lock) => recordOf(lock.file).token === lock.token;

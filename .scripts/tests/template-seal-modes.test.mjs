@@ -33,7 +33,9 @@ test('a derived project whose origin still points at the template, without its t
   assert.equal(guard(repo, 'claude', write(repo, 'AGENTS.md'))?.[0], 'deny');
   const refused = repo.script('template-manifest.mjs', ['--write']);
   assert.equal(refused.status, 1);
-  assert.match(refused.stderr, /holds neither \.github\/workflows\/template-checks\.yml nor \.readme\/94-template-ci\.md/);
+  assert.match(refused.stderr, /whose HEAD tracks its CI workflow or CI document/);
+  assert.match(refused.stderr, /HEAD of this repository tracks neither \.github\/workflows\/template-checks\.yml nor \.readme\/94-template-ci\.md/);
+  assert.doesNotMatch(refused.stderr, /holds/);
 });
 
 test('during an adoption nothing is restored, every prompt says so, and --adoption-end refuses until committed and clean', (t) => {

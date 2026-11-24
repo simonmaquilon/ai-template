@@ -128,5 +128,5 @@ Generated from the files that pin each part; their configuration is described in
 <!-- stack:generated workflows -->
 | Workflow | Runners | Node | Actions | Notes |
 | --- | --- | --- | --- | --- |
-| template-checks.yml | ubuntu-24.04, windows-2025 | 24 | actions/checkout v7.0.1, actions/setup-node v7.0.0 | |
+| template-checks.yml | ubuntu-24.04, windows-2025, macos-15 | 24 | actions/checkout v7.0.1, actions/setup-node v7.0.0 | |
 <!-- /stack:generated workflows -->

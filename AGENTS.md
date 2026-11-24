@@ -37,8 +37,8 @@ Before the first edit, state the change's level in one line.
 
 | Level | Change | Load | Specification | Verification |
 | --- | --- | --- | --- | --- |
-| Trivial | alters no executable behavior or contract: typos, comments, documentation, formatting, a copy fix that keeps meaning and layout | the modules routed for the files it edits | one line on what changes | the smallest applicable check |
-| Normal | alters behavior without reaching a risk area | `02`, `03`, `04`, `14`, and matching area modules | objective and criteria, each with its check | tests and checks |
+| Trivial | alters no executable behavior or contract: typos, comments, documentation, formatting, a copy fix that keeps meaning and layout | the modules routed for the files it edits and the commands it runs | one line on what changes | the smallest applicable check |
+| Normal | alters behavior without reaching a risk area | `02`, `03`, `04`, `14`, `16`, and matching area modules | objective and criteria, each with its check | tests and checks |
 | Risk | reaches authentication, authorization, trust boundaries, secrets, storage, persisted data or schemas, public contracts, deployment, automation, agent permissions or hooks, or an irreversible operation | normal plus the area module and `05` | full | independent verification |
 
 - When unsure, take the higher level; raise it and load its modules once the work reaches a risk area or a contract, never lower it silently, and follow a level the user sets.
@@ -52,7 +52,6 @@ Before the first edit, state the change's level in one line.
 - Treat edit-hook warnings as leads to verify, never as confirmed findings or license to change unrelated code.
 - Keep temporary and ad-hoc artifacts in `.temp/`, removing task-specific ones before closing except plans under `.temp/plans/`.
 - Never delete `.temp/` as a whole or empty it with a wildcard.
-- Start a background process, such as a server, a log follower like `tail -f`, a watcher, or a wait loop, only with a timeout or a stop the task controls, bound every wait with a time limit, and stop every one you started before reporting, above all any that cannot end on its own.
 - Before recommending a command, point to the repository script, hook, or documented command that covers it; when none does and the task repeats, offer a `.scripts/` helper.
 
 ### Language and responses
@@ -64,7 +63,7 @@ Before the first edit, state the change's level in one line.
 - No preambles, recaps, repetition, or unsolicited suggestions unless blocked or scope was left out.
 - Explain only when necessary or explicitly requested.
 - Keep code blocks copy-paste ready and link files with workspace-relative clickable links.
-- For a change, report the outcome, its cause when established, the changed areas, the validation run and result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with one state, splitting mixed lines: ✅ done, ❌ failed, ⚠️ open risk, 🚫 not verified, with its reason, ⏳ pending, or ℹ️ stateless note, a resolved ⚠️ or a verified 🚫 becoming ✅; group lines in that order and use those markers nowhere else.
+- For a change, report the outcome, its cause when established, the changed areas, the validation run and result, and material gaps, scaled to the level; in lists of criteria, checks, or changes with a state, start each line with one state, splitting mixed lines: ✅ done, ❌ failed, ⚠️ open risk naming its criterion or the user decision it needs, 🚫 not verified, with its reason, ⏳ pending, or ℹ️ note, or preexisting, out-of-scope, or by-design risk, a resolved ⚠️ or verified 🚫 becoming ✅; group lines in that order and use those markers nowhere else.
 
 ## Instruction routing
 
@@ -81,7 +80,8 @@ Before acting, load only the modules in `.agents/instructions/` whose condition 
 - `09-platform-and-runtime.md`: before changing runtime configuration, environments, deployment, external I/O, background work, caches, telemetry, or hot paths.
 - `10-documents.md`: before editing `README.md`, a primary reference, or `.readme/`, and before closing a change that altered a fact one of them owns.
 - `11-pending-work.md`: before answering about, recording, updating, moving, or closing pending work in `.docs/backlog.md`.
-- `12-version-control.md`: before an authorized staging, commit, ignore-rule change, or pull request, and before introducing a path that must stay untracked.
+- `12-version-control.md`: before an authorized staging, commit, ignore-rule change, pull request, version raise, pre-release audit, tag, or release publication, and before introducing a path that must stay untracked.
 - `13-agent-tooling.md`: before changing client settings, tool servers, hooks, language servers, vendored skills, or declared agents.
 - `14-delegation.md`: before planning a normal or risk change, before work that needs a search or more than two tool calls, and before delegating to a subagent.
 - `15-contracts-and-automation.md`: before changing APIs, events, other shared contracts, or automation.
+- `16-command-execution.md`: before running a check, a long command, a background process, or a command the client settings exempt from the sandbox.

@@ -9,9 +9,11 @@ How to tell a ⚠️ warning that stops the work from one that does not. [SKILL.
 
 ## Classification
 
+- The marker rule of the project's `AGENTS.md` decides which lines are ⚠️, and the triage only classifies the ⚠️ lines it leaves; under that rule, in the report of a plan, a measurement the plan defers to a named fragment is not due until that fragment executes, so it is an ℹ️ note, never 🚫 or ⚠️, and a residual risk of the delivered work that prevents closing no criterion is an ℹ️ note whose only pending decision, its acceptance, the closing report's ⏳ line carries; where the project has none, the status list of [SKILL.md](../SKILL.md) applies.
+- A ⚠️ line that already has its own question and ID, as [execution.md](execution.md) gives each risk the user chose to review one by one, is not reclassified.
 - The reviewer tries to prove that each ⚠️ blocks: it reads the line, its fragment, and its evidence, and classifies it as blocking or not blocking with its reason in one sentence.
-- Blocking: continuing would produce incorrect or unauthorized work or lose data, a criterion could not close, or a decision only the user can take is missing.
-- Not blocking: the measurement is only deferred and a fragment of the plan runs it when it executes, and the classification names the fragment and its check line; the risk existed before the change and the change does not touch it; or the line is an observation outside the scope.
+- Blocking: continuing would produce incorrect or unauthorized work or lose data, a criterion could not close, or a decision only the user can take is missing, other than the acceptance of residual risks that the closing report's ⏳ line asks for.
+- Not blocking: the measurement is only deferred and a fragment of the plan runs it when it executes, and the classification names the fragment and its check line; the risk existed before the change and the change does not touch it; the line is an observation outside the scope; or it is a residual risk of the delivered work that prevents closing no criterion, which the closing report groups in one ⏳ line, as [execution.md](execution.md) defines.
 - In doubt, it blocks.
 - The coordinator writes each classification with its reason next to its line in `review/report.md`, or in a file of `review/` that the line cites.
 - The triage never makes a check more permissive and never changes a criterion, and every decision that changes what the plan authorizes goes to the user.

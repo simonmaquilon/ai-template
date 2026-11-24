@@ -1,6 +1,7 @@
 ---
 name: commit
 description: Split staged changes grouped by commit.
+disable-model-invocation: true
 ---
 
 # Commit

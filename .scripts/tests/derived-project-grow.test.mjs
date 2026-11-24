@@ -27,7 +27,7 @@ for (const client of ['claude', 'codex']) {
     const repo = derivedProject(t);
     const env = hookEnv(t, repo, client);
     const agents = read(repo, 'AGENTS.md');
-    const last = /^- `15-contracts-and-automation\.md`:.*$/m.exec(agents)[0];
+    const last = /^- `16-command-execution\.md`:.*$/m.exec(agents)[0];
     repo.write('AGENTS.md', agents.replace(last, `${last}\n- \`50-example.md\`: before changing the example area.`));
     repo.write('.agents/instructions/50-example.md', '# Example\n\nRead before changing the example area.\n\n- Keep the example area small.\n');
     repo.write(EXCEPTIONS, `${JSON.stringify({ 'AGENTS.md': 'The project routes its own module, see [the plan](.docs/plan.md).' }, null, 2)}\n`);

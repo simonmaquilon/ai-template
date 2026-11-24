@@ -59,7 +59,7 @@ test('what does not block is always ℹ️, and the risks of the delivered work 
 
 test('an answered entry carries [answered date ID], which closes nothing without the receipt of the hook, and no rule refuses it for lack of provenance', () => {
   const both = `${read('SKILL.md')}\n${read('references/execution.md')}`;
-  assert.ok(carries(read('SKILL.md'), /\[answered YYYY-MM-DD P-01\]/, /receipt/, /never closes an entry by itself/));
+  assert.ok(carries(read('SKILL.md'), /\[answered YYYY-MM-DD P-01\]/, /receipt/, /closes the entry only against the receipt of that ID/));
   assert.ok(carries(read('references/execution.md'), /\[answered YYYY-MM-DD P-01\]/, /receipt/, /stays open/));
   assert.ok(carries(read('references/execution.md'), /ID at the start of the text of each question/));
   assert.ok(carries(read('references/execution.md'), /triage its ⚠️ lines/, /\]\(warning-triage\.md\)/));

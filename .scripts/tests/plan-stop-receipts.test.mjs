@@ -34,7 +34,7 @@ for (const client of ['claude', 'codex']) {
     assert.deepEqual(stop(fixture, { last_assistant_message: 'Finished.' }), {});
   });
 
-  test(`${client}: BUG-0001 a mark without a receipt blocks, and the receipt of a final question with no later user turn does not close the line`, (t) => {
+  test(`${client}: a mark without a receipt blocks, and the receipt of a final question with no later user turn does not close the line`, (t) => {
     const fixture = planRepo(t, client);
     fixture.turn();
     fixture.plan({ 'build/00-index.md': DONE, [path]: marked });

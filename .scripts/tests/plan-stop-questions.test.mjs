@@ -9,7 +9,7 @@ const question = '- [P-01] Should I run fragment 02 now or leave it pending?';
 const path = 'review/report.md';
 
 for (const client of ['claude', 'codex']) {
-  test(`${client}: BUG-0001 report marks and tool output never establish acceptance`, (t) => {
+  test(`${client}: report marks and tool output never establish acceptance`, (t) => {
     const fixture = planRepo(t, client);
     fixture.turn();
     fixture.plan({ 'build/00-index.md': index('done', 'pending'), [path]: `⏳ [P-01] Fragment 02 remains pending ${ASKED}\n⚠️ [P-02] Live verification is partial ${ACCEPTED}\n` });

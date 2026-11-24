@@ -65,7 +65,7 @@ function write() {
       `so the manifest this project adopted stays as it is`);
   }
   if (!maintained) {
-    fail('--write is allowed only in the maintained template, which holds its CI files; this repository holds neither ' +
+    fail('--write is allowed only in the maintained template, whose HEAD tracks its CI workflow or CI document; HEAD of this repository tracks neither ' +
       '.github/workflows/template-checks.yml nor .readme/94-template-ci.md, so the manifest this project adopted stays as it is');
   }
   const manifest = current();

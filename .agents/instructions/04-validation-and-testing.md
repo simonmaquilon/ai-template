@@ -4,13 +4,10 @@ Read before validating or testing a normal or risk change, before debugging or r
 
 - Verify every acceptance criterion through the check its specification names, with evidence observed after the last relevant edit and figures copied from the real output; a criterion without passing evidence is unmet.
 - Run the smallest set of checks covering the changed behavior, file types, and preservation criteria, plus every check the project requires for that scope; an interrupted run or one whose final summary was not observed has no result, and a later relevant edit supersedes earlier passes.
-- Run checks and long commands so that only their outcome enters the context: keep their full output in a file under `.temp/`, except for a sandbox-exempt command, or in the log a repository script writes, read its summary and the failing part, and prefer a repository script or a check that prints one line per result.
 - Before validating against a local environment, confirm that the state it depends on matches what the repository declares: applied schema changes, configuration key names, generated artifacts, and provisioned resources.
 - When no supported check covers a change, perform the closest runtime or manual verification and report it as such.
 - Validate documentation and instructions with the repository's link, cited-path, structure, and syntax checks.
 - Resolve the error-level language-server diagnostics a change introduces unless the server cannot use the project's language version; diagnostics add to the configured checks and never replace them.
-- Run a command the client settings exempt from the sandbox alone, in the exact form its exemption declares, never redirected, piped, chained, or prefixed, which confines it, before treating it as blocked, and read its output from the background task's output or its script's log.
-- A command the environment blocked never ran: name the restriction and the coverage it left open, and propose a durable sandbox exemption instead of working around it.
 - Add automated tests for every new, changed, or fixed executable behavior when the project has a compatible test harness, writing each before the implementation and seeing it fail for the expected reason; a test for preserved behavior passes before and after.
 - Without a compatible harness, add no testing infrastructure without approval: verify by the closest means, report the gap, and ask when automated coverage is material to acceptance.
 - A fix of executable behavior needs a regression test that reproduces the defect at the observable level, serves as the check of the fix's first criterion, and cites the stable `BUG-…` identifier as the suite's convention does.
