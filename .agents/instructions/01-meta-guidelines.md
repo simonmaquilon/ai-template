@@ -4,7 +4,7 @@ Read before editing `AGENTS.md`, an instruction module, a primary-reference or r
 
 - Keep persistent agent rules in `AGENTS.md`, which holds the primary references, the core rules every request needs, and the routing table, and in the modules under `.agents/instructions/`.
 - Give every module a routing entry in `AGENTS.md`, as an unindented list item, that states only when to load it, matching the module's scope line.
-- Give each module a unique two-digit prefix used as a stable identifier, not a reading order; this file holds `01`, the template takes prefixes below `50`, a derived project numbers its own modules from `50`, and a retired prefix is never reused.
+- Give each module a unique two-digit prefix used as a stable identifier, not a reading order; this file holds `01`, the template takes prefixes below `50`, a derived project numbers its own modules from `50`, and neither reuses a prefix it retired.
 - Name each module for the decision area it governs; group subjects that load together, and split a module when part of it applies in cases where the rest does not.
 - Keep `AGENTS.md` within 10 KB and each module within 6 KB, as `check-instructions.mjs` measures; condense or split before exceeding them, never by dropping an independent requirement.
 - Write one operational decision per rule on a single line, and start a rule that applies only at some change levels by naming those levels.

@@ -49,3 +49,59 @@ test('instruction check: an uncommitted adoption leaves every earlier retirement
   assert.equal(result.status, 0, result.stderr);
   assert.doesNotMatch(result.stdout, /retired/);
 });
+
+const listing = (repo, paths) => repo.write('.agents/template-manifest.json', JSON.stringify({ version: '9.0.0', files: Object.fromEntries(paths.map((path) => [path, 'x'])) }));
+
+// A project that adopted the baseline with these instruction files and .readme/ documents, retired them all in a later
+// commit, and now holds the instruction files given.
+function adopted(repo, retired, current, readme = []) {
+  withRules(repo, retired);
+  repo.write('.agents/template-version', '1\n');
+  for (const name of readme) repo.write(`.readme/${name}`, '# x\n');
+  repo.git('add', '-A', '--', '.readme');
+  commit(repo, 'adopt the baseline');
+  repo.git('rm', '-q', '--', ...retired.map((name) => `.agents/instructions/${name}`), ...readme.map((name) => `.readme/${name}`));
+  withRules(repo, ['01-base.md']);
+  commit(repo, 'retire after adoption');
+  withRules(repo, ['01-base.md', ...current]);
+}
+
+test('instruction check: a derived project is not told that a file the template manifest lists reuses a retired prefix', (t) => {
+  const repo = makeRepo(t);
+  adopted(repo, ['16-documentation.md'], ['16-command-execution.md']);
+  listing(repo, ['.agents/instructions/16-command-execution.md']);
+  const result = repo.script('check-instructions.mjs');
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /retired/);
+});
+
+test('instruction check: a derived project is not told that a .readme/ document the manifest lists reuses a retired prefix', (t) => {
+  const repo = makeRepo(t);
+  adopted(repo, [], [], ['95-old.md']);
+  repo.write('.readme/95-new.md', '# New\n');
+  listing(repo, ['.readme/95-new.md']);
+  const result = repo.script('check-instructions.mjs');
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /\.readme\/ documents reusing the prefix of a retired one/);
+});
+
+test('instruction check: a derived project is still told when its own file reuses a retired prefix', (t) => {
+  const repo = makeRepo(t);
+  adopted(repo, ['16-documentation.md', '17-gone.md'], ['16-command-execution.md', '17-own.md']);
+  listing(repo, ['.agents/instructions/16-command-execution.md']);
+  const result = repo.script('check-instructions.mjs');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(RETIRED.exec(result.stdout)?.[1], '17-own.md (retired 17-gone.md)');
+});
+
+test('instruction check: in a checkout of the template a file the manifest lists is still told when it reuses a retired prefix', (t) => {
+  const repo = makeRepo(t);
+  adopted(repo, ['16-documentation.md'], ['16-command-execution.md']);
+  listing(repo, ['.agents/instructions/16-command-execution.md']);
+  repo.write('.github/workflows/template-checks.yml', 'name: x\n');
+  repo.git('add', '-A', '--', '.github');
+  repo.git('commit', '-q', '-m', 'template marker');
+  const result = repo.script('check-instructions.mjs');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(RETIRED.exec(result.stdout)?.[1], '16-command-execution.md (retired 16-documentation.md)');
+});

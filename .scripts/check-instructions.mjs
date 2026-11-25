@@ -11,14 +11,18 @@
 // history shows retired; a rename that keeps its prefix retires nothing, and
 // neither does a project's history up to the commit that first added
 // .agents/template-version, whose files belonged to the set the baseline
-// replaced on adoption. A routing entry that names a missing file is left to
-// check-doc-links.mjs. Runs from any directory of the repository and prints
-// plain text, which the agent clients add to the model's context; prints
-// nothing when every file complies, outside git, or in another repository.
+// replaced on adoption. Outside a checkout of the template, a file the template
+// manifest lists is never reported as reusing a retired prefix: the template
+// owns its prefix, and the project cannot resolve it. A routing entry that
+// names a missing file is left to check-doc-links.mjs. Runs from any directory
+// of the repository and prints plain text, which the agent clients add to the
+// model's context; prints nothing when every file complies, outside git, or in
+// another repository.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { enterRepositoryRoot, git } from './hook-support.mjs';
+import { MANIFEST, isTemplateCheckout, parseManifest, readText } from './template-files.mjs';
 
 const AGENTS_LIMIT = 10 * 1024;
 const MODULE_LIMIT = 6 * 1024;
@@ -55,7 +59,9 @@ function governedHistory() {
 // Current names in dir that take the prefix of a file the history retired:
 // deleted, or renamed to another prefix, under a different name. A deletion
 // and an addition with the same prefix in one commit are a rename, as when a
-// rename rewrites the file too much for git to pair them.
+// rename rewrites the file too much for git to pair them. Outside a checkout of
+// the template, the names the template manifest lists in dir are left out; with
+// no readable manifest, none is.
 function reusedPrefixes(dir, names) {
   const range = governedHistory();
   if (range === null) return [];
@@ -69,7 +75,10 @@ function reusedPrefixes(dir, names) {
       if ((status === 'D' && !arrived.includes(prefixOf(basename(path)))) || moved) retired.push(basename(path));
     }
   }
-  return names.flatMap((name) =>
+  if (retired.length === 0) return [];
+  const manifest = isTemplateCheckout() ? null : parseManifest(readText(MANIFEST) ?? '');
+  const sealed = new Set([...(manifest?.files.keys() ?? [])].filter((path) => dirname(path) === dir).map((path) => basename(path)));
+  return names.filter((name) => !sealed.has(name)).flatMap((name) =>
     retired.filter((old) => old !== name && prefixOf(old) !== null && prefixOf(old) === prefixOf(name)).map((old) => `${name} (retired ${old})`),
   );
 }
