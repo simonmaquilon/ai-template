@@ -105,3 +105,21 @@ test('instruction check: in a checkout of the template a file the manifest lists
   assert.equal(result.status, 0, result.stderr);
   assert.equal(RETIRED.exec(result.stdout)?.[1], '16-command-execution.md (retired 16-documentation.md)');
 });
+
+test('instruction check: without a readable manifest a derived project is told of every reused prefix', (t) => {
+  const repo = makeRepo(t);
+  adopted(repo, ['16-documentation.md'], ['16-command-execution.md']);
+  const check = () => {
+    const result = repo.script('check-instructions.mjs');
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout;
+  };
+  const told = '16-command-execution.md (retired 16-documentation.md)';
+  assert.equal(RETIRED.exec(check())?.[1], told);
+  repo.write('.agents/template-manifest.json', '{ not json');
+  assert.equal(RETIRED.exec(check())?.[1], told);
+  repo.write('.agents/template-manifest.json', '{}');
+  assert.equal(RETIRED.exec(check())?.[1], told);
+  listing(repo, ['.agents/instructions/16-command-execution.md']);
+  assert.doesNotMatch(check(), /retired/);
+});
