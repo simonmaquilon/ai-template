@@ -2,13 +2,14 @@
 
 Read before validating or testing a normal or risk change, before debugging or reviewing, and whenever a check fails.
 
-- Verify every acceptance criterion through the check its specification names, with evidence observed after the last relevant edit and figures copied from the real output; a criterion without passing evidence is unmet.
+- Verify every acceptance criterion through the check its specification names, with evidence observed after the last relevant edit and figures copied from the real output; a criterion without passing evidence is unmet, and reading the code is never evidence that it runs.
 - Run the smallest set of checks covering the changed behavior, file types, and preservation criteria, plus every check the project requires for that scope; an interrupted run or one whose final summary was not observed has no result, and a later relevant edit supersedes earlier passes.
 - Before validating against a local environment, confirm that the state it depends on matches what the repository declares: applied schema changes, configuration key names, generated artifacts, and provisioned resources.
 - When no supported check covers a change, perform the closest runtime or manual verification and report it as such.
+- Before closing, run every check the change's criteria name that still has no result and that the environment and the authorization held allow, and report as not verified only the rest, naming what prevented each.
 - Validate documentation and instructions with the repository's link, cited-path, structure, and syntax checks.
 - Resolve the error-level language-server diagnostics a change introduces unless the server cannot use the project's language version; diagnostics add to the configured checks and never replace them.
-- Add automated tests for every new, changed, or fixed executable behavior when the project has a compatible test harness, writing each before the implementation and seeing it fail for the expected reason; a test for preserved behavior passes before and after.
+- Add automated tests for every new, changed, or fixed executable behavior, including each branch it adds, such as a fallback or error path, when the project has a compatible test harness, writing each before the implementation and seeing it fail for the expected reason; a test for preserved behavior passes before and after.
 - Without a compatible harness, add no testing infrastructure without approval: verify by the closest means, report the gap, and ask when automated coverage is material to acceptance.
 - A fix of executable behavior needs a regression test that reproduces the defect at the observable level, serves as the check of the fix's first criterion, and cites the stable `BUG-…` identifier as the suite's convention does.
 - Cover behavior at the lowest sufficient level, with end-to-end coverage only for behavior that depends on real browser navigation, rendering, or client-server integration; agent-operated sessions verify interactively and never count as automated coverage.

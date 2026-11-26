@@ -1,10 +1,10 @@
 {
-  "version": "9.0.1",
+  "version": "9.1.0",
   "files": {
     ".agents/instructions/01-meta-guidelines.md": "b2470787b2b4cca2ffd1fa2a44f0c49941f4d640",
     ".agents/instructions/02-change-workflow.md": "1fb15f5af5bdf13ffd8298a7eb3fd49fa93deefd",
     ".agents/instructions/03-code-authoring.md": "a2adbdb5d57087c6527b19df35bc161205b3a4ce",
-    ".agents/instructions/04-validation-and-testing.md": "4423aa8ea0eb3df1dcc6a7ccee93f4075ce9d063",
+    ".agents/instructions/04-validation-and-testing.md": "9f435fe73e083b443dab2c5b5a8e8121fab77fc1",
     ".agents/instructions/05-independent-verification.md": "d805d9e317cd86cfd915683916da53eb366934d0",
     ".agents/instructions/06-dependencies-and-stack.md": "cc9516b428ff1e65661b018446f1c19c482e42af",
     ".agents/instructions/07-interface.md": "a93b58d6c1bc34b50e4459310fd949a03ab3fad0",
@@ -74,7 +74,7 @@
     ".agents/skills/start/agents/openai.yaml": "5b1f887a9138416870f64ba2fe21602e4a59cfa7",
     ".agents/skills/start/references/documents.md": "87a0e736c07ce6787cef876cc5a874d4e6113d19",
     ".agents/skills/start/references/tooling.md": "cf5361e6c2631aa7563d617f9b1abb7e79633aac",
-    ".agents/template-version": "37ad5c8b19d9b395988afbd81786110bcb38e62d",
+    ".agents/template-version": "47da986f86fdaed33e15cdc6431a1abf742e8398",
     ".agents/tool-versions.json": "79dc80d9e0578b1f1fec5fc4b38803a8f941a51b",
     ".claude/agents/copilot-haiku.md": "d16b1ef527fea01e4a2846bb14ceadda66801c47",
     ".claude/agents/copilot-opus.md": "ff5820dd44b271f4bb409e4b49e5e58c99aef638",
