@@ -16,9 +16,9 @@ const publishing = () => {
 };
 const brief = [
   'Realiza una revisión integral de la plantilla y de todo su ecosistema de configuración y desarrollo, incluyendo hooks, skills, instrucciones, agentes, `AGENTS.md` y demás archivos relacionados.',
-  'Evalúa sus responsabilidades, dependencias, jerarquías e interacciones. Identifica y resuelve inconsistencias, contradicciones, redundancias, ambigüedades, solapamientos y vacíos.',
-  'Garantiza que todos los componentes estén correctamente articulados, sincronizados y alineados bajo criterios comunes, respetando sus responsabilidades específicas.',
-  'El objetivo es dejar una plantilla limpia, consistente, coherente y mantenible, completamente preparada para el desarrollo de software, sin conflictos entre instrucciones, divergencias de implementación ni comportamientos inesperados.',
+  'Evalúa sus responsabilidades, dependencias, jerarquías e interacciones. Identifica inconsistencias, contradicciones, redundancias, ambigüedades, solapamientos y vacíos, e informa de ellos.',
+  'Comprueba que todos los componentes estén correctamente articulados, sincronizados y alineados bajo criterios comunes, respetando sus responsabilidades específicas.',
+  'El objetivo es una plantilla limpia, consistente, coherente y mantenible, completamente preparada para el desarrollo de software, sin conflictos entre instrucciones, divergencias de implementación ni comportamientos inesperados.',
 ];
 
 test('a rule has an agent in a clean context that wrote none of the release changes audit the template read-only before the version is raised', () => {

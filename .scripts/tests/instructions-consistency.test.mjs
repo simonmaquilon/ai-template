@@ -92,5 +92,5 @@ test('the template CI document says the plan hook closes a line by its answered 
   const section = ci.slice(ci.indexOf('## Publicar una versión'));
   const before = section.slice(0, section.indexOf('**Encargo de la auditoría**'));
   assert.match(before, /Quien audita solo identifica e informa, y sus hallazgos confirmados se resuelven en el cambio de la versión antes de publicar:/);
-  assert.ok(section.includes('> Evalúa sus responsabilidades, dependencias, jerarquías e interacciones. Identifica y resuelve inconsistencias'));
+  assert.ok(section.includes('> Evalúa sus responsabilidades, dependencias, jerarquías e interacciones. Identifica inconsistencias'));
 });

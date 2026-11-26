@@ -50,11 +50,11 @@ Antes de subir la versión, un agente en un contexto limpio, que no escribió ni
 
 > Realiza una revisión integral de la plantilla y de todo su ecosistema de configuración y desarrollo, incluyendo hooks, skills, instrucciones, agentes, `AGENTS.md` y demás archivos relacionados.
 >
-> Evalúa sus responsabilidades, dependencias, jerarquías e interacciones. Identifica y resuelve inconsistencias, contradicciones, redundancias, ambigüedades, solapamientos y vacíos.
+> Evalúa sus responsabilidades, dependencias, jerarquías e interacciones. Identifica inconsistencias, contradicciones, redundancias, ambigüedades, solapamientos y vacíos, e informa de ellos.
 >
-> Garantiza que todos los componentes estén correctamente articulados, sincronizados y alineados bajo criterios comunes, respetando sus responsabilidades específicas.
+> Comprueba que todos los componentes estén correctamente articulados, sincronizados y alineados bajo criterios comunes, respetando sus responsabilidades específicas.
 >
-> El objetivo es dejar una plantilla limpia, consistente, coherente y mantenible, completamente preparada para el desarrollo de software, sin conflictos entre instrucciones, divergencias de implementación ni comportamientos inesperados.
+> El objetivo es una plantilla limpia, consistente, coherente y mantenible, completamente preparada para el desarrollo de software, sin conflictos entre instrucciones, divergencias de implementación ni comportamientos inesperados.
 
 `node .scripts/release.mjs --notes <archivo> [--timeout <minutos>]`, desde cualquier carpeta del repositorio, con las notas en un archivo no versionado, como uno bajo `.temp/`, y 60 minutos de espera por omisión. En Claude Code pide confirmación cuando se lanza en esa forma, sola desde la raíz; otra grafía, como `node ./.scripts/release.mjs`, no la activa ni sale del sandbox ([Sandbox de agentes](91-agent-sandbox.md)). `12-version-control.md` fija cuándo subir la versión y regenerar el manifiesto; este script solo publica el commit ya hecho. Sube la rama, espera al CI de ese commit consultando `gh` cada 30 segundos y, solo con el CI en verde, etiqueta el commit con la versión de `.agents/template-version`, sube el tag y crea el release con `gh release create <versión> --verify-tag --title <versión> --notes-file <archivo>`. Si ningún workflow está activo, publica igualmente y lo dice. Escribe una línea por paso y termina con código 0 al publicar.
 
